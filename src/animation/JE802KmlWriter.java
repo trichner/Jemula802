@@ -262,7 +262,7 @@ public class JE802KmlWriter extends JEmula {
 		// power Overlays
 		if (generatePowerOverlay) {
 			generators.add(new JE802PowerOverlayKml(this.doc, this.stations, this.filename, this.pixelSize, true,
-					this.reuseDistance, this.maxTxdBm, this.minTxdBm, this.attenuationFactor));
+					this.reuseDistance, this.maxTxdBm, this.minTxdBm, this.attenuationFactor, this.resultPath));
 		}
 
 		if (generateAntennas) {

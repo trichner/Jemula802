@@ -78,10 +78,12 @@ public class JE802PowerOverlayKml extends JE802KmlGenerator {
 	private final double pixelLength;
 
 	private final double reuseDistance;
+	
+	private String resultPath;
 
 	public JE802PowerOverlayKml(final Document doc, final List<JE802Station> stations, final String filename,
 			final double pixelLength, final boolean showMobile, final double reuseDistance, final double maxTxdBm,
-			final double minTxdBm, final double attenuationFactor) {
+			final double minTxdBm, final double attenuationFactor, String path) {
 		super(doc, stations);
 		this.pixelLength = pixelLength;
 		this.showMobile = showMobile;
@@ -90,6 +92,7 @@ public class JE802PowerOverlayKml extends JE802KmlGenerator {
 		this.minTxdBm = minTxdBm;
 		this.maxTxdBm = maxTxdBm;
 		this.attenuationFactor = attenuationFactor;
+		this.resultPath = path;
 	}
 
 	@Override
@@ -393,8 +396,10 @@ public class JE802PowerOverlayKml extends JE802KmlGenerator {
 	 *            filename of the image to be written
 	 */
 	private void writeImage(final Color data[][], final String fileName) {
-		File filesFolder = new File("./files");
-		filesFolder.mkdir();
+		File filesFolder = new File(this.resultPath+"/"+this.pathInKmz);
+		if (!filesFolder.exists()) {
+			filesFolder.mkdir();
+		}
 		int width = data.length;
 
 		if (width > 0) {
@@ -410,7 +415,7 @@ public class JE802PowerOverlayKml extends JE802KmlGenerator {
 			}
 
 			try {
-				ImageIO.write(image, "PNG", new File("./files/" + fileName));
+				ImageIO.write(image, "PNG", new File(this.resultPath + "/" +this.pathInKmz + fileName));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
