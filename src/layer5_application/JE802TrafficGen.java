@@ -177,7 +177,8 @@ public class JE802TrafficGen extends JEEventHandler {
 			if (this.type != TrafficType.disabled) {
 				this.theStatEval.setTcpTrafficType(stationAddress, port, fileSuffix);
 				String aPath2Results = theStatEval.getPath2Results();
-				String thrpFileheader = "% time[ms] | #packets | overall packet # | avrg.packetsize[byte] | overall sum packetsize[byte] | overall[Mb/s]";
+				
+				String thrpFileheader = "% time[ms] | #packets | overall #packets | avrg.packetsize[byte] | overall sum packetsize[byte] | thpt overall[Mb/s] | tpht last interval[Mb/s]";
 
 				if (this.EvalThrp) {
 					String filename = "thrp_SA" + this.stationAddress + "_DA" + this.DA + "_AC" + this.AC + "_ID_"

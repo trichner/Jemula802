@@ -119,7 +119,7 @@ public class JE802StatEval extends JEEventHandler {
 			this.theHistogramNumOfBins = new Integer(statEvalElem.getAttribute("HistogramNumOfBins"));
 			this.theHistogramMax_ms = new Double(statEvalElem.getAttribute("HistogramMax_ms"));
 
-			String description = "% time[ms] | #packets | overall packet # | avrg.packetsize[byte] | overall sum packetsize[byte] | overall[Mb/s]";
+			String description = "% time[ms] | #packets | overall #packets | avrg.packetsize[byte] | overall sum packetsize[byte] | thpt overall[Mb/s] | tpht last interval[Mb/s]";
 			if (this.flag_EvalTotalThrp) {
 				this.theTotalThrpResults = new JEStatEvalThrp(this.path2Results, "total_thrp", description);
 			}
@@ -269,7 +269,7 @@ public class JE802StatEval extends JEEventHandler {
 							this.theThrpResultsPerACList
 									.setElementAt(
 											new JEStatEvalThrp(this.path2Results, "thrp_AC" + anAC,
-													"% time[ms] | #packets | overall # | avrg.packetsize[byte] | overall sum packetsize[byte] | overall [Mb/s]"),
+													"% time[ms] | #packets | overall #packets | avrg.packetsize[byte] | overall sum packetsize[byte] | thpt overall[Mb/s] | tpht last interval[Mb/s]"),
 											anAC);
 						}
 						this.theThrpResultsPerACList.elementAt(anAC).sample(now.getTimeMs(), SA, seqNo, length);
@@ -309,7 +309,7 @@ public class JE802StatEval extends JEEventHandler {
 						this.theOfferResultsPerACList
 								.setElementAt(
 										new JEStatEvalThrp(this.path2Results, "offer_AC" + anAC,
-												"% time[ms] | #packets | overall # | avrg.packetsize[byte] | overall sum packetsize[byte] | overall [Mb/s]"),
+												"% time[ms] | #packets | overall #packets  | avrg.packetsize[byte] | overall sum packetsize[byte] | thpt overall[Mb/s] | tpht last interval[Mb/s]"),
 										anAC);
 					}
 					this.theOfferResultsPerACList.elementAt(anAC.intValue()).sample(theUniqueEventScheduler.now().getTimeMs(),
