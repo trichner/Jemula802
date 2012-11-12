@@ -50,7 +50,6 @@ public class JE802_11MacAlgorithm extends JEmula {
 
 	private JE802_11BackoffEntity theBackoffEntityAC01;
 	private JE802_11BackoffEntity theBackoffEntityAC02;
-	private JE802_11BackoffEntity theBackoffEntityAC[];
 	private final JE802_11Mac theMac;
 	private boolean flag_undefined;
 	private final boolean flag_showplot;
@@ -58,61 +57,10 @@ public class JE802_11MacAlgorithm extends JEmula {
 	private final Integer dot11MACAddress;
 	private JEMultiPlotter plotter;
 
-	// //provokable_nice_guy additional variables begin
-	// private String mood;
-	// private Queue<Integer> queueEvol;//used to calculate the mean over
-	// consecutive time steps
-	// private Vector<Integer> copyQueue;//used to calculate the median
-	// private int angryCnt;
-	// private int fairSwitch;
-	// private boolean first;
-	// Integer fAIFSN_AC01; //fair values
-	// Integer fAIFSN_AC02;
-	// Integer fCWmin_AC01;
-	// Integer fCWmin_AC02;
-	// Integer fCWmax_AC01;
-	// Integer fCWmax_AC02; //fair values
-	// //private Integer theCurrentLongRetryCnt;
-	// //private Integer theCurrentShortRetryCnt;
-	// //private JETime timer;
-	// private JEMultiPlotter plotter_undefined;
-
-	// provokable_nice_guy additional variables end
-
 	public JE802_11MacAlgorithm(JEEventScheduler aScheduler, Vector<JE802_11BackoffEntity> aListofBackoffEntities,
 			JE802_11Mac aMac, Random aGenerator, String anAlgorithm, boolean showplot) {
 
-		// //initialize queue histories and queue buffers...
-		/*
-		 * this.queue_1_buffer = new int[JE802_11MacAlgorithm.queue1BufferSize];
-		 * this.queue_2_buffer = new int[JE802_11MacAlgorithm.queue2BufferSize];
-		 * this.queue_1_avg_history = new
-		 * float[JE802_11MacAlgorithm.queue1HistorySize];
-		 * this.queue_2_avg_history = new
-		 * float[JE802_11MacAlgorithm.queue2HistorySize];
-		 * this.queue_2_occupation_history = new
-		 * float[JE802_11MacAlgorithm.queue2OccupationHistorySize];
-		 * 
-		 * this.queue_1_buffer_index = 0; this.queue_2_buffer_index = 0;
-		 * this.queue_1_history_index = 0; this.queue_2_history_index = 0;
-		 * this.queue_2_occupation_history_index = 0;
-		 */
-		//
-		// //this.AC1_surr_counter = 5;
-		//
 		this.theUniqueEventScheduler = aScheduler;
-
-		// this.theBackoffEntityAC=new JE802_11BackoffEntity[4];
-		// if(aListofBackoffEntities.size()>1){
-		// for(int i=0;i<aListofBackoffEntities.size();i++){
-		// if(aListofBackoffEntities.elementAt(i)!=null) {
-		// theBackoffEntityAC[i]=aListofBackoffEntities.elementAt(i);
-		// }
-		// else {
-		// theBackoffEntityAC[i]=null;
-		// }
-		// }
-		// }
 
 		if (aListofBackoffEntities.size() >= 1) {
 			if (aListofBackoffEntities.elementAt(0) != null) {
@@ -156,24 +104,9 @@ public class JE802_11MacAlgorithm extends JEmula {
 	}
 
 	public void compute() {
-		// TODO : Use if station needs to move, but also update attenuation
-		// table.
-		// if(this.theMac.getMacAddress()==2) {
-		// this.message("Current X Location:"+this.theMac.getPhy().getMobility().getXLocation());
-		// this.theMac.getPhy().getMobility().setXLocation(this.theMac.getPhy().getMobility().getXLocation()+10);
-		//
-		// }
-
-		// if(this.theMac.getMacAddress()==2)
-		// this.message("X coordinates:"+this.theMac.getPhy().getMobility().getXLocation());
 
 		if (this.theAlgorithmName.equalsIgnoreCase("none")) {
 
-			// do nothing
-			// } else if
-			// (this.theAlgorithmName.equalsIgnoreCase("ADD YOUR CHOICE FOR THE NAME HERE"))
-			// {
-			// this.compute_student();
 		} else if (this.theAlgorithmName.contains("power")) {
 			this.compute_TxPower();
 		} else if (this.theAlgorithmName.contains("phymode")) {
@@ -182,17 +115,6 @@ public class JE802_11MacAlgorithm extends JEmula {
 			this.compute_tutorial_verbose();
 		} else if (this.theAlgorithmName.equalsIgnoreCase("tutorial_verbose")) {
 			this.compute_tutorial_verbose();
-		} else if (this.theAlgorithmName.equalsIgnoreCase("smangold")) {
-			this.compute_smangold();
-			// } else if
-			// (this.theAlgorithmName.equalsIgnoreCase("provokableniceguy")) {
-			// this.provokableniceguy();
-			// } else if (this.theAlgorithmName.equalsIgnoreCase("02_name")) {
-
-			// } else if (this.theAlgorithmName.equalsIgnoreCase("03_name")) {
-			//
-			// } else if (this.theAlgorithmName.equalsIgnoreCase("04_name")) {
-			//
 		} else
 			warning("undefined algorithm " + this.theAlgorithmName.toString());
 
@@ -215,9 +137,8 @@ public class JE802_11MacAlgorithm extends JEmula {
 
 	private void compute_tutorial_verbose() {
 
-		// message("---------------------------", 10);
-		// message("I am station " + this.dot11MACAddress.toString() +
-		// ". My algorithm is called '" + this.theAlgorithmName + "'.", 10);
+		message("---------------------------", 10);
+		message("I am station " + this.dot11MACAddress.toString() +". My algorithm is called '" + this.theAlgorithmName + "'.", 10);
 
 		// observe outcome:
 		Integer AIFSN_AC01 = theBackoffEntityAC01.getDot11EDCAAIFSN();
@@ -234,11 +155,7 @@ public class JE802_11MacAlgorithm extends JEmula {
 		message("    AIFSN[AC01] = " + AIFSN_AC01.toString() + " and AIFSN[AC02] = " + AIFSN_AC02.toString(), 10);
 		message("    CWmin[AC01] = " + CWmin_AC01.toString() + " and CWmin[AC02] = " + CWmin_AC02.toString(), 10);
 		message("... the backoff entity queues perform like this:", 10);
-		// message("    " + theCurrentQueueSize_AC01.toString() + " of " +
-		// theQueueSize_AC01.toString() + " MSDUs queued in AC01.", 10);
-		// message("    " + theCurrentQueueSize_AC02.toString() + " of " +
-		// theQueueSize_AC02.toString() + " MSDUs queued in AC02.", 10);
-
+		
 		// infer decision: (note, we just change the values arbitrarily
 		if (flag_undefined) { // we should increase AIFSN
 			AIFSN_AC01 = AIFSN_AC01 + 1;
@@ -247,7 +164,7 @@ public class JE802_11MacAlgorithm extends JEmula {
 		}
 		if (AIFSN_AC01 >= 20)
 			flag_undefined = false;
-		if (AIFSN_AC01 <= 02)
+		if (AIFSN_AC01 <= 2)
 			flag_undefined = true;
 
 		// AIFSN_AC02 = 10;
@@ -258,52 +175,8 @@ public class JE802_11MacAlgorithm extends JEmula {
 		theBackoffEntityAC02.setDot11EDCAAIFSN(AIFSN_AC02);
 		theBackoffEntityAC01.setDot11EDCACWmin(CWmin_AC01);
 		theBackoffEntityAC02.setDot11EDCACWmin(CWmin_AC02);
-
-		// message("I now changed parameters like this:", 10);
-		// message("    AIFSN[AC01] set to " + AIFSN_AC01.toString() +
-		// " and AIFSN[AC02] set to " + AIFSN_AC02.toString(), 10);
-		// message("    CWmin[AC01] remains at " + CWmin_AC01.toString() +
-		// " and CWmin[AC02] set to " + CWmin_AC02.toString(), 10);
-
 	}
 
-	private void compute_smangold() {
-		if (theBackoffEntityAC01 != null) {
-			Integer AIFSN_AC01 = theBackoffEntityAC01.getDot11EDCAAIFSN();
-			Integer CWmin_AC01 = theBackoffEntityAC01.getDot11EDCACWmin();
-			theBackoffEntityAC01.getQueueSize();
-			theBackoffEntityAC01.getCurrentQueueSize();
-			// message("with AIFSN[AC01]=" + AIFSN_AC01 + " and CWmin[AC01]=" +
-			// CWmin_AC01, 10);
-			// message("the AC01 backoff entity queues " +
-			// theCurrentQueueSize_AC01.toString() + " MSDUs, max queuesize is "
-			// + theQueueSize_AC01.toString() + ".",100);
-			AIFSN_AC01 = 100;
-			CWmin_AC01 = 5;
-			theBackoffEntityAC01.setDot11EDCAAIFSN(AIFSN_AC01);
-			theBackoffEntityAC01.setDot11EDCACWmin(CWmin_AC01);
-			// message("new values: AIFSN[AC01] set to " + AIFSN_AC01.toString()
-			// + " and CWmin[AC01] set to " + CWmin_AC01.toString(), 10);
-
-		}
-		if (theBackoffEntityAC02 != null) {
-			Integer AIFSN_AC02 = theBackoffEntityAC02.getDot11EDCAAIFSN();
-			Integer CWmin_AC02 = theBackoffEntityAC02.getDot11EDCACWmin();
-			theBackoffEntityAC02.getQueueSize();
-			theBackoffEntityAC02.getCurrentQueueSize();
-			// message("with AIFSN[AC02]=" + AIFSN_AC02.toString() +
-			// " and CWmin[AC02]=" + CWmin_AC02.toString(), 10);
-			// message("the AC02 backoff entity queues " +
-			// theCurrentQueueSize_AC02.toString() + " MSDUs, max queuesize is "
-			// + theQueueSize_AC02.toString() + ".", 100);
-			AIFSN_AC02 = 10;
-			CWmin_AC02 = 5;
-			theBackoffEntityAC02.setDot11EDCAAIFSN(AIFSN_AC02);
-			theBackoffEntityAC02.setDot11EDCAAIFSN(CWmin_AC02);
-			// message("new values: AIFSN[AC02] set to " + AIFSN_AC02.toString()
-			// + " and CWmin[AC02] set to " + CWmin_AC02.toString(), 10);
-		}
-	}
 
 	private void compute_phymode() {
 
