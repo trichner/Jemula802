@@ -92,6 +92,8 @@ public class JE802GuiTimePanel extends JPanel implements KeyListener, MouseWheel
 	private int nextChannelIndex = 0;
 
 	private int frameDrawingState = 0;
+	
+	private Map<Integer,Integer> verticalPositionMap;
 
 	public JE802GuiTimePanel(JScrollBar scrollbar) {
 
@@ -104,6 +106,8 @@ public class JE802GuiTimePanel extends JPanel implements KeyListener, MouseWheel
 		this.channels.add(0);
 
 		this.indexMap.put(0, 0);
+		
+		this.verticalPositionMap = new HashMap<Integer,Integer>();
 
 		guiContext = new JE802GuiContext();
 		guiContext.thePanel_min_ms = -10.0;
@@ -203,7 +207,7 @@ public class JE802GuiTimePanel extends JPanel implements KeyListener, MouseWheel
 		this.graphics.setFont(new Font("Verdana", Font.PLAIN, 10));
 
 		// draw station labels
-		for (int i = 0; i < this.maxSta; i++) {
+		for (int i = 0; i < this.verticalPositionMap.size(); i++) {
 			int y = 92 + (i * (this.guiContext.thePixel_between_Stations + this.guiContext.thePixel_per_Station));
 			this.graphics.setColor(Color.white);
 			this.graphics.fillRect(0, y, 70, 17);
@@ -313,44 +317,37 @@ public class JE802GuiTimePanel extends JPanel implements KeyListener, MouseWheel
 		this.redraw(g);
 	}
 
-	public int addFrame(JETime aStart, JETime aDur, int aChannel, int aSta, String aLabel, String a2ndLabel, String destLabel,
-			int channel) {
+	public int addFrame(JETime aStart, JETime aDur, int aChannel, int aSta, String aLabel, String a2ndLabel, String destLabel, int channel) {
 		if (!this.channels.contains(channel)) {
 			this.channels.add(channel);
 			Collections.sort(this.channels);
 		}
-		if (this.maxSta < aSta) {
-			this.maxSta = aSta;
-			int height = (this.maxSta * (this.guiContext.thePixel_between_Stations + this.guiContext.thePixel_per_Station) + 100);
-			this.setPreferredSize(new Dimension(0, height));
-			this.setSize(this.getWidth(), height);
-		}
 		this.updateIndexMap(aStart);
 		int index = this.drawableList.size();
-		this.drawableList.add(new JE802Frame(aStart, aDur, aChannel, aSta, aLabel, a2ndLabel, destLabel, channel));
+		this.drawableList.add(new JE802Frame(aStart, aDur, aChannel, this.getVeritcalPosition(aSta), aLabel, a2ndLabel, destLabel, channel));
 		this.repaint();
 		return index;
 	}
 
 	public void addLine(JETime aTime, int aSta, int anAC, String aColor, int channel) {
 		updateIndexMap(aTime);
-		this.drawableList.add(new JE802Line(aTime, aSta, anAC, aColor, channel));
+		this.drawableList.add(new JE802Line(aTime, this.getVeritcalPosition(aSta), anAC, aColor, channel));
 	}
 
 	public void addNav(JETime aStart, JETime aDur, Integer aSta, Integer anAC, int channel) {
 		updateIndexMap(aStart);
-		this.drawableList.add(new JE802Nav(aStart, aDur, aSta, anAC, channel));
+		this.drawableList.add(new JE802Nav(aStart, aDur, this.getVeritcalPosition(aSta), anAC, channel));
 	}
 
 	public void addBackoff(JETime aStart, JETime aDur, Integer aSta, Integer anAC, String aWindow, Integer aCW, JETime aCWTime,
 			int channel) {
 		updateIndexMap(aStart);
-		this.drawableList.add(new JE802Backoff(aStart, aDur, aSta, anAC, aWindow, aCW, aCWTime, channel));
+		this.drawableList.add(new JE802Backoff(aStart, aDur, this.getVeritcalPosition(aSta), anAC, aWindow, aCW, aCWTime, channel));
 	}
 
 	public void addText(JETime aTime, Integer aSta, String aText, int channel) {
 		updateIndexMap(aTime);
-		this.drawableList.add(new JE802Text(aTime, aSta, aText, channel));
+		this.drawableList.add(new JE802Text(aTime, this.getVeritcalPosition(aSta), aText, channel));
 	}
 
 	public static Color channel2color(int aChannel) {
@@ -381,6 +378,18 @@ public class JE802GuiTimePanel extends JPanel implements KeyListener, MouseWheel
 		default:
 			return Color.black;
 		}
+	}
+	
+	private int getVeritcalPosition(int stationNumber) {
+		Integer position = this.verticalPositionMap.get(stationNumber);
+		if (position==null) {
+			position = this.verticalPositionMap.size()+1;
+			this.verticalPositionMap.put(stationNumber, position);
+			int height = (position * (this.guiContext.thePixel_between_Stations + this.guiContext.thePixel_per_Station) + 100);
+			this.setPreferredSize(new Dimension(0, height));
+			this.setSize(this.getWidth(), height);
+		}
+		return position;
 	}
 
 	@Override
