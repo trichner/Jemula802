@@ -256,7 +256,12 @@ public class JE802Station extends JEmula {
 		} else {
 			this.message("XML definition " + aTopLevelNode.getNodeName() + " found, but JE802Station expected!", 10);
 		}
+		
+		aGui.setupStation(this.address);
+		
 	}
+	
+	
 
 	public JE802_Mac getMac() {
 		return theMac;

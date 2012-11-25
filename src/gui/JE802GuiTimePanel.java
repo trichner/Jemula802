@@ -207,14 +207,19 @@ public class JE802GuiTimePanel extends JPanel implements KeyListener, MouseWheel
 		this.graphics.setFont(new Font("Verdana", Font.PLAIN, 10));
 
 		// draw station labels
-		for (int i = 0; i < this.verticalPositionMap.size(); i++) {
-			int y = 92 + (i * (this.guiContext.thePixel_between_Stations + this.guiContext.thePixel_per_Station));
+		for (Integer stationNumber : this.verticalPositionMap.keySet()) {
+			int verticalPos = this.verticalPositionMap.get(stationNumber);
+			int y = 92 + ((verticalPos-1) * (this.guiContext.thePixel_between_Stations + this.guiContext.thePixel_per_Station));
 			this.graphics.setColor(Color.white);
 			this.graphics.fillRect(0, y, 70, 17);
 			this.graphics.setColor(Color.black);
 			this.graphics.drawRect(0, y, 70, 17);
-			this.graphics.drawString("Station " + (i + 1), 2, y + 12);
+			this.graphics.drawString("Station " + stationNumber, 2, y + 12);
 		}
+	}
+	
+	public void setupStation(int number) {
+		this.getVeritcalPosition(number);
 	}
 
 	private synchronized void drawGrid(Graphics g) {

@@ -210,5 +210,9 @@ public class JE802Gui extends JFrame {
 	private enum OS {
 		WINDOWS, OSX, UNIX
 	}
+	
+	public void setupStation(int number) {
+		this.timePanel.setupStation(number);
+	}
 
 }
