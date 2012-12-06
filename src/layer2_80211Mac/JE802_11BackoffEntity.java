@@ -1353,7 +1353,8 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 			this.warning("Station " + this.theMac.getMacAddress() + " AIFSN < 1: " + dot11edcaaifsn);
 			dot11edcaaifsn = 1;
 		}
-		dot11EDCAAIFSN = dot11edcaaifsn;
+		this.dot11EDCAAIFSN = dot11edcaaifsn;
+		this.theAIFS = this.theSIFS.plus(this.theSlotTime.times(this.dot11EDCAAIFSN));
 	}
 
 	public void setDot11EDCACWmax(Integer dot11edcacWmax) {
