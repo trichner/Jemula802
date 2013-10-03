@@ -20,12 +20,6 @@ GUI
 Jemula provides a GUI to visualize packet traffic among stations. It displays the timeline of packet traffic for each station. Additionally it displays network allocation vectors and backoff times for each station. 
 
 
-Editor
-------
-
-The tool also comes with an editor for creating and editing scenarios. The editor allows to place stations on a map and connect them by mouse, additionally all the different MAC parameters can be configured for each station. For creating bigger scenarios, the editor provides functionality to create lines, grids and circles of stations. You can also select groups of stations to move, rotate or scale them.
-
-
 Animation
 ---------
 
