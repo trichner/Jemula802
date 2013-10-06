@@ -257,7 +257,9 @@ public class JE802Station extends JEmula {
 			this.message("XML definition " + aTopLevelNode.getNodeName() + " found, but JE802Station expected!", 10);
 		}
 		
-		aGui.setupStation(this.address);
+		if (aGui!=null) {
+			aGui.setupStation(this.address);
+		}
 		
 	}
 	
