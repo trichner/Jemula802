@@ -485,4 +485,10 @@ public final class JE802_11Mac extends JE802_Mac {
 	public JE802_11Mlme getMlme() {
 		return this.theMlme;
 	}
+	
+	public JE802_11BackoffEntity getBackoffEntity(int ac) {
+		return this.backoffEntityMap.get(ac);
+	}
+	
+	
 }

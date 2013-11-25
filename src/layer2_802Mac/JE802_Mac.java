@@ -104,5 +104,11 @@ public abstract class JE802_Mac extends JEEventHandler {
 	public int getChannel() {
 		return this.thePhy.getCurrentChannelNumberTX();
 	}
+	
+	public JEEventScheduler getTheUniqueEventScheduler() {
+		return this.theUniqueEventScheduler;
+	}
+	
+	
 
 }

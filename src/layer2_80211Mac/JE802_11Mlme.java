@@ -34,12 +34,15 @@
 
 package layer2_80211Mac;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Random;
 import java.util.Vector;
 import kernel.JEEvent;
 import kernel.JEEventHandler;
 import kernel.JEEventScheduler;
 import kernel.JETime;
+import layer2_802Algorithms.None;
+
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -53,6 +56,7 @@ public class JE802_11Mlme extends JEEventHandler {
 	private JE802_11MacAlgorithm theAlgorithm;
 
 	private boolean ARFEnabled;
+	private boolean showPlot = false;
 
 	public JE802_11Mlme(JEEventScheduler aScheduler, Random aGenerator, Vector<JE802_11BackoffEntity> aListofBackoffEntities,
 			JE802_11Mac aMac, Node aTopLevelNode) {
@@ -61,11 +65,36 @@ public class JE802_11Mlme extends JEEventHandler {
 		Element mlmeElem = (Element) aTopLevelNode;
 		if (mlmeElem.getNodeName().equals("JE802Mlme")) {
 			this.message("XML definition " + mlmeElem.getNodeName() + " found.", 1);
-
 			this.theBackoffEntityList = aListofBackoffEntities;
-
-			this.theAlgorithm = new JE802_11MacAlgorithm(aScheduler, this.theBackoffEntityList, aMac, aGenerator,
-					mlmeElem.getAttribute("NameOfAlgorithm"), new Boolean(mlmeElem.getAttribute("ShowPlot")));
+			this.showPlot = new Boolean(mlmeElem.getAttribute("ShowPlot"));
+			String algorithmName = mlmeElem.getAttribute("NameOfAlgorithm");
+			Class<?> algorithmClass;
+			try {
+				if (algorithmName.startsWith("phymode")) {
+					algorithmClass = Class.forName("layer2_802Algorithms.Phymode");
+				} else {
+					algorithmClass = Class.forName("layer2_802Algorithms."+algorithmName);
+				}
+				this.theAlgorithm = (JE802_11MacAlgorithm) algorithmClass.getConstructor(String.class, JE802_11Mac.class).newInstance(algorithmName,aMac);
+			} catch (ClassNotFoundException e) {
+				this.warning("Class for the algorithm name "+algorithmName+" not found, disabling algorithm.");
+				this.theAlgorithm = new None("None",aMac);
+			} catch (NoClassDefFoundError e) {
+				this.warning("Class for the algorithm name "+algorithmName+" not found, disabling algorithm.");
+				this.theAlgorithm = new None("None",aMac);
+			} catch (InstantiationException e) {
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+			} catch (IllegalArgumentException e) {
+				e.printStackTrace();
+			} catch (InvocationTargetException e) {
+				e.printStackTrace();
+			} catch (NoSuchMethodException e) {
+				e.printStackTrace();
+			} catch (SecurityException e) {
+				e.printStackTrace();
+			} 
 
 			this.theIterationPeriod = new JETime(new Double(mlmeElem.getAttribute("ComputingInterval_ms")));
 
@@ -104,6 +133,9 @@ public class JE802_11Mlme extends JEEventHandler {
 				// algorithm is called periodically
 				if (!ARFEnabled) {
 					this.theAlgorithm.compute();
+					if (this.showPlot) {
+						this.theAlgorithm.plot();
+					}
 					// this.send(new JEEvent("mobilecomputing_req", this,
 					// now.plus(this.theIterationPeriod)));
 				}
@@ -147,6 +179,10 @@ public class JE802_11Mlme extends JEEventHandler {
 
 	public JE802_11MacAlgorithm getTheAlgorithm() {
 		return theAlgorithm;
+	}
+	
+	public JETime getTheIterationPeriod() {
+		return theIterationPeriod;
 	}
 
 }
