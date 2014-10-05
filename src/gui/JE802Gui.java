@@ -77,6 +77,9 @@ public class JE802Gui extends JFrame {
 			case UNIX:
 				javax.swing.UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
 				break;
+			default:
+				javax.swing.UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
+				break;
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

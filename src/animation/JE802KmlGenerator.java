@@ -51,12 +51,12 @@ public abstract class JE802KmlGenerator {
 	// earths circumference
 	private final double circumEarth = 2 * this.earthRadius * Math.PI;
 
-	// height of the antennamodel in meters
-	public final static double antennaModelHeight = 3.2;
+	// height of the antenna model in meters
+	public final static double antennaModelHeight = 20;
 
-	public final static double userModelHeight = 1.6;
+	public final static double userModelHeight = 2.0;
 
-	public final static double antennaConeHeight = 0.98; // antennaConeWidth
+	public final static double antennaConeHeight = 2; // antennaConeWidth
 
 	// document, needed for creating elements
 	protected Document doc;

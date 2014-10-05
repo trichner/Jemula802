@@ -49,7 +49,7 @@ import kernel.JEEvent;
 import kernel.JEEventHandler;
 import kernel.JEEventScheduler;
 import kernel.JETime;
-import layer0_medium.JEIWirelessMedium;
+import layer0_medium.JEWirelessMedium;
 import layer0_medium.JEWirelessChannel;
 import layer2_802Mac.JE802_Mac;
 
@@ -68,7 +68,7 @@ public abstract class JE802Phy extends JEEventHandler {
 
 	protected final JE802Gui theUniqueGui;
 
-	protected final JEIWirelessMedium theUniqueRadioChannel;
+	protected final JEWirelessMedium theUniqueRadioChannel;
 
 	protected JE802Mobility mobility;
 
@@ -92,8 +92,6 @@ public abstract class JE802Phy extends JEEventHandler {
 
 	protected Boolean useGnuRadio;
 
-	protected JE802GnuRadio theRealPhy;
-
 	protected JEAntenna theAntenna;
 
 	protected int currentChannelNumberRX;
@@ -106,7 +104,7 @@ public abstract class JE802Phy extends JEEventHandler {
 
 	protected boolean onceTx = false;
 
-	public JE802Phy(JEEventScheduler aScheduler, JE802StatEval statEval, Random aGenerator, JEIWirelessMedium aChannel,
+	public JE802Phy(JEEventScheduler aScheduler, JE802StatEval statEval, Random aGenerator, JEWirelessMedium aChannel,
 			JE802Gui aGui, Node aTopLevelNode, JE802_Mac theMac) throws XPathExpressionException {
 
 		super(aScheduler, aGenerator);
@@ -249,15 +247,7 @@ public abstract class JE802Phy extends JEEventHandler {
 	}
 
 	public boolean isCcaBusy() {
-		if (this.useGnuRadio)
-			return theGnuRadioisCcaBusy();
 		double powerLevel_mW = this.theUniqueRadioChannel.getRxPowerLevel_mW(this);
-		boolean busy = powerLevel_mW > this.theUniqueRadioChannel.getBusyPowerLevel_mW();
-		return busy;
-	}
-
-	public boolean theGnuRadioisCcaBusy() {
-		double powerLevel_mW = this.theRealPhy.getCca_mW();
 		boolean busy = powerLevel_mW > this.theUniqueRadioChannel.getBusyPowerLevel_mW();
 		return busy;
 	}

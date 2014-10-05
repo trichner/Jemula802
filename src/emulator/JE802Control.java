@@ -36,9 +36,6 @@ package emulator;
 
 import gui.JE802Gui;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -54,7 +51,7 @@ import kernel.JEEventScheduler;
 import kernel.JETime;
 import kernel.JEmula;
 import layer0_medium.JE802MediumInterferenceModel;
-import layer0_medium.JEIWirelessMedium;
+import layer0_medium.JEWirelessMedium;
 import layer0_medium.JEMediumUnitDisk;
 
 import layer1_802Phy.JE802PhyMode;
@@ -85,7 +82,7 @@ public class JE802Control extends JEmula {
 
 	private JEEventScheduler theUniqueEventScheduler;
 
-	private JEIWirelessMedium theUniqueWirelessMedium;
+	private JEWirelessMedium theUniqueWirelessMedium;
 
 	private Random theUniqueRandomBaseGenerator;
 
@@ -115,57 +112,28 @@ public class JE802Control extends JEmula {
 		this.stations = new ArrayList<JE802Station>(); // queue of stations
 		this.parse_xml_and_create_entities();
 		this.path2Results = statEval.getPath2Results();
-		this.theUniqueEventScheduler.setPath2Results(this.path2Results); // we
-																			// give
-																			// this
-																			// path
-																			// to
-																			// the
-																			// scheduler
-																			// to
-																			// allow
-																			// kernel
-																			// file
-																			// outputs
-																			// such
-																			// as
+		this.theUniqueEventScheduler.setPath2Results(this.path2Results);
 	}
 
-	public void startSimulation() {
-		// long before = System.currentTimeMillis(); TODO: Roman: variable not
-		// used, delete
-		this.theUniqueEventScheduler.start(); // the event scheduler will now
-												// start, and then control the
-												// entire emulation
-		try {
-			FileWriter writer = new FileWriter(new File(this.path2Results + "/retransmissionRates.txt"));
-			writer.write("ID\tLost\tTransmitted\tRate\n");
-			long lostSum = 0;
-			long transmittedSum = 0;
-			for (JE802Station station : stations) {
-				station.displayLossrate();
-				long lost = station.getLostPackets();
-				lostSum += lost;
-				long transmitted = station.getTransmittedPackets();
-				transmittedSum += transmitted;
-				double r = (double) lost / transmitted;
-				writer.write("Station " + station.getMacAddress() + "\t" + lost + "\t" + transmitted + "\t" + r + "\n");
+	public void emulate() {
+		this.theUniqueEventScheduler.start();
+		// the event scheduler will now start, and then control the entire
+		// emulation
+	}
 
-			}
-			double rate = (double) lostSum / transmittedSum;
-			writer.write("Overall: " + lostSum + "\t" + transmittedSum + "\t" + rate);
-			writer.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
+	public void animate() {
 		if (kmlWriter != null) {
-			this.message("Creating animation now. This might take some time ...", 100);
+			this.message(
+					"Creating animation now. This might take some time ...",
+					100);
 			long beforeAnim = System.currentTimeMillis();
 			kmlWriter.createDOM();
 			kmlWriter.writeDOMtoFile();
 			kmlWriter.createKMZArchive();
-			this.message("Done. Creating animation took " + (System.currentTimeMillis() - beforeAnim) / 60 + " seconds.", 100);
+			this.message(
+					"Done. Creating animation took "
+							+ (System.currentTimeMillis() - beforeAnim) / 60
+							+ " seconds.", 100);
 		}
 		this.configuration = null;
 	}
@@ -209,7 +177,8 @@ public class JE802Control extends JEmula {
 		for (JE802Station station : stations) {
 			List<Integer> wiredStations = station.getWiredAddresses();
 			if (wiredStations != null) {
-				List<JE802Station> wiredToSation = new ArrayList<JE802Station>(wiredStations.size());
+				List<JE802Station> wiredToSation = new ArrayList<JE802Station>(
+						wiredStations.size());
 				for (Integer addr : wiredStations) {
 					for (JE802Station station2 : stations) {
 						if (station2.getMacAddress() == addr) {
@@ -222,8 +191,10 @@ public class JE802Control extends JEmula {
 		}
 	}
 
-	private void createRoutingConstants(Node theTopLevelNode, XPath xpath) throws XPathExpressionException {
-		Element routingParameters = (Element) xpath.evaluate("JE802RoutingParameters", theTopLevelNode, XPathConstants.NODE);
+	private void createRoutingConstants(Node theTopLevelNode, XPath xpath)
+			throws XPathExpressionException {
+		Element routingParameters = (Element) xpath.evaluate(
+				"JE802RoutingParameters", theTopLevelNode, XPathConstants.NODE);
 		if (routingParameters == null) {
 			this.warning("No <JE802RoutingParameters> in XML, using default values");
 			return;
@@ -236,21 +207,25 @@ public class JE802Control extends JEmula {
 		}
 
 		// dynamicChannelSwitching enabled
-		String switchingStr = routingParameters.getAttribute("channelSwitchingEnabled");
+		String switchingStr = routingParameters
+				.getAttribute("channelSwitchingEnabled");
 		if (!switchingStr.isEmpty()) {
-			JE802RoutingConstants.channelSwitchingEnabled = new Boolean(switchingStr);
+			JE802RoutingConstants.channelSwitchingEnabled = new Boolean(
+					switchingStr);
 		} else {
 			JE802RoutingConstants.channelSwitchingEnabled = false;
 		}
 
-		String mcrMetricStr = routingParameters.getAttribute("multiChannelPathMetricEnabled");
+		String mcrMetricStr = routingParameters
+				.getAttribute("multiChannelPathMetricEnabled");
 		if (!mcrMetricStr.isEmpty()) {
 			JE802RoutingConstants.MCRMetricEnabled = new Boolean(mcrMetricStr);
 		} else {
 			JE802RoutingConstants.MCRMetricEnabled = false;
 		}
 
-		String routeTimeout = routingParameters.getAttribute("activeRouteTimeout_ms");
+		String routeTimeout = routingParameters
+				.getAttribute("activeRouteTimeout_ms");
 		if (!routeTimeout.isEmpty()) {
 			double timeOut = new Double(routeTimeout);
 			JE802RoutingConstants.ACTIVE_ROUTE_TIMEOUT = new JETime(timeOut);
@@ -258,7 +233,8 @@ public class JE802Control extends JEmula {
 			JE802RoutingConstants.ACTIVE_ROUTE_TIMEOUT = new JETime(3000.0);
 		}
 
-		String ipHeaderLengthStr = routingParameters.getAttribute("ipHeaderByte");
+		String ipHeaderLengthStr = routingParameters
+				.getAttribute("ipHeaderByte");
 		if (!ipHeaderLengthStr.isEmpty()) {
 			int headerLength = new Integer(ipHeaderLengthStr);
 			JE802RoutingConstants.IP_HEADER_BYTE = headerLength;
@@ -266,7 +242,8 @@ public class JE802Control extends JEmula {
 			JE802RoutingConstants.IP_HEADER_BYTE = 20;
 		}
 
-		String brokenStr = routingParameters.getAttribute("brokenLinkAfterLoss");
+		String brokenStr = routingParameters
+				.getAttribute("brokenLinkAfterLoss");
 		if (!brokenStr.isEmpty()) {
 			int brokenAfter = new Integer(brokenStr);
 			JE802RoutingConstants.LINK_BREAK_AFTER_LOSS = brokenAfter;
@@ -282,7 +259,8 @@ public class JE802Control extends JEmula {
 			JE802RoutingConstants.maxTTL = 5;
 		}
 
-		String helloIntervalStr = routingParameters.getAttribute("helloInterval_ms");
+		String helloIntervalStr = routingParameters
+				.getAttribute("helloInterval_ms");
 		if (!helloIntervalStr.isEmpty()) {
 			double interval = new Integer(helloIntervalStr);
 			JE802RoutingConstants.HELLO_INTERVAL_MS = new JETime(interval);
@@ -290,7 +268,8 @@ public class JE802Control extends JEmula {
 			JE802RoutingConstants.HELLO_INTERVAL_MS = new JETime(2000);
 		}
 
-		String channelDelayStr = routingParameters.getAttribute("channelSwitchingDelay_ms");
+		String channelDelayStr = routingParameters
+				.getAttribute("channelSwitchingDelay_ms");
 		if (!channelDelayStr.isEmpty()) {
 			double delay = new Double(channelDelayStr);
 			JE802RoutingConstants.CHANNEL_SWITCHING_DELAY = new JETime(delay);
@@ -299,31 +278,42 @@ public class JE802Control extends JEmula {
 		}
 	}
 
-	private void createStations(Node theTopLevelNode, XPath xpath) throws XPathExpressionException {
+	private void createStations(Node theTopLevelNode, XPath xpath)
+			throws XPathExpressionException {
 		// stations
-		NodeList stationNodeList = (NodeList) xpath.evaluate("JE802Station", theTopLevelNode, XPathConstants.NODESET);
-		Element animationNode = (Element) xpath.evaluate("//JE802Animation", theTopLevelNode, XPathConstants.NODE);
-		Double longitude = new Double(animationNode.getAttribute("baseLongitude"));
+		NodeList stationNodeList = (NodeList) xpath.evaluate("JE802Station",
+				theTopLevelNode, XPathConstants.NODESET);
+		Element animationNode = (Element) xpath.evaluate("//JE802Animation",
+				theTopLevelNode, XPathConstants.NODE);
+		Double longitude = new Double(
+				animationNode.getAttribute("baseLongitude"));
 		Double latitude = new Double(animationNode.getAttribute("baseLatitude"));
 		for (int i = 0; i < stationNodeList.getLength(); i++) {
 			Node stationNode = stationNodeList.item(i);
-			JE802Station station = new JE802Station(theUniqueEventScheduler, theUniqueWirelessMedium,
-					theUniqueRandomBaseGenerator, theUniqueGui, statEval, stationNode, phyModes, longitude, latitude);
+			JE802Station station = new JE802Station(theUniqueEventScheduler,
+					theUniqueWirelessMedium, theUniqueRandomBaseGenerator,
+					theUniqueGui, statEval, stationNode, phyModes, longitude,
+					latitude);
 			this.stations.add(station);
-			if (!useInterferenceModel && station.getMac().getPhy().getAntenna().isDirectional()) {
-				this.warning("Station :" + station.getMacAddress()
-						+ " Directional antennas are only allowed when using the interference model."
+			if (!useInterferenceModel
+					&& station.getMac().getPhy().getAntenna().isDirectional()) {
+				this.warning("Station "
+						+ station.getMacAddress()
+						+ ": Directional antennas are only allowed when using the interference model."
 						+ " An omnidirectional antenna is used instead.");
 				station.getMac().getPhy().useOmnidirectionalAntenna();
 			}
 		}
 	}
 
-	private void createPhyModes(Node theTopLevelNode, XPath xpath) throws XPathExpressionException {
+	private void createPhyModes(Node theTopLevelNode, XPath xpath)
+			throws XPathExpressionException {
 		// phymodes
-		Node phyModesNode = (Node) xpath.evaluate("JE802PhyModes", theTopLevelNode, XPathConstants.NODE);
+		Node phyModesNode = (Node) xpath.evaluate("JE802PhyModes",
+				theTopLevelNode, XPathConstants.NODE);
 		if (phyModesNode != null) {
-			NodeList phyModeList = (NodeList) xpath.evaluate("aPhyMode", phyModesNode, XPathConstants.NODESET);
+			NodeList phyModeList = (NodeList) xpath.evaluate("aPhyMode",
+					phyModesNode, XPathConstants.NODESET);
 			for (int i = 0; i < phyModeList.getLength(); i++) {
 				Node phyNode = phyModeList.item(i);
 				phyModes.add(new JE802PhyMode(phyNode));
@@ -334,32 +324,42 @@ public class JE802Control extends JEmula {
 		}
 	}
 
-	private void createAnimation(Node theTopLevelNode, XPath xpath) throws XPathExpressionException {
+	private void createAnimation(Node theTopLevelNode, XPath xpath)
+			throws XPathExpressionException {
 		// animation
 		String resultPath = statEval.getPath2Results();
-		Element animationNode = (Element) xpath.evaluate("//JE802Animation", theTopLevelNode, XPathConstants.NODE);
-		if (new Boolean(animationNode.getAttribute("generateGEarth"))) {
-			kmlWriter = new JE802KmlWriter(animationNode, resultPath, this.configuration.getDocumentURI(), this.stations,
+		Element animationNode = (Element) xpath.evaluate("//JE802Animation",
+				theTopLevelNode, XPathConstants.NODE);
+		if (new Boolean(animationNode.getAttribute("generateGoogleEarth"))) {
+			kmlWriter = new JE802KmlWriter(animationNode, resultPath,
+					this.configuration.getDocumentURI(), this.stations,
 					this.theUniqueWirelessMedium.getReuseDistance());
 		}
 
 	}
 
-	private void createControlElement(Node theTopLevelNode, XPath xpath) throws XPathExpressionException {
+	private void createControlElement(Node theTopLevelNode, XPath xpath)
+			throws XPathExpressionException {
 		// find control element
-		Element controlElem = (Element) xpath.evaluate("JE802Control", theTopLevelNode, XPathConstants.NODE);
+		Element controlElem = (Element) xpath.evaluate("JE802Control",
+				theTopLevelNode, XPathConstants.NODE);
 		if (controlElem != null) {
 			// set emulation duration
-			JETime anEmulationEnd = new JETime(Double.parseDouble((controlElem).getAttribute("EmulationDuration_ms")));
+			JETime anEmulationEnd = new JETime(Double.parseDouble((controlElem)
+					.getAttribute("EmulationDuration_ms")));
 			theUniqueEventScheduler.setEmulationEnd(anEmulationEnd);
 
 			// stat eval
-			Node statEvalNode = (Node) xpath.evaluate("JE802StatEval", controlElem, XPathConstants.NODE);
+			Node statEvalNode = (Node) xpath.evaluate("JE802StatEval",
+					controlElem, XPathConstants.NODE);
 			if (statEvalNode != null) {
-				long aSeed = new Long(((Element) statEvalNode).getAttribute("seed"));
+				long aSeed = new Long(
+						((Element) statEvalNode).getAttribute("seed"));
 				theUniqueRandomBaseGenerator = new Random(aSeed);
-				statEval = new JE802StatEval(theUniqueEventScheduler, theUniqueRandomBaseGenerator, statEvalNode);
-				statEval.send(new JEEvent("start_req", statEval, theUniqueEventScheduler.now()));
+				statEval = new JE802StatEval(theUniqueEventScheduler,
+						theUniqueRandomBaseGenerator, statEvalNode);
+				statEval.send(new JEEvent("start_req", statEval,
+						theUniqueEventScheduler.now()));
 			} else {
 				this.warning("No JE802StatEval node specified in xml");
 			}
@@ -368,37 +368,33 @@ public class JE802Control extends JEmula {
 		}
 	}
 
-	private void createCommuniCore(Node theTopLevelNode, XPath xpath) throws XPathExpressionException {
-		Node communiCoreNode = null;
-
-		communiCoreNode = (Node) xpath.evaluate("JE802CommuniCore", theTopLevelNode, XPathConstants.NODE);
-		if (communiCoreNode != null) {
-		} else {
-			this.warning("No JE802CommuniCore node specified in xml");
-		}
-	}
-
-	private void createWirelessChannels(Node theTopLevelNode, XPath xpath) throws XPathExpressionException {
+	private void createWirelessChannels(Node theTopLevelNode, XPath xpath)
+			throws XPathExpressionException {
 		Node channelNode = null;
 		boolean channel_is_defined = false;
 
-		channelNode = (Node) xpath.evaluate("JEWirelessChannels", theTopLevelNode, XPathConstants.NODE);
+		channelNode = (Node) xpath.evaluate("JEWirelessChannels",
+				theTopLevelNode, XPathConstants.NODE);
 		if (channelNode != null) {
 			channel_is_defined = true;
-			Node interference = (Node) xpath
-					.evaluate("JEWirelessChannels/@useInterference", theTopLevelNode, XPathConstants.NODE);
+			Node interference = (Node) xpath.evaluate(
+					"JEWirelessChannels/@useInterference", theTopLevelNode,
+					XPathConstants.NODE);
 			if (interference != null) {
 				useInterferenceModel = new Boolean(interference.getNodeValue());
 				if (useInterferenceModel) {
-					theUniqueWirelessMedium = new JE802MediumInterferenceModel(theUniqueEventScheduler,
+					theUniqueWirelessMedium = new JE802MediumInterferenceModel(
+							theUniqueEventScheduler,
 							theUniqueRandomBaseGenerator, channelNode);
 				} else {
-					theUniqueWirelessMedium = new JEMediumUnitDisk(theUniqueGui, theUniqueEventScheduler,
+					theUniqueWirelessMedium = new JEMediumUnitDisk(
+							theUniqueGui, theUniqueEventScheduler,
 							theUniqueRandomBaseGenerator, channelNode);
 				}
 			} else {
-				theUniqueWirelessMedium = new JEMediumUnitDisk(theUniqueGui, theUniqueEventScheduler,
-						theUniqueRandomBaseGenerator, channelNode);
+				theUniqueWirelessMedium = new JEMediumUnitDisk(theUniqueGui,
+						theUniqueEventScheduler, theUniqueRandomBaseGenerator,
+						channelNode);
 			}
 
 		} else {

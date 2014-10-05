@@ -46,14 +46,12 @@ import javax.xml.xpath.XPathFactory;
 import kernel.JEEvent;
 import kernel.JEEventScheduler;
 import kernel.JETime;
-import layer0_medium.JEIWirelessMedium;
+import layer0_medium.JEWirelessMedium;
 import layer0_medium.JEWirelessChannel;
-import layer1_802Phy.JE802GnuRadio;
 import layer1_802Phy.JE802Phy;
 import layer1_802Phy.JE802Ppdu;
 import layer2_80211Mac.JE802_11Mac;
 import layer2_80211Mac.JE802_11Mpdu;
-//import layer2_802Mac.JE802_Mpdu;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -78,10 +76,13 @@ public class JE802_11Phy extends JE802Phy {
 
 	private JETime emulationEnd, halfDuration;
 
-	public JE802_11Phy(JEEventScheduler aScheduler, JE802StatEval statEval, Random aGenerator, JEIWirelessMedium aChannel,
-			JE802Gui aGui, Node aTopLevelNode, JE802_11Mac theMac) throws XPathExpressionException {
+	public JE802_11Phy(JEEventScheduler aScheduler, JE802StatEval statEval,
+			Random aGenerator, JEWirelessMedium aChannel, JE802Gui aGui,
+			Node aTopLevelNode, JE802_11Mac theMac)
+			throws XPathExpressionException {
 
-		super(aScheduler, statEval, aGenerator, aChannel, aGui, aTopLevelNode, theMac);
+		super(aScheduler, statEval, aGenerator, aChannel, aGui, aTopLevelNode,
+				theMac);
 
 		Element phyElem = (Element) aTopLevelNode;
 
@@ -93,33 +94,41 @@ public class JE802_11Phy extends JE802Phy {
 			if (GnuRadio.equals("")) {
 				this.useGnuRadio = false;
 			} else {
-				this.useGnuRadio = new Boolean(phyElem.getAttribute("useGnuRadio"));
-			}
-
-			if (this.useGnuRadio) {
-				this.message("Station " + this.theMac.getMacAddress() + " connecting to GnuRadio now.");
-				this.theRealPhy = new JE802GnuRadio(this.theMac.getMacAddress());
+				this.useGnuRadio = new Boolean(
+						phyElem.getAttribute("useGnuRadio"));
 			}
 
 			// mib
-			Element mibElem = (Element) xpath.evaluate("MIB802.11abgn", phyElem, XPathConstants.NODE);
+			Element mibElem = (Element) xpath.evaluate("MIB802.11abgn",
+					phyElem, XPathConstants.NODE);
 			if (mibElem != null) {
-				this.aSlotTime = new JETime(new Double(mibElem.getAttribute("aSlotTime")));
+				this.aSlotTime = new JETime(new Double(
+						mibElem.getAttribute("aSlotTime")));
 				this.SIFS = new JETime(new Double(mibElem.getAttribute("SIFS")));
-				this.currentTransmitPowerLevel_dBm = new Double(mibElem.getAttribute("dot11CurrentTransmitPowerLevel_dBm"));
-				this.currentTransmitPower_mW = Math.pow(10, (currentTransmitPowerLevel_dBm - 30) / 10);
-				this.currentChannelNumberRX = new Integer(mibElem.getAttribute("dot11CurrentChannelNumberRX"));
-				this.currentChannelNumberTX = new Integer(mibElem.getAttribute("dot11CurrentChannelNumberTX"));
+				this.currentTransmitPowerLevel_dBm = new Double(
+						mibElem.getAttribute("dot11CurrentTransmitPowerLevel_dBm"));
+				this.currentTransmitPower_mW = Math.pow(10,
+						(currentTransmitPowerLevel_dBm - 30) / 10);
+				this.currentChannelNumberRX = new Integer(
+						mibElem.getAttribute("dot11CurrentChannelNumberRX"));
+				this.currentChannelNumberTX = new Integer(
+						mibElem.getAttribute("dot11CurrentChannelNumberTX"));
 			} else {
 				this.error("No MIB802.11abgn definition found !!!");
 			}
 
-			this.SymbolDuration = new JETime(new Double(phyElem.getAttribute("SymbolDuration_ms")));
-			this.PLCPTail_bit = new Integer(phyElem.getAttribute("PLCPTail_bit"));
-			this.PLCPServiceField_bit = new Integer(phyElem.getAttribute("PLCPServiceField_bit"));
-			this.PLCPHeaderWithoutServiceField = new JETime(new Double(phyElem.getAttribute("PLCPHeaderWithoutServiceField_ms")));
-			this.PLCPPreamble = new JETime(new Double(phyElem.getAttribute("PLCPPreamble_ms")));
-			this.PLCPHeaderDuration = this.PLCPPreamble.plus(PLCPHeaderWithoutServiceField);
+			this.SymbolDuration = new JETime(new Double(
+					phyElem.getAttribute("SymbolDuration_ms")));
+			this.PLCPTail_bit = new Integer(
+					phyElem.getAttribute("PLCPTail_bit"));
+			this.PLCPServiceField_bit = new Integer(
+					phyElem.getAttribute("PLCPServiceField_bit"));
+			this.PLCPHeaderWithoutServiceField = new JETime(new Double(
+					phyElem.getAttribute("PLCPHeaderWithoutServiceField_ms")));
+			this.PLCPPreamble = new JETime(new Double(
+					phyElem.getAttribute("PLCPPreamble_ms")));
+			this.PLCPHeaderDuration = this.PLCPPreamble
+					.plus(PLCPHeaderWithoutServiceField);
 
 		} else {
 			this.error("Construction of JE802Phy did not receive JE802Phy xml node");
@@ -146,26 +155,34 @@ public class JE802_11Phy extends JE802Phy {
 				// ignore;
 
 			} else if (anEventName.equals("start_req")) {
-				this.message("PHY received event start_req while in idle state", 1);
+				this.message(
+						"PHY received event start_req while in idle state", 1);
 
 				this.parameterlist.clear();
 				this.parameterlist.add(this);
-				this.send(new JEEvent("register_req", this.theUniqueRadioChannel.getHandlerId(), now, this.parameterlist));
+				this.send(new JEEvent("register_req",
+						this.theUniqueRadioChannel.getHandlerId(), now,
+						this.parameterlist));
 				if (this.currentChannelNumberRX != this.currentChannelNumberTX) {
 					// register TX channel scanning
-					this.send(new JEEvent("registerCcaTX_req", this.theUniqueRadioChannel.getHandlerId(), now, this.parameterlist));
+					this.send(new JEEvent("registerCcaTX_req",
+							this.theUniqueRadioChannel.getHandlerId(), now,
+							this.parameterlist));
 				}
 				if (mobility.isMobile()) {
-					this.send(new JEEvent("location_update", this, mobility.getTraceStartTime()));
+					this.send(new JEEvent("location_update", this, mobility
+							.getTraceStartTime()));
 				}
 
 				this.theState = state.active;
 
 			} else {
-				this.error("undefined event '" + anEventName + "' in state " + this.theState);
+				this.error("undefined event '" + anEventName + "' in state "
+						+ this.theState);
 			}
 
-		} else if (this.theState == state.active || this.theState == state.active_sync) {
+		} else if (this.theState == state.active
+				|| this.theState == state.active_sync) {
 
 			if (anEventName.equals("PHY_SyncEnd_ind")) { // Pietro: we need to
 															// check which MAC
@@ -173,19 +190,22 @@ public class JE802_11Phy extends JE802Phy {
 															// packet
 				this.parameterlist.clear();
 				this.parameterlist = anEvent.getParameterList();
-				JE802_11Ppdu aPpdu = (JE802_11Ppdu) this.parameterlist.elementAt(0);
-				if (!aPpdu.isJammed() && currentTxEnd.isEarlierThan(now) && concurrentRx == 1) { // Pietro:
-																									// get
-																									// the
-																									// mac
-																									// Mpdu
+				JE802_11Ppdu aPpdu = (JE802_11Ppdu) this.parameterlist
+						.elementAt(0);
+				if (!aPpdu.isJammed() && currentTxEnd.isEarlierThan(now)
+						&& concurrentRx == 1) { // Pietro:
+												// get
+												// the
+												// mac
+												// Mpdu
 					JE802_11Mpdu aMpdu = aPpdu.getMpdu();
 					this.parameterlist = new Vector<Object>();
 					this.parameterlist.add(aMpdu.getDA());
 					this.parameterlist.add(aMpdu.getAC());
 					this.parameterlist.add(aMpdu.getNav());
 					// this.parameterlist.addAll(aMpdu.getStartParameterList());
-					this.send(new JEEvent("PHY_RxStart_ind", this.theMac, now, this.parameterlist));
+					this.send(new JEEvent("PHY_RxStart_ind", this.theMac, now,
+							this.parameterlist));
 				}
 				this.theState = state.active;
 
@@ -197,14 +217,17 @@ public class JE802_11Phy extends JE802Phy {
 					maxConcurrentRx = concurrentRx;
 				}
 				JE802Ppdu aPpdu = (JE802Ppdu) this.parameterlist.elementAt(0);
-				if (!aPpdu.isJammed() && this.currentTxEnd.isEarlierThan(now) && this.currentRxEnd.isEarlierThan(now)) {
+				if (!aPpdu.isJammed() && this.currentTxEnd.isEarlierThan(now)
+						&& this.currentRxEnd.isEarlierThan(now)) {
 					this.send(new JEEvent("PHY_SyncStart_ind", this.theMac, now));
-					this.send(new JEEvent("PHY_SyncEnd_ind", this, now.plus(PLCPHeaderDuration), this.parameterlist));
+					this.send(new JEEvent("PHY_SyncEnd_ind", this, now
+							.plus(PLCPHeaderDuration), this.parameterlist));
 					// this.theState = state.active_sync; // for a short amount
 					// of time, change state to sync, until SyncEnt
 				}
 				JETime receptionDuration = aPpdu.getMpdu().getTxTime();
-				statEval.recordPowerRx(theMac.getMacAddress(), this.getHandlerId(), now, receptionDuration);
+				statEval.recordPowerRx(theMac.getMacAddress(),
+						this.getHandlerId(), now, receptionDuration);
 				JETime newRxEnd = now.plus(aPpdu.getMpdu().getTxTime());
 				if (newRxEnd.isLaterThan(currentRxEnd)) {
 					this.currentRxEnd = newRxEnd;
@@ -220,13 +243,15 @@ public class JE802_11Phy extends JE802Phy {
 				// if the current rxStart was later than the txEnd otherwise,
 				// don't even report because its garbage anyway and we are not
 				// in reception state
-				if (now.minus(aPpdu.getMpdu().getTxTime()).isLaterThan(currentTxEnd)) {
+				if (now.minus(aPpdu.getMpdu().getTxTime()).isLaterThan(
+						currentTxEnd)) {
 					if (aPpdu.isJammed() || maxConcurrentRx > 1) {
 						parameterList.add(null);
 					} else {
 						parameterList.add(aPpdu.getMpdu());
 					}
-					this.send(new JEEvent("PHY_RxEnd_ind", this.theMac.getHandlerId(), theUniqueEventScheduler.now(),
+					this.send(new JEEvent("PHY_RxEnd_ind", this.theMac
+							.getHandlerId(), theUniqueEventScheduler.now(),
 							parameterList));
 				}
 				if (now.getTimeMs() == currentRxEnd.getTimeMs()) {
@@ -236,7 +261,8 @@ public class JE802_11Phy extends JE802Phy {
 			} else if (anEventName.equals("PHY_ChannelSwitch_req")) {
 
 				int from = this.currentChannelNumberTX;
-				this.currentChannelNumberRX = (Integer) anEvent.getParameterList().elementAt(0);
+				this.currentChannelNumberRX = (Integer) anEvent
+						.getParameterList().elementAt(0);
 				this.currentChannelNumberTX = this.currentChannelNumberRX;
 				this.concurrentRx = 0;
 				this.currentRxEnd = new JETime(-1);
@@ -246,7 +272,9 @@ public class JE802_11Phy extends JE802Phy {
 				this.parameterlist.add(from);
 				this.parameterlist.add(currentChannelNumberTX);
 				// do not switch channel while transmitting a packet
-				this.send(new JEEvent("channel_switch_req", this.theUniqueRadioChannel.getHandlerId(), now, this.parameterlist));
+				this.send(new JEEvent("channel_switch_req",
+						this.theUniqueRadioChannel.getHandlerId(), now,
+						this.parameterlist));
 
 			} else if (anEventName.equals("PHY_TxStart_req")) {
 
@@ -255,11 +283,15 @@ public class JE802_11Phy extends JE802Phy {
 
 				// Pietro: here we need to know if either a 802.11 or 802.15
 				// frame shall be transmitted
-				JE802_11Mpdu aMpdu = (JE802_11Mpdu) this.parameterlist.elementAt(0);
+				JE802_11Mpdu aMpdu = (JE802_11Mpdu) this.parameterlist
+						.elementAt(0);
 				statEval.addPacketForCounts(aMpdu);
-				JE802_11Ppdu aPpdu = new JE802_11Ppdu(aMpdu, this.currentTransmitPowerLevel_dBm, this.currentChannelNumberTX);
+				JE802_11Ppdu aPpdu = new JE802_11Ppdu(aMpdu,
+						this.currentTransmitPowerLevel_dBm,
+						this.currentChannelNumberTX);
 				JETime txDuration = aMpdu.getTxTime();
-				statEval.recordPowerTx(theMac.getMacAddress(), this.getHandlerId(), now, txDuration);
+				statEval.recordPowerTx(theMac.getMacAddress(),
+						this.getHandlerId(), now, txDuration);
 				currentTxEnd = now.plus(aMpdu.getTxTime());
 				this.parameterlist.clear();
 				this.parameterlist.addElement(this);
@@ -269,7 +301,8 @@ public class JE802_11Phy extends JE802Phy {
 				if (theUniqueGui != null) {
 					String type = aMpdu.getType() + " " + aMpdu.getSeqNo();
 					if (aMpdu.isData()) {
-						String ipPacketType = aMpdu.getPayload().getClass().getName();
+						String ipPacketType = aMpdu.getPayload().getClass()
+								.getName();
 						if (ipPacketType.contains("RREQ")) {
 							type = type + " RREQ";
 						} else if (ipPacketType.contains("RREP")) {
@@ -278,38 +311,42 @@ public class JE802_11Phy extends JE802Phy {
 							type = type + " RERR";
 						}
 					}
-					theUniqueGui.addFrame(theUniqueEventScheduler.now(), aMpdu.getTxTime(), aPpdu.getChannelNumber(),
-							aMpdu.getSA(), type, (aMpdu.getPhyMode().toString()), "DA: " + aMpdu.getDA(),
-							this.currentChannelNumberTX);
+					theUniqueGui
+							.addFrame(theUniqueEventScheduler.now(),
+									aMpdu.getTxTime(),
+									aPpdu.getChannelNumber(), aMpdu.getSA(),
+									type, (aMpdu.getPhyMode().toString()),
+									"DA: " + aMpdu.getDA(),
+									this.currentChannelNumberTX);
 				}
 
-				if (this.useGnuRadio) {
-					// request radio to transmit frame
-					this.theRealPhy.tx(aPpdu);
+				// forward MPDU as PPDU to channel:
+				this.send(new JEEvent("MEDIUM_TxStart_req",
+						this.theUniqueRadioChannel.getHandlerId(), now,
+						this.parameterlist));
 
-				} else {
-					// forward MPDU as PPDU to channel:
-					this.send(new JEEvent("MEDIUM_TxStart_req", this.theUniqueRadioChannel.getHandlerId(), now,
-							this.parameterlist));
-
-					this.parameterlist.clear();
-					this.parameterlist.addElement(aPpdu.getMpdu().getAC());
-					this.send(new JEEvent("PHY_TxEnd_ind", this.theMac, now.plus(aMpdu.getTxTime()), this.parameterlist));
-
-				}
+				this.parameterlist.clear();
+				this.parameterlist.addElement(aPpdu.getMpdu().getAC());
+				this.send(new JEEvent("PHY_TxEnd_ind", this.theMac, now
+						.plus(aMpdu.getTxTime()), this.parameterlist));
 
 			} else if (anEventName.equals("location_update")) {
 				this.parameterlist = new Vector<Object>();
 				this.parameterlist.add(this);
-				this.send(new JEEvent("location_update_req", this.theUniqueRadioChannel.getHandlerId(), now, parameterlist));
+				this.send(new JEEvent("location_update_req",
+						this.theUniqueRadioChannel.getHandlerId(), now,
+						parameterlist));
 				if (this.theMac.getMacAddress() == 2) {
 					if (now.isEarlierEqualThan(this.halfDuration)) {
-						this.mobility.setXLocation(this.mobility.getXLocation() + 0.005);
+						this.mobility
+								.setXLocation(this.mobility.getXLocation() + 0.005);
 					} else {
-						this.mobility.setXLocation(this.mobility.getXLocation() - 0.005);
+						this.mobility
+								.setXLocation(this.mobility.getXLocation() - 0.005);
 					}
 				}
-				this.send(new JEEvent("location_update", this, now.plus(mobility.getInterpolationInterval_ms())));
+				this.send(new JEEvent("location_update", this, now
+						.plus(mobility.getInterpolationInterval_ms())));
 
 			} else if (anEventName.equals("start_req")) {
 				// ignore
@@ -318,7 +355,8 @@ public class JE802_11Phy extends JE802Phy {
 				this.theState = state.idle;
 
 			} else {
-				this.error("undefined event '" + anEventName + "' in state " + this.theState);
+				this.error("undefined event '" + anEventName + "' in state "
+						+ this.theState);
 			}
 
 		} else {
@@ -387,7 +425,8 @@ public class JE802_11Phy extends JE802Phy {
 
 	@Override
 	public String toString() {
-		return ("Phy" + this.theMac.getMacAddress() + "_Rx" + this.currentChannelNumberRX + "_Tx" + this.currentChannelNumberTX);
+		return ("Phy" + this.theMac.getMacAddress() + "_Rx"
+				+ this.currentChannelNumberRX + "_Tx" + this.currentChannelNumberTX);
 	}
 
 	public JETime getPLCPHeaderDuration() {
@@ -400,16 +439,11 @@ public class JE802_11Phy extends JE802Phy {
 	}
 
 	public boolean isCcaBusy() {
-		if (this.useGnuRadio)
-			return theGnuRadioisCcaBusy();
-		double powerLevel_mW = this.theUniqueRadioChannel.getRxPowerLevel_mW(this);
-		boolean busy = powerLevel_mW > this.theUniqueRadioChannel.getBusyPowerLevel_mW();
+		double powerLevel_mW = this.theUniqueRadioChannel
+				.getRxPowerLevel_mW(this);
+		boolean busy = powerLevel_mW > this.theUniqueRadioChannel
+				.getBusyPowerLevel_mW();
 		return busy;
 	}
 
-	public boolean theGnuRadioisCcaBusy() {
-		double powerLevel_mW = this.theRealPhy.getCca_mW();
-		boolean busy = powerLevel_mW > this.theUniqueRadioChannel.getBusyPowerLevel_mW();
-		return busy;
-	}
 }

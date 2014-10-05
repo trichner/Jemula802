@@ -5,7 +5,7 @@ import java.util.List;
 import kernel.JEEvent;
 import layer1_802Phy.JE802Phy;
 
-public interface JEIWirelessMedium {
+public interface JEWirelessMedium {
 
 	/*
 	 * (non-Javadoc)

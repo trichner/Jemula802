@@ -48,7 +48,7 @@ import org.w3c.dom.Element;
 import station.JE802Station;
 import util.Vector3d;
 
-public class JE802AntennaDirectionsKml extends JE802LinkKmlGenerator {
+public class JE802AntennaDirectionsKml extends JE802LinksGenerator {
 
 	public JE802AntennaDirectionsKml(Document doc, List<JE802Station> stations) {
 		super(doc, stations);

@@ -63,16 +63,6 @@ public class JE802MobilitySimTraceParser extends JEmula implements JE802TracePar
 		return infos;
 	}
 
-	private double getMinimumTime(List<JE802LocationInfo> infos) {
-		double min = Double.MAX_VALUE;
-		for (JE802LocationInfo info : infos) {
-			double ms = info.getTime().getTimeMs();
-			if (ms < min) {
-				min = ms;
-			}
-		}
-		return min;
-	}
 
 	private static class TraceFiles {
 

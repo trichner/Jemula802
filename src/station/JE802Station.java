@@ -47,7 +47,7 @@ import kernel.JEEvent;
 import kernel.JEEventScheduler;
 import kernel.JETime;
 import kernel.JEmula;
-import layer0_medium.JEIWirelessMedium;
+import layer0_medium.JEWirelessMedium;
 import layer1_802Phy.JE802Mobility;
 import layer1_802Phy.JE802PhyMode;
 import layer2_802Mac.JE802_Mac;
@@ -87,7 +87,7 @@ public class JE802Station extends JEmula {
 
 	private final XPath xpath = XPathFactory.newInstance().newXPath();
 
-	public JE802Station(JEEventScheduler aScheduler, JEIWirelessMedium aChannel, Random aGenerator, JE802Gui aGui,
+	public JE802Station(JEEventScheduler aScheduler, JEWirelessMedium aChannel, Random aGenerator, JE802Gui aGui,
 			JE802StatEval aStatEval, Node topLevelNode, List<JE802PhyMode> phyModes, double longitude, double latitude)
 			throws XPathExpressionException {
 		Element aTopLevelNode = (Element) topLevelNode;

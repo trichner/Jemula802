@@ -63,8 +63,6 @@ public class JE802GuiTimePanel extends JPanel implements KeyListener, MouseWheel
 
 	private Graphics graphics;
 
-	private int maxSta;
-
 	private Map<Integer, Integer> indexMap;
 
 	private int lastTime = 0;
@@ -78,12 +76,6 @@ public class JE802GuiTimePanel extends JPanel implements KeyListener, MouseWheel
 	private int lastEnd = -1;
 
 	private JScrollBar scrollbar;
-
-	private static Color butter = new Color(252, 233, 79);
-
-	private static Color chameleon = new Color(138, 226, 52);
-
-	private static Color red = new Color(239, 41, 41);
 
 	private List<Integer> channels;
 

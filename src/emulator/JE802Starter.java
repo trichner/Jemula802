@@ -65,7 +65,8 @@ public class JE802Starter {
 	 */
 	public static void main(String[] args) {
 		if (args.length != 1) {
-			System.err.println("This is Jemula802. Please provide path and name of the XML scenario file.");
+			System.err
+					.println("This is Jemula802. Please provide path and name of the XML scenario file.");
 		} else {
 			String aScenarioFile = new String(args[0].toString());
 			Document configuration = parseDocument(aScenarioFile);
@@ -88,10 +89,8 @@ public class JE802Starter {
 				// and/or later analysis
 				filecopy(aScenarioFile, control.getPath2Results());
 			}
-			control.startSimulation();
-			if (!showGui) {
-				// JEIO.save(control, control.getPath2Results());
-			}
+			control.emulate(); // run the show (by starting scheduler)
+			control.animate(); // create google earth animation
 		}
 	}
 
@@ -100,18 +99,15 @@ public class JE802Starter {
 		File theScenarioFile = new File(aScenarioFilename); // The file to parse
 		if (!theScenarioFile.exists()) {// the XML scenario file does not exist
 										// or is not accessible
-			System.err.println("This is Jemula802. Error: could not open the XML scenario description file " + theScenarioFile);
+			System.err
+					.println("This is Jemula802. Error: could not open the XML scenario description file "
+							+ theScenarioFile);
 			System.exit(0);
 		} else {
-			System.out.println("This is Jemula802. XML scenario file: " + theScenarioFile.getName());
-			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance(); // create
-																					// a
-																					// factory
-																					// object
-																					// for
-																					// creating
-																					// DOM
-																					// parsers
+			System.out.println("This is Jemula802. XML scenario file: "
+					+ theScenarioFile.getName());
+			DocumentBuilderFactory factory = DocumentBuilderFactory
+					.newInstance();
 			DocumentBuilder parser;
 			try {
 				parser = factory.newDocumentBuilder();
@@ -133,7 +129,8 @@ public class JE802Starter {
 		XPath xpath = XPathFactory.newInstance().newXPath();
 		String expression = "//JE802Control/@resumeFile";
 		try {
-			Node fileNameNode = (Node) xpath.evaluate(expression, aDocument, XPathConstants.NODE);
+			Node fileNameNode = (Node) xpath.evaluate(expression, aDocument,
+					XPathConstants.NODE);
 			if (fileNameNode != null) {
 				return fileNameNode.getNodeValue();
 			}
@@ -149,7 +146,8 @@ public class JE802Starter {
 		XPath xpath = XPathFactory.newInstance().newXPath();
 		String expression = "//JE802Control/@resume";
 		try {
-			Node resumeNode = (Node) xpath.evaluate(expression, aDocument, XPathConstants.NODE);
+			Node resumeNode = (Node) xpath.evaluate(expression, aDocument,
+					XPathConstants.NODE);
 			if (resumeNode != null) {
 				return new Boolean(resumeNode.getNodeValue());
 			}
@@ -164,7 +162,8 @@ public class JE802Starter {
 		XPath xpath = XPathFactory.newInstance().newXPath();
 		String expression = "//JE802Control/@showGui";
 		try {
-			Node guiNode = (Node) xpath.evaluate(expression, configuration, XPathConstants.NODE);
+			Node guiNode = (Node) xpath.evaluate(expression, configuration,
+					XPathConstants.NODE);
 			return new Boolean(guiNode.getNodeValue());
 		} catch (XPathExpressionException e) {
 			e.printStackTrace();
@@ -176,7 +175,8 @@ public class JE802Starter {
 		XPath xpath = XPathFactory.newInstance().newXPath();
 		String expression = "//JE802StatEval/@seed";
 		try {
-			Node seedNode = (Node) xpath.evaluate(expression, configuration, XPathConstants.NODE);
+			Node seedNode = (Node) xpath.evaluate(expression, configuration,
+					XPathConstants.NODE);
 			return new Long(seedNode.getNodeValue());
 		} catch (XPathExpressionException e) {
 			e.printStackTrace();
@@ -187,12 +187,14 @@ public class JE802Starter {
 	private static JE802Control resumeControl(Document aDocument) {
 		String hibernationFileName = parseForHibernationFile(aDocument);
 		if (hibernationFileName == null) {
-			System.err.println("No hibernation file specified," + " insert attribute  \"resumeFile\" in tag JE802Control");
+			System.err.println("No hibernation file specified,"
+					+ " insert attribute  \"resumeFile\" in tag JE802Control");
 			return null;
 		}
 		JE802Control control = (JE802Control) JEIO.load(hibernationFileName);
 		// new simulation end is current time plus duration
-		JETime emulationEnd = new JETime(parseForDuration(aDocument)).plus(control.getSimulationTime());
+		JETime emulationEnd = new JETime(parseForDuration(aDocument))
+				.plus(control.getSimulationTime());
 		control.setSimulationEnd(emulationEnd);
 		long randomSeed = parseForRandomSeed(aDocument);
 		control.setRandomSeed(randomSeed);
@@ -203,7 +205,8 @@ public class JE802Starter {
 		XPath xpath = XPathFactory.newInstance().newXPath();
 		String expression = "//JE802Control/@EmulationDuration_ms";
 		try {
-			Node emulationDurationNode = (Node) xpath.evaluate(expression, aDocument, XPathConstants.NODE);
+			Node emulationDurationNode = (Node) xpath.evaluate(expression,
+					aDocument, XPathConstants.NODE);
 			return new Double(emulationDurationNode.getNodeValue());
 		} catch (XPathExpressionException e) {
 			e.printStackTrace();
@@ -213,15 +216,19 @@ public class JE802Starter {
 
 	public static void filecopy(String sourceFileName, String destDirectory) {
 		File source = new File(sourceFileName);
-		File destination = new File(destDirectory + File.separatorChar + source.getName());
+		File destination = new File(destDirectory + File.separatorChar
+				+ source.getName());
 
 		File directory = new File(destDirectory);
 		if (!directory.exists()) { // directory does not exist
 			try {
-				System.out.println("creating new destination directory " + destDirectory);
+				System.out.println("creating new destination directory "
+						+ destDirectory);
 				directory.mkdirs();
 			} catch (Exception e) {
-				System.err.println("could not create the destination directory " + destDirectory);
+				System.err
+						.println("could not create the destination directory "
+								+ destDirectory);
 			}
 		}
 
@@ -238,9 +245,9 @@ public class JE802Starter {
 			} else {
 				in = new FileInputStream(source).getChannel();
 				out = new FileOutputStream(destination).getChannel();
-
 				long size = in.size();
-				MappedByteBuffer buf = in.map(FileChannel.MapMode.READ_ONLY, 0, size);
+				MappedByteBuffer buf = in.map(FileChannel.MapMode.READ_ONLY, 0,
+						size);
 				out.write(buf);
 			}
 		} catch (FileNotFoundException e) {

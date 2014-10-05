@@ -67,7 +67,7 @@ import gui.JE802Gui;
  *         the wireless medium. Coordinates the existing channels, PhyTransc
  *         associations, and location updates
  */
-public class JEMediumUnitDisk extends JEEventHandler implements JEIWirelessMedium {
+public class JEMediumUnitDisk extends JEEventHandler implements JEWirelessMedium {
 
 	private final Map<Integer, JE802ChannelEntry> channels;
 

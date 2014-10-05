@@ -47,7 +47,7 @@ import javax.xml.xpath.XPathFactory;
 import kernel.JEEvent;
 import kernel.JEEventScheduler;
 import kernel.JETime;
-import layer0_medium.JEIWirelessMedium;
+import layer0_medium.JEWirelessMedium;
 //import layer1_802Phy.JE802Phy;
 import layer1_80211Phy.JE802_11Phy;
 import layer2_802Mac.JE802_Mac;
@@ -104,7 +104,7 @@ public final class JE802_11Mac extends JE802_Mac {
 	 * @throws XPathExpressionException
 	 */
 	public JE802_11Mac(final JEEventScheduler aScheduler, final JE802StatEval statEval, final Random aGenerator,
-			final JE802Gui aGui, final JEIWirelessMedium aChannel, final Node aTopLevelNode, final int smeHandlerId)
+			final JE802Gui aGui, final JEWirelessMedium aChannel, final Node aTopLevelNode, final int smeHandlerId)
 			throws XPathExpressionException {
 
 		super(aScheduler, statEval, aGenerator, aGui, aTopLevelNode, smeHandlerId);

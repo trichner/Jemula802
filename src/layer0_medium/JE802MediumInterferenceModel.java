@@ -31,7 +31,7 @@ import org.w3c.dom.NodeList;
 
 import animation.JE802KmlGenerator;
 
-public class JE802MediumInterferenceModel extends JEEventHandler implements JEIWirelessMedium {
+public class JE802MediumInterferenceModel extends JEEventHandler implements JEWirelessMedium {
 
 	private final Map<Integer, JE802ChannelEntry> channels;
 

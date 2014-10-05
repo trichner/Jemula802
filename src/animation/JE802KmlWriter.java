@@ -81,9 +81,6 @@ public class JE802KmlWriter extends JEmula {
 	// upper limit of the throughput scale
 	private final double maxTP;
 
-	// upper limit of the delay scale
-	private final double maxDelayMs;
-
 	private final double reuseDistance;
 
 	private final double minTxdBm;
@@ -100,57 +97,67 @@ public class JE802KmlWriter extends JEmula {
 
 	private final boolean generateAntennas;
 
-	public JE802KmlWriter(final Node anAnimationNode, final String path, final String filename,
-			final List<JE802Station> stations, final double reuseDistance) {
+	public JE802KmlWriter(final Node anAnimationNode, final String path,
+			final String filename, final List<JE802Station> stations,
+			final double reuseDistance) {
 		Element animationElem = (Element) anAnimationNode;
 
 		if (animationElem.hasAttribute("maxThrp")) {
 			this.maxTP = new Double(animationElem.getAttribute("maxThrp"));
 		} else {
-			this.maxTP = (Double) null;
-			this.error("missing attribute maxThrp in " + animationElem.getNodeName());
+			this.maxTP = Double.NaN;
+			this.error("missing attribute maxThrp in "
+					+ animationElem.getNodeName());
 		}
 
 		if (animationElem.hasAttribute("maxDelay")) {
-			this.maxDelayMs = new Double(animationElem.getAttribute("maxDelay"));
+			new Double(animationElem.getAttribute("maxDelay"));
 		} else {
-			this.maxDelayMs = (Double) null;
-			this.error("missing attribute maxDelay in " + animationElem.getNodeName());
+			this.error("missing attribute maxDelay in "
+					+ animationElem.getNodeName());
 		}
 
 		if (animationElem.hasAttribute("overlayAccuracy")) {
-			this.pixelSize = new Double(animationElem.getAttribute("overlayAccuracy"));
+			this.pixelSize = new Double(
+					animationElem.getAttribute("overlayAccuracy"));
 		} else {
-			this.pixelSize = (Double) null;
-			this.error("missing attribute overlayAccuracy in " + animationElem.getNodeName());
+			this.pixelSize = Double.NaN;
+			this.error("missing attribute overlayAccuracy in "
+					+ animationElem.getNodeName());
 		}
 
 		if (animationElem.hasAttribute("minTxdBm")) {
 			this.minTxdBm = new Double(animationElem.getAttribute("minTxdBm"));
 		} else {
-			this.minTxdBm = (Double) null;
-			this.error("missing attribute minTxdBm in " + animationElem.getNodeName());
+			this.minTxdBm = Double.NaN;
+			this.error("missing attribute minTxdBm in "
+					+ animationElem.getNodeName());
 		}
 
 		if (animationElem.hasAttribute("maxTxdBm")) {
 			this.maxTxdBm = new Double(animationElem.getAttribute("maxTxdBm"));
 		} else {
-			this.maxTxdBm = (Double) null;
-			this.error("missing attribute maxTxdBm in " + animationElem.getNodeName());
+			this.maxTxdBm = Double.NaN;
+			this.error("missing attribute maxTxdBm in "
+					+ animationElem.getNodeName());
 		}
 
 		if (animationElem.hasAttribute("attenuationFactor")) {
-			this.attenuationFactor = new Double(animationElem.getAttribute("attenuationFactor"));
+			this.attenuationFactor = new Double(
+					animationElem.getAttribute("attenuationFactor"));
 		} else {
-			this.attenuationFactor = (Double) null;
-			this.error("missing attribute attenuationFactor in " + animationElem.getNodeName());
+			this.attenuationFactor = Double.NaN;
+			this.error("missing attribute attenuationFactor in "
+					+ animationElem.getNodeName());
 		}
 
 		String generateBlocksStr = new String();
 		if (animationElem.hasAttribute("generateOfferBlocks")) {
-			generateBlocksStr = animationElem.getAttribute("generateOfferBlocks");
+			generateBlocksStr = animationElem
+					.getAttribute("generateOfferBlocks");
 		} else {
-			this.error("missing attribute generateOfferBlocks in " + animationElem.getNodeName());
+			this.error("missing attribute generateOfferBlocks in "
+					+ animationElem.getNodeName());
 		}
 		if (generateBlocksStr.isEmpty()) {
 			generateOffer = true;
@@ -160,9 +167,11 @@ public class JE802KmlWriter extends JEmula {
 
 		String generatePowerOverlayStr = new String();
 		if (animationElem.hasAttribute("generatePowerOverlay")) {
-			generatePowerOverlayStr = animationElem.getAttribute("generatePowerOverlay");
+			generatePowerOverlayStr = animationElem
+					.getAttribute("generatePowerOverlay");
 		} else {
-			this.error("missing attribute generatePowerOverlay in " + animationElem.getNodeName());
+			this.error("missing attribute generatePowerOverlay in "
+					+ animationElem.getNodeName());
 		}
 		if (generatePowerOverlayStr.isEmpty()) {
 			generatePowerOverlay = true;
@@ -176,13 +185,15 @@ public class JE802KmlWriter extends JEmula {
 		if (animationElem.hasAttribute("mbPerBlock")) {
 			mbPBStr = animationElem.getAttribute("mbPerBlock");
 		} else {
-			this.error("missing attribute mbPerBlock in " + animationElem.getNodeName());
+			this.error("missing attribute mbPerBlock in "
+					+ animationElem.getNodeName());
 		}
 		if (!mbPBStr.isEmpty()) {
 			this.mbPerBlock = new Double(mbPBStr);
 		} else {
 			this.mbPerBlock = 0.2;
-			warning("WARNING: no mbPerBlock attribute in JE802Animation tag specified, using default " + this.mbPerBlock);
+			warning("WARNING: no mbPerBlock attribute in JE802Animation tag specified, using default "
+					+ this.mbPerBlock);
 		}
 
 		this.reuseDistance = reuseDistance;
@@ -214,7 +225,8 @@ public class JE802KmlWriter extends JEmula {
 		return style;
 	}
 
-	private Element createFolder(final List<JE802KmlGenerator> generators, final String name) {
+	private Element createFolder(final List<JE802KmlGenerator> generators,
+			final String name) {
 		Element folder = this.doc.createElement("Folder");
 		Element folderName = this.doc.createElement("name");
 		folderName.appendChild(this.doc.createTextNode(name));
@@ -249,20 +261,32 @@ public class JE802KmlWriter extends JEmula {
 
 		List<JE802KmlGenerator> generators = new ArrayList<JE802KmlGenerator>();
 
-		// station models
-		generators.add(new JE802ModelKml(this.doc, this.stations, this.filename, false));
+		boolean visible = true;
+		// Ground overlays
+		List<JE802KmlGenerator> grounds = new ArrayList<JE802KmlGenerator>();
+		grounds.add(new JE802RadioCoverageGenerator(this.doc, this.stations,
+				"animation_files/white.png", "White", 5000, false,
+				this.reuseDistance, this.attenuationFactor,visible));
+		
+		visible = false;
+		grounds.add(new JE802RadioCoverageGenerator(this.doc, this.stations,
+				"animation_files/cobbles.png", "Cobbles", 300, true,
+				this.reuseDistance, this.attenuationFactor,visible));
+		grounds.add(new JE802RadioCoverageGenerator(this.doc, this.stations,
+				"animation_files/black.png", "Black", 5000, true,
+				this.reuseDistance, this.attenuationFactor,visible));
+		Element overlayFolder = createFolder(grounds, "Ground Overlays");
+		document.appendChild(overlayFolder);
 
-		// station models with mickey users
-		// generators.add(new JE802ModelKml(this.doc,this.stations,
-		// this.filename, true));
+		// generate station models
+		generators.add(new JE802StationModelKml(this.doc, this.stations, this.filename));
 
-		// Reuse Distance Overlays
-		generators.add(new JE802ReuseOverlay(this.doc, this.stations, this.filename, true, this.reuseDistance));
-
-		// power Overlays
 		if (generatePowerOverlay) {
-			generators.add(new JE802PowerOverlayKml(this.doc, this.stations, this.filename, this.pixelSize, true,
-					this.reuseDistance, this.maxTxdBm, this.minTxdBm, this.attenuationFactor, this.resultPath));
+			// generate power overlays
+			generators.add(new JE802RadioCoverageKml(this.doc, this.stations,
+					this.filename, this.pixelSize, true, this.reuseDistance,
+					this.maxTxdBm, this.minTxdBm, this.attenuationFactor,
+					this.resultPath));
 		}
 
 		if (generateAntennas) {
@@ -274,64 +298,19 @@ public class JE802KmlWriter extends JEmula {
 		}
 
 		// offerBlocks
+		visible = true;
 		if (generateOffer) {
-			generators.add(new JE802OfferBlocks(this.doc, this.stations, this.filename, this.mbPerBlock));
+			generators.add(new JE802TrafficBlocksKml(this.doc, this.stations,
+					this.filename, this.mbPerBlock, visible));
 		}
 
 		// create throughput links
-		generators.add(new JE802ThrpLinksKml(this.doc, this.stations, this.maxTP, false));
-
-		// throughput stations
-		generators.add(new JE802ThrpStationKml(this.doc, this.stations, this.filename, this.maxTP, false));
-
-		// create delay stations
-		// generators.add(new JE802DelayStationKml(this.doc, this.stations,
-		// this.filename, this.maxDelayMs, false));
-
-		// create delay links
-		// generators.add(new JE802DelayLinksKml(this.doc, this.stations,
-		// this.maxDelayMs, true));
-
-		// BlackLinks
-		// generators.add(new JE802StaticLinkKml(this.doc, this.stations, new
-		// Color(0,0,0), "Black"));
-
-		// WhiteLinks
-		// generators.add(new JE802StaticLinkKml(this.doc, this.stations, new
-		// Color(255,255,255), "White"));
-
-		// create delay stations
-		// generators.add(new JE802DelayStationKml(this.doc, this.stations,
-		// this.filename, this.maxDelayMs, true));
-
-		// create delay links
-		// generators.add(new JE802DelayLinksKml(this.doc, this.stations,
-		// this.maxDelayMs, false));
-
-		// route links
-		generators.add(new JE802RouteLinksKml(doc, stations));
-
-		// channel links
-		generators.add(new JE802ChannelLinksKml(doc, stations));
-
-		// phyModeLinks
-		generators.add(new JE802PhyModeLinksKml(doc, stations));
+		visible = true;
+		generators.add(new JE802LinksKml(this.doc, this.stations, this.maxTP,false,visible));
 
 		for (JE802KmlGenerator gen : generators) {
 			document.appendChild(gen.createDOM());
 		}
-
-		// Ground overlays
-		List<JE802KmlGenerator> grounds = new ArrayList<JE802KmlGenerator>();
-		grounds.add(new JE802OverlayGenerator(this.doc, this.stations, "animation_files/white.png", "White", 50000, true,
-				this.reuseDistance));
-		grounds.add(new JE802OverlayGenerator(this.doc, this.stations, "animation_files/stones2.png", "Cobbles", 300, true,
-				this.reuseDistance));
-		grounds.add(new JE802OverlayGenerator(this.doc, this.stations, "animation_files/black.png", "Black", 50000, true,
-				this.reuseDistance));
-
-		Element overlayFolder = createFolder(grounds, "Ground Overlays");
-		document.appendChild(overlayFolder);
 
 		this.doc.appendChild(root);
 		root.appendChild(document);
@@ -350,15 +329,18 @@ public class JE802KmlWriter extends JEmula {
 		File directory = new File(destDirectory);
 		if (!directory.exists()) { // directory does not exist
 			try {
-				this.message("creating new animation destination directory " + destDirectory);
+				this.message("creating new animation destination directory "
+						+ destDirectory);
 				directory.mkdirs();
 			} catch (Exception e) {
-				this.error("could not create the animation destination directory " + destDirectory);
+				this.error("could not create the animation destination directory "
+						+ destDirectory);
 			}
 		}
 
 		try {
-			output = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(destDirectory + "/doc.kml"), "UTF-8"));
+			output = new BufferedWriter(new OutputStreamWriter(
+					new FileOutputStream(destDirectory + "/doc.kml"), "UTF-8"));
 			XMLSerializer serializer = new XMLSerializer(output, format);
 			serializer.serialize(this.doc);
 		} catch (IOException e) {
@@ -372,12 +354,14 @@ public class JE802KmlWriter extends JEmula {
 		File filesFolder = new File(this.resultPath + "/animation_files");
 		for (File file : modelFolder.listFiles()) {
 			if (!file.getName().startsWith(".svn")) { // exclude .svn
-				JE802Starter.filecopy("resources/models/" + file.getName(), filesFolder.getAbsolutePath());
+				JE802Starter.filecopy("resources/models/" + file.getName(),
+						filesFolder.getAbsolutePath());
 			}
 		}
 
 		// put all files in the files folder into the kmz archive
-		File animationFile = new File(this.resultPath + "/" + this.filename + ".kmz");
+		File animationFile = new File(this.resultPath + "/" + this.filename
+				+ ".kmz");
 		FileOutputStream fileStream;
 		try {
 			fileStream = new FileOutputStream(animationFile);
@@ -385,7 +369,8 @@ public class JE802KmlWriter extends JEmula {
 			for (File file : filesFolder.listFiles()) {
 				if (!file.isDirectory()) {
 					FileInputStream in = new FileInputStream(file);
-					ZipEntry entry = new ZipEntry(filesFolder.getAbsolutePath() + "/" + file.getName());
+					ZipEntry entry = new ZipEntry(filesFolder.getAbsolutePath()
+							+ "/" + file.getName());
 					zipStream.putNextEntry(entry);
 					int len;
 					byte[] buf = new byte[1024];

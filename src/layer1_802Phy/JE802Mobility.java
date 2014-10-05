@@ -100,6 +100,7 @@ public class JE802Mobility extends JEmula {
 			if (!interpolationIntervalStr.isEmpty()) {
 				this.interpolationInterval_ms = new JETime(new Double(interpolationIntervalStr));
 			} else {
+				warning ("missing interpolationInterval_ms. Using default 3000ms.");
 				this.interpolationInterval_ms = new JETime(3000);
 			}
 
@@ -111,15 +112,7 @@ public class JE802Mobility extends JEmula {
 						this.minAccuracy = new Double(minAccuracyStr);
 					} else {
 						this.minAccuracy = 150;
-					} // TODO:uncommetn this to restore to previous state
-					// String interpolationIntervalStr =
-					// mobilityElem.getAttribute("interpolationInterval_ms");
-					// if(!interpolationIntervalStr.isEmpty()){
-					// this.interpolationInterval_ms = new JETime(new
-					// Double(interpolationIntervalStr));
-					// } else{
-					// this.interpolationInterval_ms = new JETime(3000);
-					// }
+					}
 
 					String traceStartOffset = mobilityElem.getAttribute("offsetTime_ms");
 					if (!traceStartOffset.isEmpty()) {
@@ -141,8 +134,6 @@ public class JE802Mobility extends JEmula {
 		} else {
 			this.error("Expected JE802Mobility node, found " + mobilityElem.getNodeName() + " instead");
 		}
-
-		this.message("Interpolation interval:" + this.interpolationInterval_ms);
 	}
 
 	public JETime getTraceStartTime() {
