@@ -181,7 +181,7 @@ public class JE802RadioCoverageKml extends JE802KmlGenerator {
 					powerColor = calculatePowerColor(powerSum, this.minTxdBm, this.maxTxdBm, this.alpha);
 					int channel = nearestStation.getFixedChannel();
 					channelColor = getChannelColor(channel);
-					addressColor = calculateAddressColor(nearestStation.getMacAddress(), maxAddress);
+					addressColor = calculateAddressColor(nearestStation.getMac().getMacAddress(), maxAddress);
 				} else {
 					powerColor = new Color(255, true);
 					channelColor = new Color(255, true);
@@ -320,8 +320,8 @@ public class JE802RadioCoverageKml extends JE802KmlGenerator {
 	private int maxMacAddress() {
 		int maxAddress = Integer.MIN_VALUE;
 		for (JE802Station station : this.stations) {
-			if (station.getMacAddress() > maxAddress) {
-				maxAddress = station.getMacAddress();
+			if (station.getMac().getMacAddress() > maxAddress) {
+				maxAddress = station.getMac().getMacAddress();
 			}
 		}
 		return maxAddress;

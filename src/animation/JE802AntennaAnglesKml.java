@@ -190,7 +190,7 @@ public class JE802AntennaAnglesKml extends JE802KmlGenerator {
 							.getEvaluationEnd());
 				}
 				currentTime = currentTime.plus(interval);
-				name.appendChild(this.doc.createTextNode("Station " + station.getMacAddress()));
+				name.appendChild(this.doc.createTextNode("Station " + station.getMac().getMacAddress()));
 				placemark.appendChild(name);
 				placemark.appendChild(model);
 				placemark.appendChild(timeSpan);

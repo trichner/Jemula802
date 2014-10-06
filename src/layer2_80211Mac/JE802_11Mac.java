@@ -468,10 +468,6 @@ public final class JE802_11Mac extends JE802_Mac {
 		return this.dot11WepEncr;
 	}
 
-	public void setDot11MACAddress(final Integer dot11macAddress) {
-		this.theMacAddress = dot11macAddress;
-	}
-
 	@Override
 	public String toString() {
 		return "MacAddress: " + this.theMacAddress;
@@ -481,7 +477,6 @@ public final class JE802_11Mac extends JE802_Mac {
 		return isFixed;
 	}
 
-	// TODO:check if this is OK. Added by Divya
 	public JE802_11Mlme getMlme() {
 		return this.theMlme;
 	}

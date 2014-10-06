@@ -110,7 +110,7 @@ public class JE802AntennaDirectionsKml extends JE802LinksGenerator {
 				placemark.appendChild(timeSpan);
 				antennaFolder.add(placemark);
 				currentTime = currentTime.plus(interval);
-				Element folder = createFolder(antennaFolder, "Station " + station.getMacAddress(), true);
+				Element folder = createFolder(antennaFolder, "Station " + station.getMac().getMacAddress(), true);
 				antennaFolders.add(folder);
 			}
 		}

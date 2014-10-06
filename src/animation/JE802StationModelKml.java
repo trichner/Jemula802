@@ -170,7 +170,7 @@ public class JE802StationModelKml extends JE802KmlGenerator {
 							.getEvaluationEnd());
 				}
 				currentTime = currentTime.plus(interval);
-				name.appendChild(this.doc.createTextNode("station " + station.getMacAddress()));
+				name.appendChild(this.doc.createTextNode("station " + station.getMac().getMacAddress()));
 				placemark.appendChild(name);
 				placemark.appendChild(model);
 				placemark.appendChild(timeSpan);

@@ -55,7 +55,6 @@ public class JE802LinksKml extends JE802LinksGenerator {
 	private final boolean useGreenRed;
 
 	private final boolean isVisible;
-	
 
 	public JE802LinksKml(Document doc, List<JE802Station> stations,
 			double maxTP, boolean useGreenRed, boolean visible) {
@@ -68,7 +67,7 @@ public class JE802LinksKml extends JE802LinksGenerator {
 			List<JE802TrafficGen> gens = station.getTrafficGenList();
 			for (JE802TrafficGen gen : gens) {
 				if (gen != null && gen.isEvaluatingThrp() && gen.is_active()) {
-					int source = station.getMacAddress();
+					int source = station.getMac().getMacAddress();
 					ArrayList<JE802HopInfo> hops = gen.getHopAddresses();
 					// start and stop index of evaluation of this traffic gen
 					int start = gen.getEvaluationStartTimeStep();
@@ -117,12 +116,13 @@ public class JE802LinksKml extends JE802LinksGenerator {
 							.getSampleCount()];
 					boolean hasLink = false;
 					for (JE802LinkRecord link : links) {
-						if (link.getSourceAddress() == station1.getMacAddress()
+						if (link.getSourceAddress() == station1.getMac()
+								.getMacAddress()
 								&& link.getDestinationAddress() == station2
-										.getMacAddress()
+										.getMac().getMacAddress()
 								|| link.getDestinationAddress() == station1
-										.getMacAddress()
-								&& link.getSourceAddress() == station2
+										.getMac().getMacAddress()
+								&& link.getSourceAddress() == station2.getMac()
 										.getMacAddress()) {
 							hasLink = true;
 							ArrayList<Double> linkData = link.getData();
@@ -157,10 +157,11 @@ public class JE802LinksKml extends JE802LinksGenerator {
 							}
 							currentTime = currentTime.plus(interval);
 						}
-						Element folder = createFolder(
-								linkFolder,
-								station1.getMacAddress() + " to "
-										+ station2.getMacAddress(), !this.isVisible);
+						Element folder = createFolder(linkFolder, station1
+								.getMac().getMacAddress()
+								+ " to "
+								+ station2.getMac().getMacAddress(),
+								!this.isVisible);
 						linkFolders.add(folder);
 					}
 				}
@@ -173,7 +174,8 @@ public class JE802LinksKml extends JE802LinksGenerator {
 	public Element createDOM() {
 		String folderName = "Links";
 		List<Element> linkElements = createThrpLinks();
-		Element linkFolder = createFolder(linkElements, folderName, !this.isVisible);
+		Element linkFolder = createFolder(linkElements, folderName,
+				!this.isVisible);
 		return linkFolder;
 	}
 }

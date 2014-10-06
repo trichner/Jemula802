@@ -60,17 +60,20 @@ public class JE802TrafficBlocksKml extends JE802StationModelGenerator {
 	private final List<JE802StationRecord> throughputs = new ArrayList<JE802StationRecord>();
 
 	private final boolean isVisible;
-	
-	public JE802TrafficBlocksKml(final Document doc, final List<JE802Station> stations, final String filename, final double blocksize, boolean visible) {
+
+	public JE802TrafficBlocksKml(final Document doc,
+			final List<JE802Station> stations, final String filename,
+			final double blocksize, boolean visible) {
 		super(doc, stations, filename, false);
 		// split up the throughput of a route in separate links
 		this.factor = 1 / blocksize;
 		this.isVisible = visible;
 		for (JE802Station station : stations) {
 			List<JE802TrafficGen> gens = station.getTrafficGenList();
-			int source = station.getMacAddress();
+			int source = station.getMac().getMacAddress();
 			for (JE802TrafficGen gen : gens) {
-				if (gen != null && gen.isEvaluatingThrp() && gen.isEvaluatingOffer() && gen.is_active()) {
+				if (gen != null && gen.isEvaluatingThrp()
+						&& gen.isEvaluatingOffer() && gen.is_active()) {
 					ArrayList<JE802HopInfo> hops = gen.getHopAddresses();
 					// start and stop index of evaluation of this traffic gen
 					int start = gen.getEvaluationStartTimeStep();
@@ -82,28 +85,40 @@ public class JE802TrafficBlocksKml extends JE802StationModelGenerator {
 					for (int j = start; j < stop; j++) {
 						List<JEStatEvalThrp> thrps = gen.getThrpResults();
 						if (thrps != null && !thrps.isEmpty()) {
-							int numPackets = (Integer) gen.getThrpResults().get(lastHopIndex).getEvalList3().get(j - start);
-							double avgPacketSize = (Double) gen.getThrpResults().get(lastHopIndex).getEvalList5().get(j - start);
-							double aFactor = 1000.0 / gen.getStatEval().getEvaluationInterval().getTimeMs(); // samples
-																												// per
-																												// second
-							double thrp = numPackets * avgPacketSize * aFactor / 125000.0; // bytes
-																							// to
-																							// Mb/s
+							int numPackets = (Integer) gen.getThrpResults()
+									.get(lastHopIndex).getEvalList3()
+									.get(j - start);
+							double avgPacketSize = (Double) gen
+									.getThrpResults().get(lastHopIndex)
+									.getEvalList5().get(j - start);
+							double aFactor = 1000.0 / gen.getStatEval()
+									.getEvaluationInterval().getTimeMs(); // samples
+																			// per
+																			// second
+							double thrp = numPackets * avgPacketSize * aFactor
+									/ 125000.0; // bytes
+												// to
+												// Mb/s
 							thrpData.add(thrp);
-							numPackets = (Integer) gen.getOffer().getEvalList3().get(j - start);
-							avgPacketSize = (Double) gen.getOffer().getEvalList5().get(j - start);
-							aFactor = 1000.0 / gen.getStatEval().getEvaluationInterval().getTimeMs(); // samples
-																										// per
-																										// second
-							double offer = numPackets * avgPacketSize * aFactor / 125000.0; // bytes
-																							// to
-																							// Mb/s
+							numPackets = (Integer) gen.getOffer()
+									.getEvalList3().get(j - start);
+							avgPacketSize = (Double) gen.getOffer()
+									.getEvalList5().get(j - start);
+							aFactor = 1000.0 / gen.getStatEval()
+									.getEvaluationInterval().getTimeMs(); // samples
+																			// per
+																			// second
+							double offer = numPackets * avgPacketSize * aFactor
+									/ 125000.0; // bytes
+												// to
+												// Mb/s
 							offerData.add(offer);
 						}
 					}
-					JE802StationRecord offer = new JE802StationRecord(source, start, stop, offerData);
-					JE802StationRecord thrp = new JE802StationRecord(source, start, stop, thrpData);
+					JE802StationRecord offer = new JE802StationRecord(source,
+							start, stop, offerData);
+					JE802StationRecord thrp = new JE802StationRecord(source,
+							start, stop, thrpData);
 					this.stationData.add(offer);
 					this.throughputs.add(thrp);
 					source = destination;
@@ -116,19 +131,26 @@ public class JE802TrafficBlocksKml extends JE802StationModelGenerator {
 		ArrayList<Element> allBlocks = new ArrayList<Element>();
 		for (JE802Station station : this.stations) {
 			ArrayList<Element> stationBlocks = new ArrayList<Element>();
-			if (!station.getTrafficGenList().isEmpty() && station.getTrafficGenList().get(0).getDA() != 0) {
+			if (!station.getTrafficGenList().isEmpty()
+					&& station.getTrafficGenList().get(0).getDA() != 0) {
 				for (int k = 0; k < this.stationData.size(); k++) {
 					JE802StationRecord offerRecord = this.stationData.get(k);
 					JE802StationRecord thrpRecord = this.throughputs.get(k);
-					if (station.getMacAddress() == offerRecord.getSourceAddress()) {
+					if (station.getMac().getMacAddress() == offerRecord
+							.getSourceAddress()) {
 						int start = offerRecord.getStartIndex();
-						JETime interval = station.getStatEval().getEvaluationInterval();
-						JETime currentTime = station.getStatEval().getEvaluationStarttime();
+						JETime interval = station.getStatEval()
+								.getEvaluationInterval();
+						JETime currentTime = station.getStatEval()
+								.getEvaluationStarttime();
 
 						for (int j = start; j < offerRecord.getStopIndex(); j++) {
-							int blockCount = new Double(offerRecord.getData().get(j - start) * this.factor).intValue();
-							double[] position = convertXYZtoLatLonAlt(station.getXLocation(currentTime),
-									station.getYLocation(currentTime), station.getZLocation(currentTime));
+							int blockCount = new Double(offerRecord.getData()
+									.get(j - start) * this.factor).intValue();
+							double[] position = convertXYZtoLatLonAlt(
+									station.getXLocation(currentTime),
+									station.getYLocation(currentTime),
+									station.getZLocation(currentTime));
 							for (int i = 0; i < blockCount; i++) {
 								boolean isMobile = station.isMobile();
 								Double scaleFactor = 0.0;
@@ -138,21 +160,35 @@ public class JE802TrafficBlocksKml extends JE802StationModelGenerator {
 									scaleFactor = 1.1;
 								}
 
-								Element altitudeMode = this.doc.createElement("altitudeMode");
-								altitudeMode.appendChild(this.doc.createTextNode("relativeToGround"));
+								Element altitudeMode = this.doc
+										.createElement("altitudeMode");
+								altitudeMode.appendChild(this.doc
+										.createTextNode("relativeToGround"));
 
 								// Location
-								Element location = this.doc.createElement("Location");
-								Element longitude = this.doc.createElement("longitude");
-								longitude.appendChild(this.doc.createTextNode(new Double(position[1]).toString()));
-								Element latitude = this.doc.createElement("latitude");
-								latitude.appendChild(this.doc.createTextNode(new Double(position[0]).toString()));
-								Element altitude = this.doc.createElement("altitude");
-								Double height = 0.2 + i * (this.blockHeight * scaleFactor + 0.5 * this.blockHeight * scaleFactor);
+								Element location = this.doc
+										.createElement("Location");
+								Element longitude = this.doc
+										.createElement("longitude");
+								longitude.appendChild(this.doc
+										.createTextNode(new Double(position[1])
+												.toString()));
+								Element latitude = this.doc
+										.createElement("latitude");
+								latitude.appendChild(this.doc
+										.createTextNode(new Double(position[0])
+												.toString()));
+								Element altitude = this.doc
+										.createElement("altitude");
+								Double height = 0.2
+										+ i
+										* (this.blockHeight * scaleFactor + 0.5
+												* this.blockHeight
+												* scaleFactor);
 								if (isMobile) {
-									height += this.userModelHeight;
+									height += JE802KmlGenerator.userModelHeight;
 								} else {
-									height += this.antennaModelHeight;
+									height += JE802KmlGenerator.antennaModelHeight;
 								}
 								altitude.appendChild(this.doc.createTextNode(height.toString()));
 								location.appendChild(longitude);
@@ -160,25 +196,31 @@ public class JE802TrafficBlocksKml extends JE802StationModelGenerator {
 								location.appendChild(altitude);
 
 								// scale
-
 								Element scale = this.doc.createElement("Scale");
 								Element x = this.doc.createElement("x");
 
-								x.appendChild(this.doc.createTextNode(scaleFactor.toString()));
+								x.appendChild(this.doc
+										.createTextNode(scaleFactor.toString()));
 								Element y = this.doc.createElement("y");
-								y.appendChild(this.doc.createTextNode(scaleFactor.toString()));
+								y.appendChild(this.doc
+										.createTextNode(scaleFactor.toString()));
 								Element z = this.doc.createElement("z");
-								z.appendChild(this.doc.createTextNode(scaleFactor.toString()));
+								z.appendChild(this.doc
+										.createTextNode(scaleFactor.toString()));
 								scale.appendChild(x);
 								scale.appendChild(y);
 								scale.appendChild(z);
 
 								// orientation
-								Element orientation = this.doc.createElement("Orientation");
+								Element orientation = this.doc
+										.createElement("Orientation");
 
 								Double headingRotation = 0.0;
-								Element heading = this.doc.createElement("heading");
-								heading.appendChild(this.doc.createTextNode(headingRotation.toString()));
+								Element heading = this.doc
+										.createElement("heading");
+								heading.appendChild(this.doc
+										.createTextNode(headingRotation
+												.toString()));
 								Element tilt = this.doc.createElement("tilt");
 								tilt.appendChild(this.doc.createTextNode("0"));
 								Element roll = this.doc.createElement("roll");
@@ -188,10 +230,13 @@ public class JE802TrafficBlocksKml extends JE802StationModelGenerator {
 								orientation.appendChild(roll);
 
 								// modelfile
-								Element linkElem = this.doc.createElement("Link");
+								Element linkElem = this.doc
+										.createElement("Link");
 								Element href = this.doc.createElement("href");
 								String path = "animation_files/";
-								int thrp = new Double(thrpRecord.getData().get(j - start) * this.factor).intValue();
+								int thrp = new Double(thrpRecord.getData().get(
+										j - start)
+										* this.factor).intValue();
 								if (i + 1 <= blockCount - thrp) {
 									path = path + this.redBlock;
 								} else {
@@ -209,10 +254,14 @@ public class JE802TrafficBlocksKml extends JE802StationModelGenerator {
 								model.appendChild(linkElem);
 
 								// placemark wrapping the model tag
-								Element placemark = this.doc.createElement("Placemark");
+								Element placemark = this.doc
+										.createElement("Placemark");
 								Element name = this.doc.createElement("name");
-								name.appendChild(this.doc.createTextNode("Station " + station.getMacAddress()));
-								Element timeSpan = createTimeSpan(currentTime, currentTime.plus(interval));
+								name.appendChild(this.doc
+										.createTextNode("Station "
+												+ station.getMac().getMacAddress()));
+								Element timeSpan = createTimeSpan(currentTime,
+										currentTime.plus(interval));
 
 								placemark.appendChild(name);
 								placemark.appendChild(timeSpan);
@@ -226,7 +275,8 @@ public class JE802TrafficBlocksKml extends JE802StationModelGenerator {
 				}
 			}
 			if (!stationBlocks.isEmpty()) {
-				Element stationFolder = createFolder(stationBlocks, "Station " + station.getMacAddress(), !this.isVisible);
+				Element stationFolder = createFolder(stationBlocks, "Station "
+						+ station.getMac().getMacAddress(), !this.isVisible);
 				allBlocks.add(stationFolder);
 			}
 		}
@@ -236,7 +286,8 @@ public class JE802TrafficBlocksKml extends JE802StationModelGenerator {
 	@Override
 	public Element createDOM() {
 		List<Element> models = createOfferBlocks();
-		return createFolder(models, "Traffic (" + 1 / this.factor + "Mb/block)", !this.isVisible);
+		return createFolder(models,
+				"Traffic (" + 1 / this.factor + "Mb/block)", !this.isVisible);
 	}
 
 }

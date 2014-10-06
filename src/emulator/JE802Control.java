@@ -167,29 +167,11 @@ public class JE802Control extends JEmula {
 			createPhyModes(theTopLevelNode, xpath);
 			createRoutingConstants(theTopLevelNode, xpath);
 			createStations(theTopLevelNode, xpath);
-			this.setWiredStations();
 		} catch (XPathExpressionException e) {
 			e.printStackTrace();
 		}
 	}
 
-	private void setWiredStations() {
-		for (JE802Station station : stations) {
-			List<Integer> wiredStations = station.getWiredAddresses();
-			if (wiredStations != null) {
-				List<JE802Station> wiredToSation = new ArrayList<JE802Station>(
-						wiredStations.size());
-				for (Integer addr : wiredStations) {
-					for (JE802Station station2 : stations) {
-						if (station2.getMacAddress() == addr) {
-							wiredToSation.add(station2);
-						}
-					}
-				}
-				station.setWiredStations(wiredToSation);
-			}
-		}
-	}
 
 	private void createRoutingConstants(Node theTopLevelNode, XPath xpath)
 			throws XPathExpressionException {
@@ -298,7 +280,7 @@ public class JE802Control extends JEmula {
 			if (!useInterferenceModel
 					&& station.getMac().getPhy().getAntenna().isDirectional()) {
 				this.warning("Station "
-						+ station.getMacAddress()
+						+ station.getMac().getMacAddress()
 						+ ": Directional antennas are only allowed when using the interference model."
 						+ " An omnidirectional antenna is used instead.");
 				station.getMac().getPhy().useOmnidirectionalAntenna();
