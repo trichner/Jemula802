@@ -35,26 +35,29 @@
 package station;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
+
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
+
 import kernel.JEEvent;
 import kernel.JEEventScheduler;
 import kernel.JETime;
 import kernel.JEmula;
 import layer0_medium.JEWirelessMedium;
+import layer1_80211Phy.JE802_11Phy;
 import layer1_802Phy.JE802Mobility;
+import layer1_802Phy.JE802Phy;
 import layer1_802Phy.JE802PhyMode;
 import layer2_802Mac.JE802_Mac;
 import layer2_80211Mac.JE802_11Mac;
 import layer3_network.JE802RouteManager;
 import layer4_transport.JE802TCPManager;
 import layer5_application.JE802TrafficGen;
+
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -66,11 +69,7 @@ public class JE802Station extends JEmula {
 
 	private List<JE802TrafficGen> trafficGenerators;
 
-	// private int address;
-
-	private JE802_Mac theMac;
-
-	private Map<Integer, JE802_11Mac> dot11MacMap;
+	private JE802_11Mac theMac;
 
 	private final JE802StatEval statEval;
 
@@ -78,11 +77,13 @@ public class JE802Station extends JEmula {
 
 	private List<Integer> wiredAddresses;
 
-	private JE802Sme sme;
+	private JE802Sme theSme;
 
 	private JE802RouteManager ipLayer;
 
 	private JE802TCPManager tcp;
+
+	private JE802Phy thePhy;
 
 	private final XPath xpath = XPathFactory.newInstance().newXPath();
 
@@ -97,93 +98,80 @@ public class JE802Station extends JEmula {
 			this.message("XML definition " + aTopLevelNode.getNodeName()
 					+ " found.", 1);
 
-			// // get station address
-			// this.address = Integer.parseInt(aTopLevelNode
-			// .getAttribute("address"));
-			// String wiredStationsString =
-			// aTopLevelNode.getAttribute("wiredTo");
-			// if (wiredStationsString.isEmpty()) {
-			// this.wiredAddresses = null;
-			// } else {
-			// String[] addresses = wiredStationsString.split(",");
-			// this.wiredAddresses = new ArrayList<Integer>(addresses.length);
-			// for (String wired : addresses) {
-			// Integer addr = new Integer(wired);
-			// this.wiredAddresses.add(addr);
-			// }
-			// }
-
-			this.dot11MacMap = new HashMap<Integer, JE802_11Mac>();
 			this.trafficGenerators = new ArrayList<JE802TrafficGen>();
 
 			if (aTopLevelNode.hasChildNodes()) {
-				// -- create SME (Station Management Entity):
 				// ------------------------------------------------------------------------------------------------
+				// -- create SME (Station Management Entity):
 				Node smeNode = (Node) xpath.evaluate("JE802SME", aTopLevelNode,
 						XPathConstants.NODE);
-				this.message("allocating " + smeNode.getNodeName(), 10);
-				this.sme = new JE802Sme(aScheduler, aGenerator, smeNode, this);
+				if (smeNode == null) {
+					this.error("No JE802SME element found in XML scenario file.");
+				}
+				this.message("allocating " + smeNode.getNodeName(),10);
+				this.theSme = new JE802Sme(aScheduler, aGenerator, smeNode);
 
-				// -- create mobility:
 				// ----------------------------------------------------------------------------------------
+				// -- create mobility:
 				Node mobNode = (Node) xpath.evaluate("JE802Mobility",
 						aTopLevelNode, XPathConstants.NODE);
 				this.message("allocating " + mobNode.getNodeName(), 10);
 				this.mobility = new JE802Mobility(mobNode, longitude, latitude);
 
-				// -- create MACS:
 				// ----------------------------------------------------------------------------------------
+				// create PHY layer:
+				Node phyNode = (Node) this.xpath.evaluate("JE80211PHY",
+						aTopLevelNode, XPathConstants.NODE);
+				if (phyNode == null) {
+					this.error("No JE80211PHY element found in XML scenario file.");
+				}
+				this.thePhy = new JE802_11Phy(aScheduler, statEval, aGenerator,
+						aChannel, aGui, phyNode);
+				this.thePhy.setThePhyModeList(phyModes);
+				this.thePhy.setMobility(this.mobility);
+				this.thePhy.send(new JEEvent("start_req", this.thePhy,
+						theUniqueEventScheduler.now()));
 
-				// create 802_11 Macs, if any
-
-				NodeList macList = (NodeList) xpath.evaluate("JE80211MAC",
-						aTopLevelNode, XPathConstants.NODESET);
-				if (macList.getLength() > 0) {
-					for (int i = 0; i < macList.getLength(); i++) {
-						Node macNode = macList.item(i);
-						this.message("allocating " + macNode.getNodeName(), 10);
-						JE802_11Mac theMac = new JE802_11Mac(aScheduler,
-								aStatEval, aGenerator, aGui, aChannel, macNode,
-								this.sme.getHandlerId());
-						this.dot11MacMap.put(theMac.getChannel(),
-								(JE802_11Mac) theMac);
-						theMac.getPhy().setThePhyModeList(phyModes);
-						theMac.getMlme().getTheAlgorithm().compute();
-						theMac.getPhy().setMobility(this.mobility);
-						theMac.getPhy().send(
-								new JEEvent("start_req", theMac.getPhy(),
-										theUniqueEventScheduler.now()));
-						this.theMac = theMac;
-					}
-
-					sme.setMacs(new ArrayList<JE802_11Mac>(dot11MacMap.values()));
-
-					this.ipLayer = new JE802RouteManager(aScheduler,
-							aGenerator, this.sme, statEval, this);
-					this.sme.setIpHandlerId(this.ipLayer.getHandlerId());
+				// ----------------------------------------------------------------------------------------
+				// -- create MAC layer:
+				Node macNode = (Node) xpath.evaluate("JE80211MAC",
+						aTopLevelNode, XPathConstants.NODE);
+				if (macNode == null) {
+					this.error("No JE80211Mac found.");
 				} else {
-					this.message("No JE80211Mac definition found", 10);
+					this.message("allocating " + macNode.getNodeName(), 10);
+					JE802_11Mac aMac = new JE802_11Mac(aScheduler, aStatEval,
+							aGenerator, aGui, aChannel, macNode,
+							this.theSme.getHandlerId(),this.thePhy);
+					this.theMac = aMac;
+					this.theMac.getMlme().getTheAlgorithm().compute();
+
+					this.theSme.setMac(this.theMac);
+					this.thePhy.setMac(this.theMac);
+					this.theMac.setPhy(this.thePhy);
+					
+					this.ipLayer = new JE802RouteManager(aScheduler,aGenerator, this.theSme, statEval);
+					this.theSme.setIpHandlerId(this.ipLayer.getHandlerId());
 				}
 
-				// -- create TCP Manager:
 				// ------------------------------------------------------------------------------------------------
+				// -- create TCP Manager:
 				Node tcpNode = (Node) xpath.evaluate("JE802TCP", aTopLevelNode,
 						XPathConstants.NODE);
 				this.tcp = new JE802TCPManager(aScheduler, aGenerator, tcpNode,
 						this.ipLayer, this.statEval);
 				this.ipLayer.setTcpHandlerId(tcp.getHandlerId());
 
-				// -- create traffic generators:
 				// ----------------------------------------------------------------------------------------
-
+				// -- create traffic generators:
 				NodeList tgList = (NodeList) xpath.evaluate("JE802TrafficGen",
 						aTopLevelNode, XPathConstants.NODESET);
 				for (int i = 0; i < tgList.getLength(); i++) {
 					Node tgNode = tgList.item(i);
 					this.message("allocating " + tgNode.getNodeName(), 10);
 					JE802TrafficGen aNewTrafficGen = new JE802TrafficGen(
-							aScheduler, aGenerator, tgNode, this.theMac.getMacAddress(),
-							aStatEval, tcp);
+							aScheduler, aGenerator, tgNode,
+							this.theMac.getMacAddress(), aStatEval, tcp);
 					this.trafficGenerators.add(aNewTrafficGen);
 					// stop generating traffic, usually not used:
 					aNewTrafficGen.send(new JEEvent("stop_req", aNewTrafficGen,
@@ -192,7 +180,6 @@ public class JE802Station extends JEmula {
 					aNewTrafficGen.send(new JEEvent("start_req",
 							aNewTrafficGen, aNewTrafficGen.getStartTime()));
 				}
-
 			} else {
 				this.message("XML definition " + aTopLevelNode.getNodeName()
 						+ " has no child nodes!", 10);
@@ -236,28 +223,16 @@ public class JE802Station extends JEmula {
 		return statEval;
 	}
 
-	// public int getMacAddress() {
-	// return this.address;
-	// }
-
 	public JE802Sme getSme() {
-		return this.sme;
+		return this.theSme;
 	}
 
-	public int getFixedChannel() {
-		for (JE802_11Mac aMac : dot11MacMap.values()) {
-			if (aMac.isFixedChannel()) {
-				return aMac.getChannel();
-			}
-		}
-		return this.dot11MacMap.values().iterator().next().getPhy()
-				.getCurrentChannelNumberTX();
+	public JE802Phy getPhy() {
+		return this.thePhy;
 	}
 
 	public double getTransmitPowerLeveldBm() {
-		// returns power level of first mac
-		return this.dot11MacMap.values().iterator().next().getPhy()
-				.getCurrentTransmitPowerLevel_dBm();
+		return this.getPhy().getCurrentTransmitPowerLevel_dBm();
 	}
 
 	public JE802Mobility getMobility() {
@@ -266,10 +241,6 @@ public class JE802Station extends JEmula {
 
 	public long getLostPackets() {
 		return tcp.getLostPackets();
-	}
-
-	public void setWiredStations(List<JE802Station> wiredStations) {
-		this.sme.setWiredStations(wiredStations);
 	}
 
 	public List<Integer> getWiredAddresses() {

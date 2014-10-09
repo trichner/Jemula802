@@ -98,14 +98,14 @@ public class JE802Starter {
 		Document anXMLdoc = null;
 		File theScenarioFile = new File(aScenarioFilename); // The file to parse
 		if (!theScenarioFile.exists()) {// the XML scenario file does not exist
-										// or is not accessible
+			// or is not accessible
 			System.err
 					.println("This is Jemula802. Error: could not open the XML scenario description file "
 							+ theScenarioFile);
 			System.exit(0);
 		} else {
-			System.out.println("This is Jemula802. XML scenario file: "
-					+ theScenarioFile.getName());
+			System.out.println(" JE802Starter: This is Jemula802.\n JE802Starter: XML scenario file is \""
+					+ theScenarioFile.getName() + "\"");
 			DocumentBuilderFactory factory = DocumentBuilderFactory
 					.newInstance();
 			DocumentBuilder parser;

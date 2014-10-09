@@ -33,7 +33,7 @@ public class JE802RouteManager extends JEEventHandler {
 
 	private int tcpHandlerId;
 
-	private final JE802Sme sme;
+	private final JE802Sme theSme;
 
 	private final JE802AODVRoutingTable rt;
 
@@ -57,20 +57,14 @@ public class JE802RouteManager extends JEEventHandler {
 
 	private final JE802StatEval statEval;
 
-	public JE802RouteManager(JEEventScheduler aScheduler, final Random aGenerator, JE802Sme sme, JE802StatEval statEval,
-			JE802Station ourStation) {
+	public JE802RouteManager(JEEventScheduler aScheduler, final Random aGenerator, JE802Sme sme, JE802StatEval statEval) {
 		super(aScheduler, aGenerator);
-		this.sme = sme;
+		this.theSme = sme;
 		this.statEval = statEval;
 		this.availableChannels = sme.getAvailableChannels();
 		this.helloPacketsSeen = new ArrayList<Integer>();
 		this.routeStats = new JE802RoutingStatistics(this.availableChannels);
-		if (JE802RoutingConstants.channelSwitchingEnabled) {
-			this.channelMgr = new JE802HybridChannelManager(sme, aGenerator, aScheduler, ourStation);
-		} else {
-			this.channelMgr = new JE802FixedChannelManager(aScheduler, aGenerator, sme);
-		}
-
+		this.channelMgr = new JE802HybridChannelManager(theSme, theUniqueRandomGenerator, theUniqueEventScheduler);
 		this.ownAddress = new JE802HopInfo(sme.getAddress(), channelMgr.getFirstChannelNo());
 
 		if (JE802RoutingConstants.routingEnabled) {
@@ -89,7 +83,7 @@ public class JE802RouteManager extends JEEventHandler {
 	}
 
 	public void checkQueueSize(int size) {
-		sme.checkQueueSize(size);
+		theSme.checkQueueSize(size);
 	}
 
 	// Calculates the cost of a the path according to some Multichannel Routing
@@ -127,6 +121,11 @@ public class JE802RouteManager extends JEEventHandler {
 		String eventName = anEvent.getName();
 		JETime now = anEvent.getScheduledTime();
 		if (eventName.equals("TCP_Deliv_req")) {
+			this.message("Router at Station " + this.getAddress() + " on Channel "
+					+ this.theSme.getChannelsInUse() + " received event '"
+					+ eventName + "'", 10);
+
+
 			if (JE802RoutingConstants.routingEnabled) {
 				this.route(anEvent);
 			} else {
@@ -154,7 +153,8 @@ public class JE802RouteManager extends JEEventHandler {
 				parameterList.setElementAt(ipPacket, 3); // Deliver an IP packet
 															// instead of a TCP
 															// Packet
-				this.send(new JEEvent("IP_Deliv_req", sme.getHandlerId(), now, parameterList));
+				this.message("requesting IP_Delivery",10);
+				this.send(new JEEvent("IP_Deliv_req", theSme.getHandlerId(), now, parameterList));
 			}
 		} else if (eventName.equals("hop_evaluation")) {
 			JE802IPPacket ipPacket = (JE802IPPacket) anEvent.getParameterList().get(0);
@@ -200,7 +200,7 @@ public class JE802RouteManager extends JEEventHandler {
 				this.sendHello();
 				this.message("Send Hello at Station" + ownAddress, 60);
 			}
-			// 1% Jitter in interval times, avoids that all stations send hello
+			// 1% Jitter in interval times, avoids that all theStations send hello
 			// messages at the same time
 			JETime interval = JE802RoutingConstants.HELLO_INTERVAL_MS;
 			JETime nextHelloTime = now.plus(interval).plus(
@@ -494,7 +494,7 @@ public class JE802RouteManager extends JEEventHandler {
 					rrep.setLastHopFixedChannel(ownAddress.getChannel());
 					channelMgr.unicastIPPacket(rrep, lastHop2);
 					this.message(
-							"Station " + sme.getAddress() + " sent RREP to " + rrep.getDA() + "over channel "
+							"Station " + theSme.getAddress() + " sent RREP to " + rrep.getDA() + "over channel "
 									+ lastHop.getChannel(), 60);
 				}
 				JE802RoutingTableEntry rrepDestEntry = rt.lookupRoute(rreqPacket.getDA());

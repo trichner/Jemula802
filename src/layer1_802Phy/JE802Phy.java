@@ -51,6 +51,7 @@ import kernel.JEEventScheduler;
 import kernel.JETime;
 import layer0_medium.JEWirelessMedium;
 import layer0_medium.JEWirelessChannel;
+import layer2_80211Mac.JE802_11Mac;
 import layer2_802Mac.JE802_Mac;
 
 import org.w3c.dom.Element;
@@ -94,9 +95,7 @@ public abstract class JE802Phy extends JEEventHandler {
 
 	protected JEAntenna theAntenna;
 
-	protected int currentChannelNumberRX;
-
-	protected int currentChannelNumberTX;
+	protected int currentChannelNumber;
 
 	protected double currentTransmitPowerLevel_dBm;
 
@@ -105,10 +104,9 @@ public abstract class JE802Phy extends JEEventHandler {
 	protected boolean onceTx = false;
 
 	public JE802Phy(JEEventScheduler aScheduler, JE802StatEval statEval, Random aGenerator, JEWirelessMedium aChannel,
-			JE802Gui aGui, Node aTopLevelNode, JE802_Mac theMac) throws XPathExpressionException {
+			JE802Gui aGui, Node aTopLevelNode) throws XPathExpressionException {
 
 		super(aScheduler, aGenerator);
-		this.theMac = theMac;
 		this.theUniqueGui = aGui;
 		this.theState = state.idle;
 		this.theUniqueRadioChannel = aChannel;
@@ -254,8 +252,7 @@ public abstract class JE802Phy extends JEEventHandler {
 
 	@Override
 	public String toString() {
-		return this.currentChannelNumberRX + "/" + this.currentChannelNumberTX + "/" + this.currentRxEnd + "/"
-				+ this.currentTxEnd + super.toString();
+		return this.currentChannelNumber + "/" + this.currentRxEnd + "/" + this.currentTxEnd + super.toString();
 	}
 
 	public JEAntenna getAntenna() {
@@ -266,68 +263,36 @@ public abstract class JE802Phy extends JEEventHandler {
 		this.theAntenna = new JEAntenna(1, 0, 0, 0, 180);
 	}
 
-	public JE802_Mac getMac() {
-		return theMac;
-	}
-
-	/**
-	 * @return the currentChannelNumberRX
-	 */
-	public int getCurrentChannelNumberRX() {
-		return currentChannelNumberRX;
-	}
-
-	/**
-	 * @param currentChannelNumberRX
-	 *            the currentChannelNumberRX to set
-	 */
-	public void setCurrentChannelNumberRX(int currentChannelNumberRX) {
-		this.currentChannelNumberRX = currentChannelNumberRX;
-	}
-
-	/**
-	 * @return the currentChannelNumberTX
-	 */
-	public int getCurrentChannelNumberTX() {
-		return currentChannelNumberTX;
-	}
-
-	/**
-	 * @param currentChannelNumberTX
-	 *            the currentChannelNumberTX to set
-	 */
-	public void setCurrentChannelNumberTX(int currentChannelNumberTX) {
-		this.currentChannelNumberTX = currentChannelNumberTX;
-	}
-
-	/**
-	 * @return the currentTransmitPowerLevel_dBm
-	 */
 	public double getCurrentTransmitPowerLevel_dBm() {
 		return currentTransmitPowerLevel_dBm;
 	}
 
-	/**
-	 * @param currentTransmitPowerLevel_dBm
-	 *            the currentTransmitPowerLevel_dBm to set
-	 */
 	public void setCurrentTransmitPowerLevel_dBm(double currentTransmitPowerLevel_dBm) {
 		this.currentTransmitPowerLevel_dBm = currentTransmitPowerLevel_dBm;
 	}
 
-	/**
-	 * @return the currentTransmitPower_mW
-	 */
 	public double getCurrentTransmitPower_mW() {
 		return currentTransmitPower_mW;
 	}
 
-	/**
-	 * @param currentTransmitPower_mW
-	 *            the currentTransmitPower_mW to set
-	 */
 	public void setCurrentTransmitPower_mW(double currentTransmitPower_mW) {
 		this.currentTransmitPower_mW = currentTransmitPower_mW;
+	}
+
+	public void setMac(JE802_11Mac mac) {
+		this.theMac = mac;
+	}
+
+	public JE802_Mac getMac() {
+		return theMac;
+	}
+
+	public int getCurrentChannel() {
+		return this.currentChannelNumber;
+	}
+
+	public void setChannel(int channel) {
+		this.currentChannelNumber = channel;
 	}
 
 }

@@ -64,8 +64,6 @@ public abstract class JE802_Mac extends JEEventHandler {
 
 	protected final JE802StatEval statEval;
 
-	protected JE802Phy thePhy;
-
 	/**
 	 * @param aTopLevelNode
 	 * @throws XPathExpressionException
@@ -91,19 +89,6 @@ public abstract class JE802_Mac extends JEEventHandler {
 	@Override
 	public abstract void event_handler(final JEEvent anEvent);
 
-	/**
-	 * Returns the general phy. (override to provide implementation for
-	 * retrieving a phy instance of a subtype)
-	 * 
-	 * @return thePhy
-	 */
-	public JE802Phy getPhy() {
-		return thePhy;
-	}
-
-	public int getChannel() {
-		return this.thePhy.getCurrentChannelNumberTX();
-	}
 	
 	public JEEventScheduler getTheUniqueEventScheduler() {
 		return this.theUniqueEventScheduler;

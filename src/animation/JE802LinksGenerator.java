@@ -151,13 +151,13 @@ public abstract class JE802LinksGenerator extends JE802KmlGenerator {
 
 		StringBuilder coordinateStr = new StringBuilder();
 
-		// fix for jumping line in animation, stations should not have same
+		// fix for jumping line in animation, theStations should not have same
 		// latitude
 		if (srcVec[0] == dstVec[0]) {
 			srcVec[0] += 10E-14;
 		}
 
-		// fix for jumping line in animation, stations should not have same
+		// fix for jumping line in animation, theStations should not have same
 		// longitude
 		if (srcVec[1] == dstVec[1]) {
 			srcVec[1] += 10E-14;

@@ -177,20 +177,13 @@ public class JE802TrafficGen extends JEEventHandler {
 			if (this.type != TrafficType.disabled) {
 				this.theStatEval.setTcpTrafficType(stationAddress, port, fileSuffix);
 				String aPath2Results = theStatEval.getPath2Results();
-				
+
 				String thrpFileheader = "% time[ms] | #packets | overall #packets | avrg.packetsize[byte] | overall sum packetsize[byte] | thpt overall[Mb/s] | tpht last interval[Mb/s]";
 
 				if (this.EvalThrp) {
 					String filename = "thrp_SA" + this.stationAddress + "_DA" + this.DA + "_AC" + this.AC + "_ID_"
 							+ this.getHandlerId() + "_" + this.type + "_" + fileSuffix;
 					this.endThrpResults = new JEStatEvalThrp(aPath2Results, filename + "_End", thrpFileheader);
-					/*
-					 * this.hopThrpResults = new ArrayList<JEStatEvalThrp>();
-					 * for(int i = 0; i<hopAddresses.size(); i++){
-					 * JEStatEvalThrp thrpEval = new
-					 * JEStatEvalThrp(aPath2Results, filename+i,
-					 * thrpFileheader); hopThrpResults.add(thrpEval); }
-					 */
 				}
 
 				if (this.EvalOffer) {
@@ -240,15 +233,14 @@ public class JE802TrafficGen extends JEEventHandler {
 				JETime aNextPacketArrivalTime = JETime.add(now, new JETime(this.var_interarr_ms.nextvalue()));
 				this.send(new JEEvent("newpacket_ind", this.getHandlerId(), aNextPacketArrivalTime));
 			} else if (this.type == TrafficType.cbr) { // deterministic data
-														// model
+				// model
 				JETime aNextPacketArrivalTime = JETime.add(now, new JETime(this.var_interarr_ms.nextvalue()));
 				this.send(new JEEvent("newpacket_ind", this.getHandlerId(), aNextPacketArrivalTime));
 			} else if (this.type == TrafficType.saturation) { // random data
-																// model
+				// model
 				this.send(new JEEvent("newpacket_ind", this.getHandlerId(), now));
 			} else if (this.type == TrafficType.saturation_fixed) { // random
-																	// data
-																	// model
+				// data model
 				this.send(new JEEvent("newpacket_ind", this.getHandlerId(), now));
 
 			} else if (this.type == TrafficType.disabled) {
@@ -364,7 +356,7 @@ public class JE802TrafficGen extends JEEventHandler {
 				anEvent.getParameterList().add(this.AC);
 				anEvent.getParameterList().add(this.stationAddress);
 				this.send(anEvent, theStatEval); // forward all packets for
-													// global evaluation
+				// global evaluation
 			}
 		} else if (anEventName.equals("newpacket_ind")) {
 			if (tcp.isBufferFull(port)) {
@@ -429,6 +421,8 @@ public class JE802TrafficGen extends JEEventHandler {
 			this.parameterlist.add(hopAddresses.clone());
 			this.parameterlist.add(port);
 			this.parameterlist.add(isTcpStream);
+			this.message("TG at Station " + this.stationAddress + " " + this.toString() + " sending TCP delivery request", 10);
+
 			this.send(new JEEvent("TCPDeliv_req", this.tcp.getHandlerId(), deliveryTime, this.parameterlist));
 			seqNo++;
 		}
@@ -536,7 +530,7 @@ public class JE802TrafficGen extends JEEventHandler {
 		this.stopTime = new JETime(new Double(trafficElem.getAttribute("stoptime_ms")));
 
 		this.AC = new Integer(trafficElem.getAttribute("AC")); // Access
-																// Category
+		// Category
 
 		String typeStr = trafficElem.getAttribute("type"); // traffic type
 		if (typeStr.equals("data")) {
@@ -554,9 +548,9 @@ public class JE802TrafficGen extends JEEventHandler {
 		}
 		this.seqNo = 0;
 		this.max_packet_size_byte = new Integer(trafficElem.getAttribute("max_packet_size_byte")); // packet
-																									// size
+		// size
 		this.mean_load_Mbps = new Double(trafficElem.getAttribute("mean_load_Mbps")); // offered
-																						// traffic
+		// traffic
 
 		if ((this.mean_load_Mbps < 1e-12) || (this.max_packet_size_byte < 1e-12)) {
 			this.type = TrafficType.disabled;

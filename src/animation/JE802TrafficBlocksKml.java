@@ -129,7 +129,7 @@ public class JE802TrafficBlocksKml extends JE802StationModelGenerator {
 
 	private List<Element> createOfferBlocks() {
 		ArrayList<Element> allBlocks = new ArrayList<Element>();
-		for (JE802Station station : this.stations) {
+		for (JE802Station station : this.theStations) {
 			ArrayList<Element> stationBlocks = new ArrayList<Element>();
 			if (!station.getTrafficGenList().isEmpty()
 					&& station.getTrafficGenList().get(0).getDA() != 0) {

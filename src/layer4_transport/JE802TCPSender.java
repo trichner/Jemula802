@@ -121,12 +121,13 @@ public class JE802TCPSender extends JEEventHandler {
 
 	private final JE802StatEval statEval;
 
-	private final int stationAddr;
+	private final int theStationAddr;
 
 	public JE802TCPSender(JEEventScheduler aScheduler, Random aGenerator, JE802RouteManager aRouter, int bufferSize,
 			int aHandlerId, int port, int slowStartThreshold, double minimumTimeout, int bulkAcks, JE802StatEval statEval,
 			int stationAddr) {
 		super(aScheduler, aGenerator);
+
 		buffer = new JE802TCPBufferRecord[bufferSize];
 		this.router = aRouter;
 		this.trafficHandlerId = aHandlerId;
@@ -136,13 +137,15 @@ public class JE802TCPSender extends JEEventHandler {
 		this.minimumTimeout = minimumTimeout;
 		this.slowStartThreshold = slowStartThreshold;
 		this.statEval = statEval;
-		this.stationAddr = stationAddr;
+		this.theStationAddr = stationAddr;
 	}
 
 	@Override
 	public void event_handler(JEEvent anEvent) {
 		String anEventName = anEvent.getName();
 		this.now = anEvent.getScheduledTime();
+		this.message("TCP at Station " + this.theStationAddr + " " + this.toString() + " received event '" + anEventName + "'", 10);
+
 		this.parameterlist = anEvent.getParameterList();
 		if (anEventName.equals("TCP_Deliv_req")) {
 			deliveryRequest(anEvent);
@@ -168,13 +171,13 @@ public class JE802TCPSender extends JEEventHandler {
 		if (!full) {
 			ArrayList<JE802HopInfo> returnRoute = new ArrayList<JE802HopInfo>(hopAddresses);
 			Collections.reverse(returnRoute); // reverse Route, to be replaced
-												// when routing is implemented
+			// when routing is implemented
 			int channel = returnRoute.remove(0).getChannel(); // remove first
-																// station
-																// because its
-																// your own
-																// address after
-																// reversing
+			// station
+			// because its
+			// your own
+			// address after
+			// reversing
 			// add yourself at end of reversed list, such that you are the final
 			// destination of the reversed route
 			returnRoute.add(new JE802HopInfo(this.router.getAddress(), channel));
@@ -209,7 +212,6 @@ public class JE802TCPSender extends JEEventHandler {
 				flightSize++;
 				transmit(record);
 				record.setSent(true);
-				this.message(("Handed " + seqNo + " to Mac, Port: " + packetPort + " TO: " + rto), 10);
 			}
 			seqNo++;
 			// check if buffer is full
@@ -230,7 +232,7 @@ public class JE802TCPSender extends JEEventHandler {
 		long sequenceNo = ack.getSeqNo();
 		this.message("Ack for " + sequenceNo + "received, Port: " + ack.getPort(), 10);
 		if (sequenceNo == lastAcked) { // we received a duplicate Ack, packet
-										// was lost
+			// was lost
 			this.message("Duplicate ACK for " + sequenceNo + "Count: " + lastAckedCount + " Port " + ack.getPort(), 10);
 			lastAckedCount++;
 			flightSize--;
@@ -243,13 +245,11 @@ public class JE802TCPSender extends JEEventHandler {
 				fastRetransmit();
 			}
 			lost++;
-			// this.message("Lost " + lost + " Lossrate " +
-			// (double)lost/lastAcked*100 + "%",55);
 
 			// packet delivered successfully, notify traffic gen
 		} else if (sequenceNo > lastAcked) {
 			int cumulCount = (int) (sequenceNo - lastAcked - 1); // cumulative
-																	// acks
+			// acks
 			flightSize -= cumulCount;
 			// fast recovery, when cumulative Acks arrive, cwSize is increased
 			// by number of cumulative Acks
@@ -272,7 +272,7 @@ public class JE802TCPSender extends JEEventHandler {
 				JE802TCPBufferRecord currentRecord = buffer[i % buffer.length];
 				if (currentRecord != null && currentRecord.getPacket().getSeqNo() <= sequenceNo) {
 					currentRecord.packetDelivered();
-					statEval.tcpPacketAcked(stationAddr, port);
+					statEval.tcpPacketAcked(theStationAddr, port);
 					JE802TCPPacket packet = currentRecord.getPacket();
 					double rtt = theUniqueEventScheduler.now().getTimeMs() - packet.getCreationTime().getTimeMs();
 					adjustSmoothedRTT(rtt);
@@ -314,8 +314,6 @@ public class JE802TCPSender extends JEEventHandler {
 					flightSize++;
 					transmit(currentRecord);
 					currentRecord.setSent(true);
-					this.message(("Handed " + currentRecord.getPacket().getSeqNo() + " to RoutingLayer, CWmin: " + cwMin
-							+ " cwSize:" + cwSize + " Port " + ack.getPort() + " TO: " + rto), 70);
 				}
 			}
 		}
@@ -397,12 +395,10 @@ public class JE802TCPSender extends JEEventHandler {
 				rto = new JETime(newRto);
 			}
 		}
-		// this.message("RTT: " + smoothedRTT + "ms RttVar: " + rttVar +
-		// "ms timeout: " + rto, 10);
 	}
 
 	private void transmit(JE802TCPBufferRecord record) {
-		statEval.tcpPacketSent(stationAddr, port);
+		statEval.tcpPacketSent(theStationAddr, port);
 		record.setTimer(rto);
 		record.getPacket().setCreationTime(now);// for having accurate rtt
 		this.parameterlist.clear();

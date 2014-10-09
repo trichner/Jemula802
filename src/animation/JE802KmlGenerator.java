@@ -61,11 +61,11 @@ public abstract class JE802KmlGenerator {
 	// document, needed for creating elements
 	protected Document doc;
 
-	protected List<JE802Station> stations;
+	protected List<JE802Station> theStations;
 
 	public JE802KmlGenerator(final Document doc, final List<JE802Station> stations) {
 		this.doc = doc;
-		this.stations = new ArrayList<JE802Station>(stations);
+		this.theStations = new ArrayList<JE802Station>(stations);
 	}
 
 	public abstract Element createDOM();

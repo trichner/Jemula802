@@ -51,7 +51,7 @@ public class JE802AODVRoutingTable extends JEmula {
 			JE802HopInfo unreachDest = rerr.getUnreachDestAddr().get(i);
 			long unreachDestSeqNo = rerr.getUnreachDestSeqNo().get(0);
 			JE802RoutingTableEntry destEntry = routingTable.get(unreachDest.getAddress());
-			// not all the stations receiving a RERR have this destination
+			// not all the theStations receiving a RERR have this destination
 			// because the RERR might have been broadcasted
 			if (destEntry != null) {
 				destEntry.setValid(false);

@@ -143,7 +143,7 @@ public class JEMediumUnitDisk extends JEEventHandler implements JEWirelessMedium
 		// aPpdu.display_status();
 		JE802Phy aTxPhy = (JE802Phy) anEvent.getParameterList().elementAt(0);
 		// aTxPhy.display_status();
-		JE802ChannelEntry chan = this.channels.get(aTxPhy.getCurrentChannelNumberTX());
+		JE802ChannelEntry chan = this.channels.get(aTxPhy.getCurrentChannel());
 		// create new transmission
 		JE802MediumTxRecord transmission = chan.addTransmission(aTxPhy);
 		aTxPhy.setOnceTx(true);
@@ -175,7 +175,7 @@ public class JEMediumUnitDisk extends JEEventHandler implements JEWirelessMedium
 	private void transmitEnd(final JEEvent anEvent) {
 		JE802Ppdu aPpdu = (JE802Ppdu) anEvent.getParameterList().elementAt(0);
 		JE802Phy aTxPhyTransc = (JE802Phy) anEvent.getParameterList().elementAt(1);
-		JE802ChannelEntry chan = this.channels.get(aTxPhyTransc.getCurrentChannelNumberTX());
+		JE802ChannelEntry chan = this.channels.get(aTxPhyTransc.getCurrentChannel());
 
 		JE802MediumTxRecord transmission = chan.removeTransmission(aTxPhyTransc);
 
@@ -202,7 +202,7 @@ public class JEMediumUnitDisk extends JEEventHandler implements JEWirelessMedium
 	private void switchChannel(final JEEvent anEvent) {
 		JE802Phy phy = (JE802Phy) anEvent.getParameterList().get(0);
 		Integer from = (Integer) anEvent.getParameterList().get(1);
-		Integer to = phy.getCurrentChannelNumberTX();
+		Integer to = phy.getCurrentChannel();
 		JE802ChannelEntry fromChannel = this.channels.get(from);
 		fromChannel.removePhy(phy);
 		JE802ChannelEntry toChannel = this.channels.get(to);
@@ -211,7 +211,7 @@ public class JEMediumUnitDisk extends JEEventHandler implements JEWirelessMedium
 
 	private void registerPhy(final JEEvent anEvent) {
 		JE802Phy newPhy = (JE802Phy) anEvent.getParameterList().get(0);
-		JE802ChannelEntry chan = this.channels.get(newPhy.getCurrentChannelNumberTX());
+		JE802ChannelEntry chan = this.channels.get(newPhy.getCurrentChannel());
 		// message(newPhy.getDot11CurrentChannelNumberTX());
 		// message(chan);
 		chan.registerPhy(newPhy);
@@ -219,7 +219,7 @@ public class JEMediumUnitDisk extends JEEventHandler implements JEWirelessMedium
 
 	private void updateConnectivity(final JEEvent anEvent) {
 		JE802Phy aTxPhy = (JE802Phy) anEvent.getParameterList().elementAt(0);
-		JE802ChannelEntry chan = this.channels.get(aTxPhy.getCurrentChannelNumberTX());
+		JE802ChannelEntry chan = this.channels.get(aTxPhy.getCurrentChannel());
 		chan.updateLocation(aTxPhy);
 	}
 
@@ -258,15 +258,15 @@ public class JEMediumUnitDisk extends JEEventHandler implements JEWirelessMedium
 	}
 
 	@Override
-	public double getRxPowerLevel_mW(final JE802Phy phy) {
-		JE802ChannelEntry chan = this.channels.get(phy.getCurrentChannelNumberTX());
+	public double getRxPowerLevel_mW(final JE802Phy Phy) {
+		JE802ChannelEntry chan = this.channels.get(Phy.getCurrentChannel());
 		if (chan == null) {
-			this.error("Channel " + phy.getCurrentChannelNumberTX() + " not defined in XML");
+			this.error("Channel " + Phy.getCurrentChannel() + " not defined in XML");
 			return 0.0;
 		} else {
 			// if there is an ongoing transmission, the power level is high,
 			// certainly above threshold
-			if (chan.hasTransmissionInRange(phy)) {
+			if (chan.hasTransmissionInRange(Phy)) {
 				return Double.MAX_VALUE;
 			} else {
 				return -Double.MAX_VALUE;

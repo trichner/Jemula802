@@ -278,6 +278,7 @@ public class JE802TCPManager extends JEEventHandler {
 
 	@SuppressWarnings("unchecked")
 	private void deliveryRequest(JEEvent anEvent) {
+		this.message("Processing the TCP deliver request.", 10);
 		boolean isTcpStream = (Boolean) parameterlist.get(7);
 		int ac = (Integer) parameterlist.get(4);
 		int trafficHandlerId = (Integer) parameterlist.get(3);

@@ -83,7 +83,7 @@ public class JE802RadioCoverageGenerator extends JE802KmlGenerator {
 		Double latMin = Double.POSITIVE_INFINITY;
 		Double longMax = Double.NEGATIVE_INFINITY;
 		Double longMin = Double.POSITIVE_INFINITY;
-		for (JE802Station station : this.stations) {
+		for (JE802Station station : this.theStations) {
 			double[] position = convertXYZtoLatLonAlt(station.getXLocation(new JETime()), station.getYLocation(new JETime()),
 					station.getZLocation(new JETime()));
 			double latHigh = position[0] + meters2DegreesLatitude(this.reuseDistance);

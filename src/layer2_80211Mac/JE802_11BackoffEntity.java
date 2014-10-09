@@ -86,7 +86,7 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 
 	private int theLongRetryCnt;
 
-	private static int discardedCounter = 0;
+	private int discardedCounter = 0;
 
 	private int maxRetryCountShort;
 
@@ -215,7 +215,7 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 		String anEventName = anEvent.getName();
 		this.theLastRxEvent = anEvent;
 
-		this.message("Station " + this.theMac.getMacAddress() + " on Channel " + this.theMac.getChannel() + " AC " + this.theAC
+		this.message("Station " + this.theMac.getMacAddress() + " on Channel " + this.theMac.getPhy().getCurrentChannel() + " AC " + this.theAC
 				+ " received event '" + anEventName + "'", 30);
 
 		if (anEventName.contains("update_backoff_timer_req")) {
@@ -546,7 +546,7 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 	private void event_backoff_expired_ind(JEEvent anEvent) {
 		if (this.theMpduCtrl != null) {
 			if (this.theBackoffTimer.is_idle() & this.theInterFrameSpaceTimer.is_idle()) {
-				this.warning("Station " + this.theMac.getMacAddress() + " backoff error?");
+				this.message("Station " + this.theMac.getMacAddress() + " backoff error?",10);
 				return;
 			}
 		}
@@ -620,17 +620,17 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 			case ack:
 				discardedCounter = 0;
 				this.message("Station " + this.theMac.getMacAddress() + " received ACK " + this.theMpduRx.getSeqNo()
-						+ "from Station " + this.theMpduRx.getSA() + " on channel " + this.theMac.getChannel(), 10);
+						+ "from Station " + this.theMpduRx.getSA() + " on channel " + this.theMac.getPhy().getCurrentChannel(), 10);
 				receiveAck();
 				break;
 			case rts:
 				this.message("Station " + this.theMac.getMacAddress() + " received RTS " + this.theMpduRx.getSeqNo()
-						+ "from Station " + this.theMpduRx.getSA() + " on channel " + this.theMac.getChannel(), 10);
+						+ "from Station " + this.theMpduRx.getSA() + " on channel " + this.theMac.getPhy().getCurrentChannel(), 10);
 				receiveRts();
 				break;
 			case cts:
 				this.message("Station " + this.theMac.getMacAddress() + " received CTS " + this.theMpduRx.getSeqNo()
-						+ "from Station " + this.theMpduRx.getSA() + " on channel " + this.theMac.getChannel(), 10);
+						+ "from Station " + this.theMpduRx.getSA() + " on channel " + this.theMac.getPhy().getCurrentChannel(), 10);
 				receiveCts();
 				break;
 			default:
@@ -846,7 +846,7 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 																																// NOT
 																																// the
 																																// destination
-			this.theNavTimer.start(aNav, this.theMac.getMacAddress(), this.theAC, this.theMac.getChannel());
+			this.theNavTimer.start(aNav, this.theMac.getMacAddress(), this.theAC, this.theMac.getPhy().getCurrentChannel());
 		}
 	}
 
@@ -1051,12 +1051,12 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 				|| this.theInterFrameSpaceTimer.is_active()) {
 			// theUniqueGui.addLine(theUniqueEventScheduler.now(),
 			// this.theMac.getMacAddress(), this.theAC-1, "red",
-			// this.theMac.getChannel());
+			// this.theMac.getPhy().getChannel());
 			return true;
 		} else {
 			// theUniqueGui.addLine(theUniqueEventScheduler.now(),
 			// this.theMac.getMacAddress(), this.theAC-1, "green",
-			// this.theMac.getChannel());
+			// this.theMac.getPhy().getChannel());
 			return false;
 		}
 	}
@@ -1136,7 +1136,7 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 			// set seqno
 			this.theMpduCtrl.setSeqNo(this.theMpduRx.getSeqNo());
 			this.message("Station " + this.theMac.getMacAddress() + " sent ACK " + this.theMpduCtrl.getSeqNo() + " to Station "
-					+ this.theMpduCtrl.getDA() + " on channel " + this.theMac.getChannel(), 10);
+					+ this.theMpduCtrl.getDA() + " on channel " + this.theMac.getPhy().getCurrentChannel(), 10);
 		} else {
 			this.error("Station " + this.theMac.getMacAddress() + " generateACK: backoff entity has pending CTS/ACK frame");
 		}
@@ -1391,7 +1391,7 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 		for (int i = this.theQueue.size() - 1; i >= 0; i--) {
 			Vector<Object> params = new Vector<Object>();
 			params.add(this.theQueue.get(i));
-			params.add(this.theMac.getChannel());
+			params.add(this.theMac.getPhy().getCurrentChannel());
 			this.send(new JEEvent("push_back_packet", this.theMac.getHandlerId(), theUniqueEventScheduler.now(), params));
 		}
 		this.theQueue.clear();

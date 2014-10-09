@@ -102,14 +102,14 @@ public class JE802LinksKml extends JE802LinksGenerator {
 	}
 
 	/**
-	 * Creates all links of stations colored according to their throughput
+	 * Creates all links of theStations colored according to their throughput
 	 * 
-	 * @return List of KML elements representing the links between all stations
+	 * @return List of KML elements representing the links between all theStations
 	 */
 	private List<Element> createThrpLinks() {
 		ArrayList<Element> linkFolders = new ArrayList<Element>();
-		for (JE802Station station1 : stations) {
-			for (JE802Station station2 : stations) {
+		for (JE802Station station1 : theStations) {
+			for (JE802Station station2 : theStations) {
 				if (!station1.equals(station2)) {
 					// aggregate traffic of several routes over same link
 					double aggregatedThrp[] = new double[station1.getStatEval()

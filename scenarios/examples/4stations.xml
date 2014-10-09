@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <JE802>
-
-	<!--mesh -->
-	<JE802Control showGui="false" EmulationDuration_ms="41000"
+	<JE802Control showGui="true" EmulationDuration_ms="41000"
 		resume="false" resumeFile="results\hibernation.zip">
 		<JE802StatEval seed="1" EvalThrpPerAC="true"
 			EvalDelayPerAC="true" EvalOfferPerAC="true" EvaluationStarttime_ms="0"
-			EvaluationInterval_ms="500" Path2Results="results"
+			EvaluationInterval_ms="500" Path2Results="results_4stations"
 			EvalTotalOffer="true" EvalTotalThrp="true" EvalTotalDelay="true"
 			HistogramMax_ms="100" HistogramNumOfBins="100">
 			<!--JE802StatEval defines the parameters needed for statistical analysis 
@@ -16,7 +14,6 @@
 		<JE802Animation attenuationFactor="3.5" baseLatitude="47.37655200000001"
 			baseLongitude="8.548604999999982" maxDelay="5" maxThrp="5"
 			mbPerBlock="0.5" maxTxdBm="20" minTxdBm="-60" overlayAccuracy=".2"
-			generateOfferBlocks="true" generatePowerOverlay="true"
 			generateGoogleEarth="true" />
 	</JE802Control>
 
@@ -35,6 +32,15 @@
 		<JE802SME>
 			<!--not much defined so far -->
 		</JE802SME>
+		<JE80211PHY PLCPHeaderWithoutServiceField_ms="0.004"
+			PLCPPreamble_ms="0.016" PLCPServiceField_bit="16" PLCPTail_bit="6"
+			SymbolDuration_ms="0.004">
+			<MIB802.11abgn SIFS="0.016" aSlotTime="0.009"
+				dot11CurrentChannelNumber="6"
+				dot11CurrentTransmitPowerLevel_dBm="0" />
+			<JEAntenna xDirection="0" yDirection="-5" zDirection="1.6"
+				angle_degrees="360" gain_dBi="50" />
+		</JE80211PHY>
 		<JE80211MAC dot11MacAddress4_byte="6" dot11MacFCS_byte="4"
 			dot11MacHeaderACK_byte="10" dot11MacHeaderCTS_byte="10"
 			dot11MacHeaderDATA_byte="24" dot11MacHeaderRTS_byte="16"
@@ -80,18 +86,8 @@
 				dot11MaxTransmitMSDULifetime="1000" dot11RTSThreshold="500"
 				dot11ShortRetryLimit="7" />
 
-
-			<JE80211PHY PLCPHeaderWithoutServiceField_ms="0.004"
-				PLCPPreamble_ms="0.016" PLCPServiceField_bit="16" PLCPTail_bit="6"
-				SymbolDuration_ms="0.004">
-				<MIB802.11abgn SIFS="0.016" aSlotTime="0.009"
-					dot11CurrentChannelNumberRX="6" dot11CurrentChannelNumberTX="6"
-					dot11CurrentTransmitPowerLevel_dBm="0" />
-				<JEAntenna xDirection="0" yDirection="-5" zDirection="1.6"
-					angle_degrees="360" gain_dBi="50" />
-			</JE80211PHY>
-
 		</JE80211MAC>
+
 
 	</JE802Station>
 
@@ -104,7 +100,8 @@
 		<JE802TCP b="1" bufferSizePackets="10" minimumTimeoutMs="50"
 			slowStartThreshold="10" />
 		<JE802Mobility isMobile="true" xLocation="10" yLocation="10"
-			zLocation="0" offsetTime_ms="0.0" oldFormat="true" interpolationInterval_ms="900"/>
+			zLocation="0" offsetTime_ms="0.0" oldFormat="true"
+			interpolationInterval_ms="900" />
 
 		<JE802SME>
 			<!--not much defined so far -->
@@ -153,17 +150,17 @@
 				dot11MACAddress="2" dot11MaxReceiveLifetime="1000"
 				dot11MaxTransmitMSDULifetime="1000" dot11RTSThreshold="500"
 				dot11ShortRetryLimit="7" />
-
-			<JE80211PHY PLCPHeaderWithoutServiceField_ms="0.004"
-				PLCPPreamble_ms="0.016" PLCPServiceField_bit="16" PLCPTail_bit="6"
-				SymbolDuration_ms="0.004">
-				<MIB802.11abgn SIFS="0.016" aSlotTime="0.009"
-					dot11CurrentChannelNumberRX="6" dot11CurrentChannelNumberTX="6"
-					dot11CurrentTransmitPowerLevel_dBm="0" />
-				<JEAntenna xDirection="0" yDirection="-5" zDirection="1.6"
-					angle_degrees="360" gain_dBi="50" />
-			</JE80211PHY>
 		</JE80211MAC>
+
+		<JE80211PHY PLCPHeaderWithoutServiceField_ms="0.004"
+			PLCPPreamble_ms="0.016" PLCPServiceField_bit="16" PLCPTail_bit="6"
+			SymbolDuration_ms="0.004">
+			<MIB802.11abgn SIFS="0.016" aSlotTime="0.009"
+				dot11CurrentChannelNumber="6"
+				dot11CurrentTransmitPowerLevel_dBm="0" />
+			<JEAntenna xDirection="0" yDirection="-5" zDirection="1.6"
+				angle_degrees="360" gain_dBi="50" />
+		</JE80211PHY>
 
 
 	</JE802Station>
@@ -177,7 +174,8 @@
 		<JE802TCP b="1" bufferSizePackets="10" minimumTimeoutMs="50"
 			slowStartThreshold="10" />
 		<JE802Mobility isMobile="true" xLocation="10" yLocation="0"
-			zLocation="0" offsetTime_ms="0.0" oldFormat="true" interpolationInterval_ms="900" />
+			zLocation="0" offsetTime_ms="0.0" oldFormat="true"
+			interpolationInterval_ms="900" />
 		<JE802SME>
 			<!--not much defined so far -->
 		</JE802SME>
@@ -225,18 +223,18 @@
 				dot11MACAddress="3" dot11MaxReceiveLifetime="1000"
 				dot11MaxTransmitMSDULifetime="1000" dot11RTSThreshold="500"
 				dot11ShortRetryLimit="7" />
-
-			<JE80211PHY PLCPHeaderWithoutServiceField_ms="0.004"
-				PLCPPreamble_ms="0.016" PLCPServiceField_bit="16" PLCPTail_bit="6"
-				SymbolDuration_ms="0.004">
-				<MIB802.11abgn SIFS="0.016" aSlotTime="0.009"
-					dot11CurrentChannelNumberRX="6" dot11CurrentChannelNumberTX="6"
-					dot11CurrentTransmitPowerLevel_dBm="0" />
-				<JEAntenna xDirection="0" yDirection="-5" zDirection="1.6"
-					angle_degrees="360" gain_dBi="50" />
-
-			</JE80211PHY>
 		</JE80211MAC>
+
+		<JE80211PHY PLCPHeaderWithoutServiceField_ms="0.004"
+			PLCPPreamble_ms="0.016" PLCPServiceField_bit="16" PLCPTail_bit="6"
+			SymbolDuration_ms="0.004">
+			<MIB802.11abgn SIFS="0.016" aSlotTime="0.009"
+				dot11CurrentChannelNumber="6"
+				dot11CurrentTransmitPowerLevel_dBm="0" />
+			<JEAntenna xDirection="0" yDirection="-5" zDirection="1.6"
+				angle_degrees="360" gain_dBi="50" />
+
+		</JE80211PHY>
 
 
 	</JE802Station>
@@ -249,7 +247,8 @@
 		<JE802TCP b="1" bufferSizePackets="10" minimumTimeoutMs="50"
 			slowStartThreshold="10" />
 		<JE802Mobility isMobile="true" xLocation="20" yLocation="0"
-			zLocation="0" offsetTime_ms="0.0" oldFormat="true" interpolationInterval_ms="900" />
+			zLocation="0" offsetTime_ms="0.0" oldFormat="true"
+			interpolationInterval_ms="900" />
 		<JE802SME>
 			<!--not much defined so far -->
 		</JE802SME>
@@ -298,17 +297,19 @@
 				dot11MaxTransmitMSDULifetime="1000" dot11RTSThreshold="500"
 				dot11ShortRetryLimit="7" />
 
-			<JE80211PHY PLCPHeaderWithoutServiceField_ms="0.004"
-				PLCPPreamble_ms="0.016" PLCPServiceField_bit="16" PLCPTail_bit="6"
-				SymbolDuration_ms="0.004">
-				<MIB802.11abgn SIFS="0.016" aSlotTime="0.009"
-					dot11CurrentChannelNumberRX="6" dot11CurrentChannelNumberTX="6"
-					dot11CurrentTransmitPowerLevel_dBm="0" />
-				<JEAntenna xDirection="0" yDirection="-5" zDirection="1.6"
-					angle_degrees="360" gain_dBi="50" />
-
-			</JE80211PHY>
 		</JE80211MAC>
+
+
+		<JE80211PHY PLCPHeaderWithoutServiceField_ms="0.004"
+			PLCPPreamble_ms="0.016" PLCPServiceField_bit="16" PLCPTail_bit="6"
+			SymbolDuration_ms="0.004">
+			<MIB802.11abgn SIFS="0.016" aSlotTime="0.009"
+				dot11CurrentChannelNumber="6"
+				dot11CurrentTransmitPowerLevel_dBm="0" />
+			<JEAntenna xDirection="0" yDirection="-5" zDirection="1.6"
+				angle_degrees="360" gain_dBi="50" />
+
+		</JE80211PHY>
 
 
 	</JE802Station>

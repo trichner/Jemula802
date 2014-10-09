@@ -7,31 +7,30 @@ import java.util.Random;
 import java.util.Vector;
 
 import station.JE802Sme;
-
 import kernel.JEEvent;
 import kernel.JEEventHandler;
 import kernel.JEEventScheduler;
-
+import layer0_medium.JEWirelessChannel;
 import layer2_80211Mac.JE802HopInfo;
 
 public class JE802FixedChannelManager extends JEEventHandler implements JE802IChannelManager {
 
-	private final JE802Sme sme;
+	private final JE802Sme theSme;
 
-	private final List<Integer> availableChannels;
+	private final List<JEWirelessChannel> availableChannels;
 
 	public JE802FixedChannelManager(JEEventScheduler aScheduler, Random aGenerator, JE802Sme aSme) {
 		super(aScheduler, aGenerator);
-		this.sme = aSme;
-		this.sme.setChannelHandlerId(this.getHandlerId());
-		this.availableChannels = this.sme.getChannelsInUse();
+		this.theSme = aSme;
+		this.theSme.setChannelHandlerId(this.getHandlerId());
+		this.availableChannels = this.theSme.getAvailableChannels();
 	}
 
 	@Override
 	public void broadcastIPPacketAll(JE802IPPacket packet) {
 		if (packet.getTTL() >= 1) {
-			for (Integer channel : availableChannels) {
-				this.broadcastIPPacketChannel(packet, channel);
+			for (JEWirelessChannel channel : availableChannels) {
+				this.broadcastIPPacketChannel(packet, channel.getChannelNumber());
 			}
 		}
 	}
@@ -61,7 +60,7 @@ public class JE802FixedChannelManager extends JEEventHandler implements JE802ICh
 		hops.add(DA);
 		parameterList.add(hops);
 		parameterList.add(packet);
-		this.send(new JEEvent("IP_Deliv_req", sme, theUniqueEventScheduler.now(), parameterList));
+		this.send(new JEEvent("IP_Deliv_req", theSme, theUniqueEventScheduler.now(), parameterList));
 	}
 
 	@Override
@@ -70,13 +69,13 @@ public class JE802FixedChannelManager extends JEEventHandler implements JE802ICh
 		if (eventName.equals("broadcast_sent")) {
 			// ignore
 		} else {
-			this.error("Undefined Event " + eventName + " at FixedChannelManager at Station " + sme.getAddress());
+			this.error("Undefined Event " + eventName + " at FixedChannelManager at Station " + theSme.getAddress());
 		}
 	}
 
 	@Override
 	public int checkFixedSwitch(Map<Integer, Integer> neighborhoodChannelUsages) {
-		return availableChannels.get(0);
+		return availableChannels.get(0).getChannelNumber();
 	}
 
 	@Override
@@ -87,7 +86,7 @@ public class JE802FixedChannelManager extends JEEventHandler implements JE802ICh
 
 	@Override
 	public int getFirstChannelNo() {
-		return availableChannels.get(0);
+		return availableChannels.get(0).getChannelNumber();
 	}
 
 	@Override
@@ -111,7 +110,7 @@ public class JE802FixedChannelManager extends JEEventHandler implements JE802ICh
 			hops.add(nextHop);
 			parameterList.add(hops);
 			parameterList.add(packet);
-			this.send(new JEEvent("IP_Deliv_req", sme, theUniqueEventScheduler.now(), parameterList));
+			this.send(new JEEvent("IP_Deliv_req", theSme, theUniqueEventScheduler.now(), parameterList));
 		}
 	}
 

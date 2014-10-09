@@ -46,29 +46,32 @@ import org.w3c.dom.Element;
 import station.JE802Station;
 import util.Vector3d;
 
-public class JE802AntennaAnglesKml extends JE802KmlGenerator {
+public class JE802AntennasKml extends JE802KmlGenerator {
 
 	private final String antennaConeName = "antennaCone.dae";
 	private final String antennaSphereName = "sphere.dae";
 
-	public JE802AntennaAnglesKml(final Document doc, final List<JE802Station> stations) {
+	public JE802AntennasKml(final Document doc,
+			final List<JE802Station> stations) {
 		super(doc, stations);
 	}
 
 	private List<Element> createAntennaModels() {
 		ArrayList<Element> models = new ArrayList<Element>();
-		for (JE802Station station : this.stations) {
+		for (JE802Station station : this.theStations) {
 			int positionCount;
 			JETime currentTime = station.getStatEval().getEvaluationStarttime();
 			JETime interval = station.getStatEval().getEvaluationInterval();
 			if (station.isMobile()) {
-				double end = station.getStatEval().getEvaluationEnd().getTimeMs();
-				positionCount = (int) ((end - currentTime.getTimeMs()) / interval.getTimeMs());
+				double end = station.getStatEval().getEvaluationEnd()
+						.getTimeMs();
+				positionCount = (int) ((end - currentTime.getTimeMs()) / interval
+						.getTimeMs());
 			} else {
 				positionCount = 1;
 			}
 
-			JEAntenna antenna = station.getMac().getPhy().getAntenna();
+			JEAntenna antenna = station.getPhy().getAntenna();
 			String scaleFactorYZ;
 			String scaleFactorX;
 			String heading, tilt, roll;
@@ -77,20 +80,25 @@ public class JE802AntennaAnglesKml extends JE802KmlGenerator {
 
 			for (int i = 0; i < positionCount; i++) {
 
-				headingRotation = -station.getMobility().getTraceHeading(currentTime);
+				headingRotation = -station.getMobility().getTraceHeading(
+						currentTime);
 
 				if (antenna.isDirectional()) {
 					Vector3d antennaDir = antenna.getDirection();
 					double angleDeg = antenna.getApertureAngle();
 					double angle = Math.toRadians(angleDeg);
-					double newWidth = Math.tan(angle) * JE802KmlGenerator.antennaConeHeight * 2;
-					double yzScaleFactor = newWidth / JE802KmlGenerator.antennaConeHeight; // antennaConeHeight
-																							// ==
-																							// antennaConeWidth
-					double oldConeRadius = Math.sqrt(5) * JE802KmlGenerator.antennaConeHeight / 2;
+					double newWidth = Math.tan(angle)
+							* JE802KmlGenerator.antennaConeHeight * 2;
+					double yzScaleFactor = newWidth
+							/ JE802KmlGenerator.antennaConeHeight; // antennaConeHeight
+					// ==
+					// antennaConeWidth
+					double oldConeRadius = Math.sqrt(5)
+							* JE802KmlGenerator.antennaConeHeight / 2;
 					double newConeRadius = (newWidth / 2) / Math.sin(angle);
 					double overallScaleFactor = oldConeRadius / newConeRadius;
-					scaleFactorYZ = String.valueOf(yzScaleFactor * overallScaleFactor);
+					scaleFactorYZ = String.valueOf(yzScaleFactor
+							* overallScaleFactor);
 					scaleFactorX = String.valueOf(overallScaleFactor);
 
 					headingRotation -= antennaDir.getLon();
@@ -113,26 +121,32 @@ public class JE802AntennaAnglesKml extends JE802KmlGenerator {
 					path = "animation_files/" + antennaSphereName;
 				}
 
-				Vector3d pos = new Vector3d(station.getXLocation(currentTime), station.getYLocation(currentTime),
+				Vector3d pos = new Vector3d(station.getXLocation(currentTime),
+						station.getYLocation(currentTime),
 						station.getZLocation(currentTime));
 
 				if (station.isMobile()) {
 					pos.setAlt(pos.getAlt() + JE802KmlGenerator.userModelHeight);
 				} else {
-					pos.setAlt(pos.getAlt() + JE802KmlGenerator.antennaModelHeight);
+					pos.setAlt(pos.getAlt()
+							+ JE802KmlGenerator.antennaModelHeight);
 				}
 
 				// Location
 				Element altitudeMode = this.doc.createElement("altitudeMode");
-				altitudeMode.appendChild(this.doc.createTextNode("relativeToGround"));
+				altitudeMode.appendChild(this.doc
+						.createTextNode("relativeToGround"));
 
 				Element location = this.doc.createElement("Location");
 				Element longitude = this.doc.createElement("longitude");
-				longitude.appendChild(this.doc.createTextNode(Double.toString(pos.getLon())));
+				longitude.appendChild(this.doc.createTextNode(Double
+						.toString(pos.getLon())));
 				Element latitude = this.doc.createElement("latitude");
-				latitude.appendChild(this.doc.createTextNode(Double.toString(pos.getLat())));
+				latitude.appendChild(this.doc.createTextNode(Double
+						.toString(pos.getLat())));
 				Element altitude = this.doc.createElement("altitude");
-				altitude.appendChild(this.doc.createTextNode(Double.toString(pos.getAlt())));
+				altitude.appendChild(this.doc.createTextNode(Double
+						.toString(pos.getAlt())));
 
 				location.appendChild(longitude);
 				location.appendChild(latitude);
@@ -165,9 +179,6 @@ public class JE802AntennaAnglesKml extends JE802KmlGenerator {
 				Element link = this.doc.createElement("Link");
 				Element href = this.doc.createElement("href");
 
-				// old animation files path
-				// String path = this.filename + ".kmz/animation_files/";
-
 				href.appendChild(this.doc.createTextNode(path));
 				link.appendChild(href);
 
@@ -184,13 +195,16 @@ public class JE802AntennaAnglesKml extends JE802KmlGenerator {
 				Element name = this.doc.createElement("name");
 				Element timeSpan;
 				if (station.isMobile()) {
-					timeSpan = createTimeSpan(currentTime, currentTime.plus(interval));
+					timeSpan = createTimeSpan(currentTime,
+							currentTime.plus(interval));
 				} else {
-					timeSpan = createTimeSpan(station.getStatEval().getEvaluationStarttime(), station.getStatEval()
+					timeSpan = createTimeSpan(station.getStatEval()
+							.getEvaluationStarttime(), station.getStatEval()
 							.getEvaluationEnd());
 				}
 				currentTime = currentTime.plus(interval);
-				name.appendChild(this.doc.createTextNode("Station " + station.getMac().getMacAddress()));
+				name.appendChild(this.doc.createTextNode("Station "
+						+ station.getMac().getMacAddress()));
 				placemark.appendChild(name);
 				placemark.appendChild(model);
 				placemark.appendChild(timeSpan);
@@ -203,9 +217,8 @@ public class JE802AntennaAnglesKml extends JE802KmlGenerator {
 
 	@Override
 	public Element createDOM() {
-		List<Element> models = createAntennaModels();
-		String folderName = "Antenna Angles";
-		Element modelFolder = createFolder(models, folderName, false);
-		return modelFolder;
+		List<Element> aListOfAngles = createAntennaModels();
+		Element antennaFolder = createFolder(aListOfAngles, "Antennas", true);
+		return antennaFolder;
 	}
 }

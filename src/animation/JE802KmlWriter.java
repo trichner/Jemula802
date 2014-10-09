@@ -91,12 +91,6 @@ public class JE802KmlWriter extends JEmula {
 
 	private final double mbPerBlock;
 
-	private final boolean generateOffer;
-
-	private final boolean generatePowerOverlay;
-
-	private final boolean generateAntennas;
-
 	public JE802KmlWriter(final Node anAnimationNode, final String path,
 			final String filename, final List<JE802Station> stations,
 			final double reuseDistance) {
@@ -150,36 +144,6 @@ public class JE802KmlWriter extends JEmula {
 			this.error("missing attribute attenuationFactor in "
 					+ animationElem.getNodeName());
 		}
-
-		String generateBlocksStr = new String();
-		if (animationElem.hasAttribute("generateOfferBlocks")) {
-			generateBlocksStr = animationElem
-					.getAttribute("generateOfferBlocks");
-		} else {
-			this.error("missing attribute generateOfferBlocks in "
-					+ animationElem.getNodeName());
-		}
-		if (generateBlocksStr.isEmpty()) {
-			generateOffer = true;
-		} else {
-			generateOffer = new Boolean(generateBlocksStr);
-		}
-
-		String generatePowerOverlayStr = new String();
-		if (animationElem.hasAttribute("generatePowerOverlay")) {
-			generatePowerOverlayStr = animationElem
-					.getAttribute("generatePowerOverlay");
-		} else {
-			this.error("missing attribute generatePowerOverlay in "
-					+ animationElem.getNodeName());
-		}
-		if (generatePowerOverlayStr.isEmpty()) {
-			generatePowerOverlay = true;
-		} else {
-			generatePowerOverlay = new Boolean(generatePowerOverlayStr);
-		}
-
-		this.generateAntennas = animationElem.hasAttribute("generateAntennas");
 
 		String mbPBStr = new String();
 		if (animationElem.hasAttribute("mbPerBlock")) {
@@ -266,47 +230,39 @@ public class JE802KmlWriter extends JEmula {
 		List<JE802KmlGenerator> grounds = new ArrayList<JE802KmlGenerator>();
 		grounds.add(new JE802RadioCoverageGenerator(this.doc, this.stations,
 				"animation_files/white.png", "White", 5000, false,
-				this.reuseDistance, this.attenuationFactor,visible));
-		
+				this.reuseDistance, this.attenuationFactor, visible));
+
 		visible = false;
 		grounds.add(new JE802RadioCoverageGenerator(this.doc, this.stations,
 				"animation_files/cobbles.png", "Cobbles", 300, true,
-				this.reuseDistance, this.attenuationFactor,visible));
+				this.reuseDistance, this.attenuationFactor, visible));
 		grounds.add(new JE802RadioCoverageGenerator(this.doc, this.stations,
 				"animation_files/black.png", "Black", 5000, true,
-				this.reuseDistance, this.attenuationFactor,visible));
+				this.reuseDistance, this.attenuationFactor, visible));
 		Element overlayFolder = createFolder(grounds, "Ground Overlays");
 		document.appendChild(overlayFolder);
 
 		// generate station models
-		generators.add(new JE802StationModelKml(this.doc, this.stations, this.filename));
+		generators.add(new JE802StationModelKml(this.doc, this.stations,
+				this.filename));
 
-		if (generatePowerOverlay) {
-			// generate power overlays
-			generators.add(new JE802RadioCoverageKml(this.doc, this.stations,
-					this.filename, this.pixelSize, true, this.reuseDistance,
-					this.maxTxdBm, this.minTxdBm, this.attenuationFactor,
-					this.resultPath));
-		}
+		generators.add(new JE802RadioCoverageKml(this.doc, this.stations,
+				this.filename, this.pixelSize, true, this.reuseDistance,
+				this.maxTxdBm, this.minTxdBm, this.attenuationFactor,
+				this.resultPath));
 
-		if (generateAntennas) {
-			// antenna directions
-			generators.add(new JE802AntennaDirectionsKml(doc, stations));
-
-			// antenna angles
-			generators.add(new JE802AntennaAnglesKml(doc, stations));
-		}
+		// antenna directions & angles
+		generators.add(new JE802AntennasKml(doc, stations));
 
 		// offerBlocks
 		visible = true;
-		if (generateOffer) {
-			generators.add(new JE802TrafficBlocksKml(this.doc, this.stations,
-					this.filename, this.mbPerBlock, visible));
-		}
+		generators.add(new JE802TrafficBlocksKml(this.doc, this.stations,
+				this.filename, this.mbPerBlock, visible));
 
 		// create throughput links
 		visible = true;
-		generators.add(new JE802LinksKml(this.doc, this.stations, this.maxTP,false,visible));
+		generators.add(new JE802LinksKml(this.doc, this.stations, this.maxTP,
+				false, visible));
 
 		for (JE802KmlGenerator gen : generators) {
 			document.appendChild(gen.createDOM());
@@ -361,7 +317,7 @@ public class JE802KmlWriter extends JEmula {
 
 		// put all files in the files folder into the kmz archive
 		File animationFile = new File(this.resultPath + "/" + this.filename
-				+ ".kmz");
+				+ " (Google Earth).kmz");
 		FileOutputStream fileStream;
 		try {
 			fileStream = new FileOutputStream(animationFile);

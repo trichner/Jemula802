@@ -34,10 +34,7 @@
 
 package station;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.Vector;
 
@@ -49,7 +46,6 @@ import layer0_medium.JEWirelessChannel;
 import layer2_80211Mac.JE802HopInfo;
 import layer2_80211Mac.JE802_11Mac;
 import layer2_80211Mac.JE802_11Mpdu;
-import layer3_network.JE802IPPacket;
 
 import org.w3c.dom.Node;
 
@@ -57,7 +53,7 @@ import org.w3c.dom.Node;
 public class JE802Sme extends JEEventHandler {
 	// SME = Station Management Entity
 
-	private Map<Integer, JE802_11Mac> macDot11Map;
+	private JE802_11Mac theMac;
 
 	private int ipHandlerId;
 
@@ -65,15 +61,11 @@ public class JE802Sme extends JEEventHandler {
 
 	private long seqNo = 0;
 
-	private List<JE802Station> wiredStations;
-
-	@SuppressWarnings("unused")
-	private final JE802Station station;
+	// private List<JE802Station> wiredStations;
 
 	public JE802Sme(JEEventScheduler aScheduler, Random aGenerator,
-			Node aTopLevelNode, JE802Station myStation) {
+			Node aTopLevelNode) {
 		super(aScheduler, aGenerator);
-		this.station = myStation;
 		this.theState = state.active;
 	}
 
@@ -85,100 +77,36 @@ public class JE802Sme extends JEEventHandler {
 		if (anEventName.equals("packet_forward")) {
 			JE802_11Mpdu aMpdu = (JE802_11Mpdu) anEvent.getParameterList().get(
 					0);
-			int nextChannel = aMpdu.getHopAddresses().get(0).getChannel();
 			JE802HopInfo nextHop = aMpdu.getHopAddresses().get(0);
-			JE802_11Mac mac = macDot11Map.get(nextChannel);
-			if (mac != null) {
-				parameterlist = new Vector<Object>();
-				parameterlist.add(nextHop); // Destination Address of MPDU
-				parameterlist.add(aMpdu.getAC());
-				parameterlist.add(aMpdu.getHopAddresses());
-				parameterlist.add(aMpdu.getPayload());
-				parameterlist.add(aMpdu.getSeqNo());
-				parameterlist.add(aMpdu.getSourceHandler());
-				JEEvent groupForwardEvent = new JEEvent("groupForwardEvent",
-						mac.getHandlerId(), theUniqueEventScheduler.now(),
-						parameterlist);
-				this.send(groupForwardEvent);
-			} else {
-				this.error("Station " + this.getAddress()
-						+ " does not know channel " + nextChannel);
-			}
+			parameterlist = new Vector<Object>();
+			parameterlist.add(nextHop); // Destination Address of MPDU
+			parameterlist.add(aMpdu.getAC());
+			parameterlist.add(aMpdu.getHopAddresses());
+			parameterlist.add(aMpdu.getPayload());
+			parameterlist.add(aMpdu.getSeqNo());
+			parameterlist.add(aMpdu.getSourceHandler());
+			JEEvent groupForwardEvent = new JEEvent("groupForwardEvent",
+					this.theMac.getHandlerId(), theUniqueEventScheduler.now(),
+					parameterlist);
+			this.send(groupForwardEvent);
 
 		} else if (anEventName.equals("start_req")) {
 			this.parameterlist.clear();
-			// this.send(new JEEvent("listen_for_pages_req",
-			// this.macDot15Map.values().iterator().next().getHandlerId(),
-			// theUniqueEventScheduler.now()));
-		} else if (anEventName.equals("Channel_Switch_req")) {
-			Integer switchFrom = (Integer) anEvent.getParameterList().get(0);
-			Integer switchTo = (Integer) anEvent.getParameterList().get(1);
-			JE802_11Mac macThatSwitches = macDot11Map.get(switchFrom);
 
-			if (macDot11Map.get(switchTo) != null) {
-				System.err.println("Switching to channel at station"
-						+ this.getAddress());
-			}
-			// change assigned channel of mac
-			// this.message("Switching from " + switchFrom + " to " + switchTo +
-			// " at Station" + this.getAddress());
-			macDot11Map.remove(switchFrom);
-			macDot11Map.put(switchTo, macThatSwitches);
+		} else if (anEventName.equals("Channel_Switch_req")) {
+			Integer switchTo = (Integer) anEvent.getParameterList().get(1);
 			this.parameterlist = new Vector<Object>();
 			this.parameterlist.add(switchTo);
-			this.send(new JEEvent("Channel_Switch_req", macThatSwitches
+			this.send(new JEEvent("Channel_Switch_req", this.theMac
 					.getHandlerId(), theUniqueEventScheduler.now(),
 					this.parameterlist));
 
 		} else if (anEventName.equals("IP_Deliv_req")) {
-			JE802HopInfo nextHop = (JE802HopInfo) anEvent.getParameterList()
-					.get(0);
-			boolean sent = false;
-			if (wiredStations != null) {
-				for (JE802Station station : wiredStations) {
-					if (station.getMac().getMacAddress() == nextHop
-							.getAddress() || nextHop.getAddress() == 255) {
-						seqNo++;
-						anEvent.getParameterList().add(seqNo);
-						anEvent.getParameterList().add(this.getAddress());
-						this.send(new JEEvent("wiredForward", station.getSme()
-								.getHandlerId(), now, anEvent
-								.getParameterList()));
-						sent = true;
-					}
-				}
-			}
-			if (!sent || nextHop.getAddress() == 255) {
-				int channel = nextHop.getChannel();
-				JE802_11Mac macOnChannel = macDot11Map.get(channel);
-				anEvent.getParameterList().add(seqNo);
-				anEvent.getParameterList().add(this.getHandlerId());
-				seqNo++;
-				if (macOnChannel != null) {
-					this.send(new JEEvent("MSDUDeliv_req", macOnChannel
-							.getHandlerId(), now, anEvent.getParameterList()));
-				} else {
-					this.warning("Station " + this.getAddress()
-							+ " does not know channel " + channel);
-				}
-			}
-		} else if (anEventName.equals("wiredForward")) {
-			JE802IPPacket packet = (JE802IPPacket) anEvent.getParameterList()
-					.get(3);
-			Integer ac = (Integer) anEvent.getParameterList().get(1);
-			JE802HopInfo hop = (JE802HopInfo) anEvent.getParameterList().get(0);
-			Long sequenceNo = (Long) anEvent.getParameterList().get(4);
-			Integer sa = (Integer) anEvent.getParameterList().get(5);
-			Vector<Object> parameterList = new Vector<Object>();
-			parameterList.add(packet);
-			parameterList.add(now);
-			parameterList.add(ac);
-			parameterList.add(hop.getChannel());
-			parameterList.add(sequenceNo);
-			parameterList.add(sa);
-			this.send(new JEEvent("packet_exiting_system_ind",
-					this.ipHandlerId, now, parameterList));
-
+			anEvent.getParameterList().add(seqNo);
+			anEvent.getParameterList().add(this.getHandlerId());
+			seqNo++;
+			this.send(new JEEvent("MSDUDeliv_req", this.theMac.getHandlerId(),
+					now, anEvent.getParameterList()));
 		} else if (anEventName.equals("broadcast_sent")) {
 			this.send(new JEEvent("broadcast_sent", channelHandlerId, anEvent
 					.getScheduledTime(), anEvent.getParameterList()));
@@ -201,7 +129,7 @@ public class JE802Sme extends JEEventHandler {
 					0);
 			anEvent.getParameterList().setElementAt(aMpdu.getPayload(), 0);
 			anEvent.getParameterList().add(aMpdu.getSeqNo()); // mac sequence
-																// number
+			// number
 			anEvent.getParameterList().add(aMpdu.getSA());
 			this.send(new JEEvent("packet_exiting_system_ind",
 					this.ipHandlerId, now, anEvent.getParameterList()));
@@ -238,62 +166,24 @@ public class JE802Sme extends JEEventHandler {
 	}
 
 	public int getAddress() {
-		if (macDot11Map != null) {
-			return this.macDot11Map.values().iterator().next().getMacAddress();
-		}
-		return 0;
+		return this.theMac.getMacAddress();
+	}
+
+	public Integer getChannelsInUse() {
+		return this.theMac.getPhy().getCurrentChannel();
 	}
 
 	public List<JEWirelessChannel> getAvailableChannels() {
-		if (this.macDot11Map != null) {
-			message("80211Mac channels", 10);
-			return this.macDot11Map.values().iterator().next().getPhy()
-					.getAvailableChannels();
-		} else {
-			return null;
-		}
+		return this.theMac.getPhy().getAvailableChannels();
 	}
 
-	public List<Integer> getChannelsInUse() {
-		List<Integer> channels = new ArrayList<Integer>();
-		if (this.macDot11Map != null) {
-			for (JE802_11Mac mac : macDot11Map.values()) {
-				channels.add(mac.getChannel());
-			}
-		}
-		return channels;
-	}
-
-	public void setMacs(List<JE802_11Mac> macs) {
-		this.macDot11Map = new HashMap<Integer, JE802_11Mac>();
-		for (JE802_11Mac mac : macs) {
-			macDot11Map.put(mac.getChannel(), mac);
-		}
+	public void setMac(JE802_11Mac mac) {
+		this.theMac = mac;
 	}
 
 	public void checkQueueSize(int size) {
-		if (this.macDot11Map != null) {
-			for (JE802_11Mac mac : macDot11Map.values()) {
-				mac.checkQueueSize(size);
-			}
-		}
+		this.theMac.checkQueueSize(size);
 	}
-
-	/*
-	 * public Map<Integer, Double> getETT() { for (JE802_11Mac mac :
-	 * macMap.values()) { int phyMode =
-	 * mac.getPhy().getCurrentPhyMode().getRateMbps(); double bytePerSecond =
-	 * phyMode / 8.0 * 1E6; double etx = mac.getETX(); double ett = etx * (1024
-	 * / bytePerSecond); ettMap.put(mac.getChannel(), ett); } return ettMap; }
-	 */
-
-	/*
-	 * public double getETT(int channel) { JE802_11Mac mac =
-	 * macMap.get(channel); if (mac != null) { int phyMode =
-	 * mac.getPhy().getCurrentPhyMode().getRateMbps(); double bytePerSecond =
-	 * phyMode / 8.0 * 1E6; double etx = mac.getETX(); double ett = etx * (1024
-	 * / bytePerSecond); return ett; } else { return 0; } }
-	 */
 
 	public void setIpHandlerId(int tcpHandlerId) {
 		this.ipHandlerId = tcpHandlerId;
@@ -306,14 +196,6 @@ public class JE802Sme extends JEEventHandler {
 	@Override
 	public String toString() {
 		return "Sme at station " + this.getAddress();
-	}
-
-	public void setWiredStations(List<JE802Station> wiredStations) {
-		if (wiredStations != null && wiredStations.isEmpty()) {
-			this.wiredStations = null;
-		} else {
-			this.wiredStations = wiredStations;
-		}
 	}
 
 }

@@ -50,7 +50,7 @@ import kernel.JEEvent;
 import kernel.JEEventScheduler;
 import kernel.JETime;
 import kernel.JEmula;
-import layer0_medium.JE802MediumInterferenceModel;
+import layer0_medium.JE8MediumWithInterference;
 import layer0_medium.JEWirelessMedium;
 import layer0_medium.JEMediumUnitDisk;
 
@@ -109,7 +109,7 @@ public class JE802Control extends JEmula {
 		} else {
 			theUniqueGui = null;
 		}
-		this.stations = new ArrayList<JE802Station>(); // queue of stations
+		this.stations = new ArrayList<JE802Station>(); // queue of theStations
 		this.parse_xml_and_create_entities();
 		this.path2Results = statEval.getPath2Results();
 		this.theUniqueEventScheduler.setPath2Results(this.path2Results);
@@ -262,7 +262,7 @@ public class JE802Control extends JEmula {
 
 	private void createStations(Node theTopLevelNode, XPath xpath)
 			throws XPathExpressionException {
-		// stations
+		// theStations
 		NodeList stationNodeList = (NodeList) xpath.evaluate("JE802Station",
 				theTopLevelNode, XPathConstants.NODESET);
 		Element animationNode = (Element) xpath.evaluate("//JE802Animation",
@@ -278,12 +278,12 @@ public class JE802Control extends JEmula {
 					latitude);
 			this.stations.add(station);
 			if (!useInterferenceModel
-					&& station.getMac().getPhy().getAntenna().isDirectional()) {
+					&& station.getPhy().getAntenna().isDirectional()) {
 				this.warning("Station "
 						+ station.getMac().getMacAddress()
 						+ ": Directional antennas are only allowed when using the interference model."
 						+ " An omnidirectional antenna is used instead.");
-				station.getMac().getPhy().useOmnidirectionalAntenna();
+				station.getPhy().useOmnidirectionalAntenna();
 			}
 		}
 	}
@@ -365,7 +365,7 @@ public class JE802Control extends JEmula {
 			if (interference != null) {
 				useInterferenceModel = new Boolean(interference.getNodeValue());
 				if (useInterferenceModel) {
-					theUniqueWirelessMedium = new JE802MediumInterferenceModel(
+					theUniqueWirelessMedium = new JE8MediumWithInterference(
 							theUniqueEventScheduler,
 							theUniqueRandomBaseGenerator, channelNode);
 				} else {

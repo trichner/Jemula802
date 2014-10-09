@@ -35,21 +35,25 @@ package layer2_80211Mac;
 
 import emulator.JE802StatEval;
 import gui.JE802Gui;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.Vector;
+
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
+
 import kernel.JEEvent;
 import kernel.JEEventScheduler;
 import kernel.JETime;
 import layer0_medium.JEWirelessMedium;
 //import layer1_802Phy.JE802Phy;
 import layer1_80211Phy.JE802_11Phy;
+import layer1_802Phy.JE802Phy;
 import layer2_802Mac.JE802_Mac;
 
 import org.w3c.dom.Element;
@@ -99,66 +103,89 @@ public final class JE802_11Mac extends JE802_Mac {
 
 	private final XPath xpath = XPathFactory.newInstance().newXPath();
 
+	private JE802Phy thePhy;
+
 	/**
 	 * @param aTopLevelNode
+	 * @param aPhy
 	 * @throws XPathExpressionException
 	 */
-	public JE802_11Mac(final JEEventScheduler aScheduler, final JE802StatEval statEval, final Random aGenerator,
-			final JE802Gui aGui, final JEWirelessMedium aChannel, final Node aTopLevelNode, final int smeHandlerId)
-			throws XPathExpressionException {
+	public JE802_11Mac(final JEEventScheduler aScheduler,
+			final JE802StatEval statEval, final Random aGenerator,
+			final JE802Gui aGui, final JEWirelessMedium aChannel,
+			final Node aTopLevelNode, final int smeHandlerId, JE802Phy aPhy)
+					throws XPathExpressionException {
 
-		super(aScheduler, statEval, aGenerator, aGui, aTopLevelNode, smeHandlerId);
+		super(aScheduler, statEval, aGenerator, aGui, aTopLevelNode,
+				smeHandlerId);
 		this.backoffEntityMap = new HashMap<Integer, JE802_11BackoffEntity>();
 
 		if (aTopLevelNode.getNodeName().equals("JE80211MAC")) {
-			this.message("JE80211MAC XML definition " + aTopLevelNode.getNodeName() + " found.", 1);
+			this.message(
+					"JE80211MAC XML definition " + aTopLevelNode.getNodeName()
+					+ " found.", 1);
+
+			this.thePhy = aPhy;
 
 			Element macNode = (Element) aTopLevelNode;
+			Element mibNode = (Element) this.xpath.evaluate("MIB802.11-1999",
+					aTopLevelNode, XPathConstants.NODE);
 
-			// create MIB
-			Element mibNode = (Element) this.xpath.evaluate("MIB802.11-1999", aTopLevelNode, XPathConstants.NODE);
-
-			this.theMacAddress = new Integer(mibNode.getAttribute("dot11MACAddress"));
-			this.dot11BroadcastAddress = new Integer(mibNode.getAttribute("dot11BroadcastAddress"));
-			this.dot11RTSThreshold = new Integer(mibNode.getAttribute("dot11RTSThreshold"));
-			this.dot11ShortRetryLimit = new Integer(mibNode.getAttribute("dot11ShortRetryLimit"));
-			this.dot11LongRetryLimit = new Integer(mibNode.getAttribute("dot11LongRetryLimit"));
-			this.dot11FragmentationThreshold = new Integer(mibNode.getAttribute("dot11FragmentationThreshold"));
-			this.dot11MaxTransmitMSDULifetime = new Integer(mibNode.getAttribute("dot11MaxTransmitMSDULifetime"));
-			this.dot11MaxReceiveLifetime = new Integer(mibNode.getAttribute("dot11MaxReceiveLifetime"));
+			this.theMacAddress = new Integer(
+					mibNode.getAttribute("dot11MACAddress"));
+			this.dot11BroadcastAddress = new Integer(
+					mibNode.getAttribute("dot11BroadcastAddress"));
+			this.dot11RTSThreshold = new Integer(
+					mibNode.getAttribute("dot11RTSThreshold"));
+			this.dot11ShortRetryLimit = new Integer(
+					mibNode.getAttribute("dot11ShortRetryLimit"));
+			this.dot11LongRetryLimit = new Integer(
+					mibNode.getAttribute("dot11LongRetryLimit"));
+			this.dot11FragmentationThreshold = new Integer(
+					mibNode.getAttribute("dot11FragmentationThreshold"));
+			this.dot11MaxTransmitMSDULifetime = new Integer(
+					mibNode.getAttribute("dot11MaxTransmitMSDULifetime"));
+			this.dot11MaxReceiveLifetime = new Integer(
+					mibNode.getAttribute("dot11MaxReceiveLifetime"));
 
 			// some times and settings
-			this.dot11WepEncr = new Boolean(macNode.getAttribute("dot11WepEncryption"));
-			this.dot11MacAddress4_byte = new Integer(macNode.getAttribute("dot11MacAddress4_byte"));
-			this.dot11MacFCS_byte = new Integer(macNode.getAttribute("dot11MacFCS_byte"));
-			this.dot11MacFCS_byte = new Integer(macNode.getAttribute("dot11MacFCS_byte"));
-			this.dot11MacHeaderACK_byte = new Integer(macNode.getAttribute("dot11MacHeaderACK_byte"));
-			this.dot11MacHeaderCTS_byte = new Integer(macNode.getAttribute("dot11MacHeaderCTS_byte"));
-			this.dot11MacHeaderDATA_byte = new Integer(macNode.getAttribute("dot11MacHeaderDATA_byte"));
-			this.dot11MacHeaderRTS_byte = new Integer(macNode.getAttribute("dot11MacHeaderRTS_byte"));
+			this.dot11WepEncr = new Boolean(
+					macNode.getAttribute("dot11WepEncryption"));
+			this.dot11MacAddress4_byte = new Integer(
+					macNode.getAttribute("dot11MacAddress4_byte"));
+			this.dot11MacFCS_byte = new Integer(
+					macNode.getAttribute("dot11MacFCS_byte"));
+			this.dot11MacFCS_byte = new Integer(
+					macNode.getAttribute("dot11MacFCS_byte"));
+			this.dot11MacHeaderACK_byte = new Integer(
+					macNode.getAttribute("dot11MacHeaderACK_byte"));
+			this.dot11MacHeaderCTS_byte = new Integer(
+					macNode.getAttribute("dot11MacHeaderCTS_byte"));
+			this.dot11MacHeaderDATA_byte = new Integer(
+					macNode.getAttribute("dot11MacHeaderDATA_byte"));
+			this.dot11MacHeaderRTS_byte = new Integer(
+					macNode.getAttribute("dot11MacHeaderRTS_byte"));
 
 			String isFixedStr = macNode.getAttribute("isFixed");
 			if (!isFixedStr.isEmpty()) {
 				isFixed = new Boolean(isFixedStr);
 			}
 
-			// create PHY layer
-			Node phyNode = (Node) this.xpath.evaluate("JE80211PHY", aTopLevelNode, XPathConstants.NODE);
-			if (phyNode == null) {
-				error("Mac with no Phy found at Station " + this.getMacAddress());
-			}
-			this.thePhy = new JE802_11Phy(aScheduler, statEval, aGenerator, aChannel, aGui, phyNode, this);
-
 			// create virtual collision handler
-			this.theVch = new JE802_11Vch(aScheduler, aGenerator, this.getPhy(), this);
-			this.send(new JEEvent("start_req", this.theVch, this.theUniqueEventScheduler.now()));
+			this.theVch = new JE802_11Vch(aScheduler, aGenerator,
+					this.getPhy(), this);
+			this.send(new JEEvent("start_req", this.theVch,
+					this.theUniqueEventScheduler.now()));
 
 			// create backoff entities
-			NodeList baList = (NodeList) this.xpath.evaluate("JE802BackoffEntity", aTopLevelNode, XPathConstants.NODESET);
+			NodeList baList = (NodeList) this.xpath
+					.evaluate("JE802BackoffEntity", aTopLevelNode,
+							XPathConstants.NODESET);
 			for (int i = 0; i < baList.getLength(); i++) {
 				Node baNode = baList.item(i);
 				// System.out.println("fin qui");
-				JE802_11BackoffEntity aNewBE = new JE802_11BackoffEntity(aScheduler, aGenerator, aGui, baNode, this, this.theVch);
+				JE802_11BackoffEntity aNewBE = new JE802_11BackoffEntity(
+						aScheduler, aGenerator, aGui, baNode, this, this.theVch);
 				this.backoffEntityMap.put(aNewBE.getAC(), aNewBE);
 			}
 			if (baList.getLength() < 1) {
@@ -166,10 +193,13 @@ public final class JE802_11Mac extends JE802_Mac {
 			}
 
 			// create MAC layer management entity MLME
-			Node mlmeNode = (Node) this.xpath.evaluate("JE802Mlme", aTopLevelNode, XPathConstants.NODE);
-			this.theMlme = new JE802_11Mlme(aScheduler, aGenerator, new Vector<JE802_11BackoffEntity>(
-					this.backoffEntityMap.values()), this, mlmeNode);
-			this.send(new JEEvent("start_req", this.theMlme, this.theUniqueEventScheduler.now()));
+			Node mlmeNode = (Node) this.xpath.evaluate("JE802Mlme",
+					aTopLevelNode, XPathConstants.NODE);
+			this.theMlme = new JE802_11Mlme(aScheduler, aGenerator,
+					new Vector<JE802_11BackoffEntity>(
+							this.backoffEntityMap.values()), this, mlmeNode);
+			this.send(new JEEvent("start_req", this.theMlme,
+					this.theUniqueEventScheduler.now()));
 		} else {
 			error("JE80211MAC XML messed up, dude");
 		}
@@ -179,8 +209,8 @@ public final class JE802_11Mac extends JE802_Mac {
 		for (JE802_11BackoffEntity be : this.backoffEntityMap.values()) {
 			if (be != null) {
 				if (queueSize > be.getQueueSize()) {
-					warning("TCP buffer size bigger than backoff entity queue size at Station" + this.theMacAddress + "AC"
-							+ be.getAC());
+					warning("TCP buffer size bigger than backoff entity queue size at Station"
+							+ this.theMacAddress + "AC" + be.getAC());
 				}
 			}
 
@@ -194,8 +224,9 @@ public final class JE802_11Mac extends JE802_Mac {
 		JETime now = anEvent.getScheduledTime();
 		String anEventName = anEvent.getName();
 
-		this.message("MAC at Station " + this.theMacAddress + " on Channel " + getChannel() + " received event '" + anEventName
-				+ "'", 10);
+		this.message("MAC at Station " + this.theMacAddress + " on Channel "
+				+ this.thePhy.getCurrentChannel() + " received event '"
+				+ anEventName + "'", 10);
 
 		if (this.theState == state.idle) {
 
@@ -205,26 +236,28 @@ public final class JE802_11Mac extends JE802_Mac {
 			} else if (anEventName.equals("start_req")) {
 				this.theState = state.active;
 			} else {
-				error("undefined event '" + anEventName + "' in state " + this.theState.toString());
+				error("undefined event '" + anEventName + "' in state "
+						+ this.theState.toString());
 			}
 
 		} else if (this.theState == state.active) {
 
 			if (anEventName.equals("PHY_RxEnd_ind")) { // send this event to all
-														// backoff entities
+				// backoff entities
 				for (JE802_11BackoffEntity aBE : this.backoffEntityMap.values()) {
-					this.send(new JEEvent("PHY_RxEnd_ind", aBE, now, anEvent.getParameterList()));
+					this.send(new JEEvent("PHY_RxEnd_ind", aBE, now, anEvent
+							.getParameterList()));
 				}
 
 			} else if (anEventName.equals("PHY_SyncStart_ind")) { // inform all
-																	// backoff
-																	// entities
-																	// that we
-																	// are
-																	// starting
-																	// to
-																	// receive
-																	// something
+				// backoff
+				// entities
+				// that we
+				// are
+				// starting
+				// to
+				// receive
+				// something
 
 				for (JE802_11BackoffEntity aBE : this.backoffEntityMap.values()) {
 					this.send(new JEEvent(anEventName, aBE, now));
@@ -238,14 +271,16 @@ public final class JE802_11Mac extends JE802_Mac {
 				JE802_11BackoffEntity aTargetBe;
 
 				if (aWinningBeId == null) { // no Mpdu was sent before, just
-											// send the packet to the BE for CTS
-											// or ACK if the BE with the
-											// respective AC does not exist,
-											// create it!
+					// send the packet to the BE for CTS
+					// or ACK if the BE with the
+					// respective AC does not exist,
+					// create it!
 					aTargetBe = this.backoffEntityMap.get(anAc);
 					if (aTargetBe == null) {
 						try {
-							aTargetBe = new JE802_11BackoffEntity(this.theUniqueEventScheduler, this.theUniqueRandomGenerator,
+							aTargetBe = new JE802_11BackoffEntity(
+									this.theUniqueEventScheduler,
+									this.theUniqueRandomGenerator,
 									this.theUniqueGui, null, this, this.theVch);
 							aTargetBe.setAC(anAc);
 							this.backoffEntityMap.put(anAc, aTargetBe);
@@ -256,23 +291,29 @@ public final class JE802_11Mac extends JE802_Mac {
 					} else {
 
 					}
-					this.send(new JEEvent("MPDUReceive_ind", aTargetBe.getHandlerId(), now, this.parameterlist));
+					this.send(new JEEvent("MPDUReceive_ind", aTargetBe
+							.getHandlerId(), now, this.parameterlist));
 
 					// for the purpose of virtual CS for the backoff entities
-					for (JE802_11BackoffEntity aBE : this.backoffEntityMap.values()) {
+					for (JE802_11BackoffEntity aBE : this.backoffEntityMap
+							.values()) {
 						if (aBE.getAC() != anAc) {
-							this.send(new JEEvent("MPDUReceive_ind", aBE, now, this.parameterlist));
+							this.send(new JEEvent("MPDUReceive_ind", aBE, now,
+									this.parameterlist));
 						}
 					}
 				} else {
 					// one BE sent something before
-					this.send(new JEEvent("MPDUReceive_ind", aWinningBeId, now, this.parameterlist));
+					this.send(new JEEvent("MPDUReceive_ind", aWinningBeId, now,
+							this.parameterlist));
 
 					// for the purpose of virtual CS for the backoff entities,
 					// except the winner
-					for (JE802_11BackoffEntity aBE : this.backoffEntityMap.values()) {
+					for (JE802_11BackoffEntity aBE : this.backoffEntityMap
+							.values()) {
 						if (aBE.getHandlerId() != aWinningBeId) {
-							this.send(new JEEvent("MPDUReceive_ind", aBE, now, this.parameterlist));
+							this.send(new JEEvent("MPDUReceive_ind", aBE, now,
+									this.parameterlist));
 						}
 					}
 					this.theVch.setTransmitterId(null);
@@ -280,14 +321,16 @@ public final class JE802_11Mac extends JE802_Mac {
 			} else if (anEventName.equals("MSDU_delivered_ind")) {
 				// each time a packet is successfully delivered, we update the
 				// etx
-				JE802_11Mpdu aMpdu = (JE802_11Mpdu) anEvent.getParameterList().get(0);
+				JE802_11Mpdu aMpdu = (JE802_11Mpdu) anEvent.getParameterList()
+						.get(0);
 				Integer mpduDA = aMpdu.getDA();
 				int retried = (Integer) anEvent.getParameterList().get(1);
 				Vector<Object> parameterList = new Vector<Object>();
 				parameterList.add(retried);
 				parameterList.add(mpduDA);
-				parameterList.add(getChannel());
-				this.send(new JEEvent(anEventName, this.smeHandlerId, now, parameterList));
+				parameterList.add(this.thePhy.getCurrentChannel());
+				this.send(new JEEvent(anEventName, this.smeHandlerId, now,
+						parameterList));
 
 			} else if (anEventName.equals("MSDU_discarded_ind")) {
 
@@ -296,7 +339,8 @@ public final class JE802_11Mac extends JE802_Mac {
 				// the ip layer is only interested in packets discarded because
 				// of too many retries
 				if (!queueFull) {
-					JE802_11Mpdu aMpdu = (JE802_11Mpdu) anEvent.getParameterList().get(0);
+					JE802_11Mpdu aMpdu = (JE802_11Mpdu) anEvent
+							.getParameterList().get(0);
 					Vector<Object> parameterList = new Vector<Object>();
 					Integer retries = 0;
 					if (anEvent.getParameterList().size() > 2) {
@@ -304,20 +348,23 @@ public final class JE802_11Mac extends JE802_Mac {
 					}
 					parameterList.add(aMpdu);
 					parameterList.add(retries);
-					parameterList.add(getChannel());
-					this.send(new JEEvent(anEvent.getName(), this.smeHandlerId, now, parameterList));
+					parameterList.add(this.thePhy.getCurrentChannel());
+					this.send(new JEEvent(anEvent.getName(), this.smeHandlerId,
+							now, parameterList));
 				}
 
 			} else if (anEventName.equals("empty_queue_ind")) {
 				// forward empty queue to ipLayer
 				this.parameterlist = anEvent.getParameterList();
-				this.parameterlist.add(getChannel());
-				this.send(new JEEvent(anEventName, this.smeHandlerId, now, this.parameterlist));
+				this.parameterlist.add(this.thePhy.getCurrentChannel());
+				this.send(new JEEvent(anEventName, this.smeHandlerId, now,
+						this.parameterlist));
 
 			} else if (anEventName.equals("MSDUDeliv_req")) {
 				this.parameterlist = anEvent.getParameterList();
 				int anAC = (Integer) this.parameterlist.elementAt(1);
-				ArrayList<JE802HopInfo> hopAddresses = (ArrayList<JE802HopInfo>) this.parameterlist.get(2);
+				ArrayList<JE802HopInfo> hopAddresses = (ArrayList<JE802HopInfo>) this.parameterlist
+						.get(2);
 				// remove first hop address because its already set as
 				// destination address.
 				hopAddresses.remove(0);
@@ -328,13 +375,17 @@ public final class JE802_11Mac extends JE802_Mac {
 				this.send(anEvent);
 
 			} else if (anEventName.equals("packet_exiting_system_ind")) {
-				JE802_11Mpdu aMpdu = (JE802_11Mpdu) anEvent.getParameterList().get(0);
-				if (aMpdu.getDA() != dot11BroadcastAddress && aMpdu.isData() && aMpdu.getPayload().getPayload() != null) {
-					statEval.recordPhyMode(aMpdu.getSA(), this.theMacAddress, now, aMpdu.getPhyMode());
+				JE802_11Mpdu aMpdu = (JE802_11Mpdu) anEvent.getParameterList()
+						.get(0);
+				if (aMpdu.getDA() != dot11BroadcastAddress && aMpdu.isData()
+						&& aMpdu.getPayload().getPayload() != null) {
+					statEval.recordPhyMode(aMpdu.getSA(), this.theMacAddress,
+							now, aMpdu.getPhyMode());
 				}
-				anEvent.getParameterList().add(getChannel());
-				this.send(new JEEvent("packet_exiting_system_ind", this.smeHandlerId, this.theUniqueEventScheduler.now(), anEvent
-						.getParameterList()));
+				anEvent.getParameterList().add(this.thePhy.getCurrentChannel());
+				this.send(new JEEvent("packet_exiting_system_ind",
+						this.smeHandlerId, this.theUniqueEventScheduler.now(),
+						anEvent.getParameterList()));
 
 			} else if (anEventName.equals("Channel_Switch_req")) {
 				for (JE802_11BackoffEntity be : this.backoffEntityMap.values()) {
@@ -348,24 +399,28 @@ public final class JE802_11Mac extends JE802_Mac {
 				} else {
 					switchTime = now;
 				}
-				this.send(new JEEvent("PHY_ChannelSwitch_req", this.thePhy.getHandlerId(), switchTime, anEvent.getParameterList()));
+				this.send(new JEEvent("PHY_ChannelSwitch_req", this.thePhy
+						.getHandlerId(), switchTime, anEvent.getParameterList()));
 
 			} else if (anEventName.equals("broadcast_sent")) {
 				Vector<Object> parameterList = new Vector<Object>();
-				parameterList.add(getChannel());
-				this.send(new JEEvent("broadcast_sent", this.smeHandlerId, anEvent.getScheduledTime(), parameterList));
+				parameterList.add(this.thePhy.getCurrentChannel());
+				this.send(new JEEvent("broadcast_sent", this.smeHandlerId,
+						anEvent.getScheduledTime(), parameterList));
 
 			} else if (anEventName.equals("PHY_TxEnd_ind")) {
 				this.parameterlist = anEvent.getParameterList();
 				Integer anAc = (Integer) this.parameterlist.elementAt(0);
-				this.send(new JEEvent(anEventName, this.backoffEntityMap.get(anAc), now));
+				this.send(new JEEvent(anEventName, this.backoffEntityMap
+						.get(anAc), now));
 
 			} else if (anEventName.equals("VCH_TxStart_ind")) { //
 				// one backoff entity transmits. If there are others, send the
 				// frame to them, so they behave as if a real collision
 				// occurred.
 				this.parameterlist = anEvent.getParameterList();
-				JE802_11Mpdu anMpdu = ((JE802_11Mpdu) this.parameterlist.elementAt(0)).clone();
+				JE802_11Mpdu anMpdu = ((JE802_11Mpdu) this.parameterlist
+						.elementAt(0)).clone();
 				Integer aWinningBeId = this.theVch.getTransmitterId();
 				this.currentTransmissionEnd = now.plus(anMpdu.getTxTime());
 				if (aWinningBeId != null) {
@@ -374,14 +429,17 @@ public final class JE802_11Mac extends JE802_Mac {
 					this.parameterlist.add(anMpdu);
 					// for the purpose of virtual CS for the backoff
 					// entities, except the winner
-					for (JE802_11BackoffEntity aBE : this.backoffEntityMap.values()) {
+					for (JE802_11BackoffEntity aBE : this.backoffEntityMap
+							.values()) {
 						if (aBE.getHandlerId() != aWinningBeId) {
 							this.parameterlist.clear();
 							this.parameterlist.add(anMpdu.getDA());
 							this.parameterlist.add(anMpdu.getAC());
 							this.parameterlist.add(anMpdu.getNav());
-							this.send(new JEEvent("MPDUReceive_ind", aBE, now.plus(this.getPhy().getPLCPHeaderDuration()),
-									this.parameterlist));
+							this.send(new JEEvent("MPDUReceive_ind", aBE,
+									now.plus(this.getPhy()
+											.getPLCPHeaderDuration()),
+											this.parameterlist));
 						}
 					}
 					this.theVch.setTransmitterId(null);
@@ -390,18 +448,21 @@ public final class JE802_11Mac extends JE802_Mac {
 					// collision.
 				}
 			} else if (anEventName.equals("packet_forward")) { // a packet was
-																// received, and
-																// will be
-																// forwarded (in
-																// mesh)
-				this.send(new JEEvent("packet_forward", this.smeHandlerId, now, anEvent.getParameterList()));
+				// received, and
+				// will be
+				// forwarded (in
+				// mesh)
+				this.send(new JEEvent("packet_forward", this.smeHandlerId, now,
+						anEvent.getParameterList()));
 
 			} else if (anEventName.equals("groupForwardEvent")) {
 				this.parameterlist = anEvent.getParameterList();
-				ArrayList<JE802HopInfo> hops = (ArrayList<JE802HopInfo>) this.parameterlist.get(2);
+				ArrayList<JE802HopInfo> hops = (ArrayList<JE802HopInfo>) this.parameterlist
+						.get(2);
 				if (hops != null) {
 					this.parameterlist.set(0, hops.get(0));
-					JEEvent newPacketEvent = new JEEvent("MSDUDeliv_req", getHandlerId(), this.theUniqueEventScheduler.now(),
+					JEEvent newPacketEvent = new JEEvent("MSDUDeliv_req",
+							getHandlerId(), this.theUniqueEventScheduler.now(),
 							this.parameterlist);
 					this.send(newPacketEvent);
 				}
@@ -410,12 +471,14 @@ public final class JE802_11Mac extends JE802_Mac {
 			} else if (anEventName.equals("stop_req")) {
 				this.theState = state.idle;
 			} else if (anEventName.equals("push_back_packet")) {
-				this.send(new JEEvent("push_back_packet", smeHandlerId, now, anEvent.getParameterList()));
+				this.send(new JEEvent("push_back_packet", smeHandlerId, now,
+						anEvent.getParameterList()));
 			} else if (anEventName.equals("location_update")) {
 				this.send(new JEEvent("location_update", this.getPhy(), now));
 
 			} else {
-				error("undefined event '" + anEventName + "' in state " + this.theState.toString());
+				error("undefined event '" + anEventName + "' in state "
+						+ this.theState.toString());
 			}
 		}
 	}
@@ -480,10 +543,13 @@ public final class JE802_11Mac extends JE802_Mac {
 	public JE802_11Mlme getMlme() {
 		return this.theMlme;
 	}
-	
+
 	public JE802_11BackoffEntity getBackoffEntity(int ac) {
 		return this.backoffEntityMap.get(ac);
 	}
-	
-	
+
+	public void setPhy(JE802Phy aPhy) {
+		this.thePhy = aPhy;
+	}
+
 }

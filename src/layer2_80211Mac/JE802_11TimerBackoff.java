@@ -101,7 +101,7 @@ public final class JE802_11TimerBackoff extends JETimer {
 		} else {
 			if (theUniqueGui != null)
 				theUniqueGui.addBackoff(theUniqueEventScheduler.now(), this.theRemainingInterval, this.theStationId, this.theAC,
-						aRemainingWindow + "", new Integer(this.theCW), aCWInterval, this.be.getMac().getChannel());
+						aRemainingWindow + "", new Integer(this.theCW), aCWInterval, this.be.getMac().getPhy().getCurrentChannel());
 		}
 	}
 
@@ -118,7 +118,7 @@ public final class JE802_11TimerBackoff extends JETimer {
 		JETime aCWInterval = this.aSlotTime.times(this.theCW);
 		if (theUniqueGui != null)
 			theUniqueGui.addBackoff(theUniqueEventScheduler.now(), this.theRemainingInterval, this.theStationId, this.theAC,
-					aRemainingWindow + "", this.theCW, aCWInterval, this.be.getMac().getChannel());
+					aRemainingWindow + "", this.theCW, aCWInterval, this.be.getMac().getPhy().getCurrentChannel());
 		super.resume();
 	}
 }

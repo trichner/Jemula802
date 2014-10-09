@@ -18,9 +18,10 @@ import kernel.JETime;
 import layer0_medium.JEWirelessChannel;
 import layer2_80211Mac.JE802HopInfo;
 
-public class JE802HybridChannelManager extends JEEventHandler implements JE802IChannelManager {
+public class JE802HybridChannelManager extends JEEventHandler implements
+JE802IChannelManager {
 
-	private final JE802Sme sme;
+	private final JE802Sme theSme;
 
 	// packet queues for each channel
 	private final Map<Integer, List<JE802QueueEntry>> packetQueues;
@@ -45,13 +46,13 @@ public class JE802HybridChannelManager extends JEEventHandler implements JE802IC
 	// priority
 	private JEHybridChannelState state;
 
-	public JE802HybridChannelManager(final JE802Sme aSme, final Random aGenerator, final JEEventScheduler aScheduler,
-			JE802Station station) {
+	public JE802HybridChannelManager(final JE802Sme aSme,
+			final Random aGenerator, final JEEventScheduler aScheduler) {
 		super(aScheduler, null);
-		this.sme = aSme;
-		this.sme.setChannelHandlerId(getHandlerId());
+		this.theSme = aSme;
+		this.theSme.setChannelHandlerId(getHandlerId());
 		this.theUniqueRandomGenerator = aGenerator;
-		this.availableChannels = this.sme.getAvailableChannels();
+		this.availableChannels = this.theSme.getAvailableChannels();
 		this.packetQueues = new HashMap<Integer, List<JE802QueueEntry>>();
 		this.channelUsagesTime = new HashMap<Integer, List<JE802UsageEntry>>();
 		this.dataSizeOnChannel = new HashMap<Integer, Integer>();
@@ -63,82 +64,8 @@ public class JE802HybridChannelManager extends JEEventHandler implements JE802IC
 			this.channelUsagesTime.put(channel.getChannelNumber(), entryList);
 			this.dataSizeOnChannel.put(channel.getChannelNumber(), 0);
 		}
-
-		// initialize fixed channel to random channel
-		int randomNr;
-		if (station.isMobile()) {
-			randomNr = theUniqueRandomGenerator.nextInt(availableChannels.size());
-			this.fixedChannel = this.availableChannels.get(randomNr).getChannelNumber();
-		} else {
-			this.fixedChannel = station.getFixedChannel();
-		}
-
-		randomNr = theUniqueRandomGenerator.nextInt(availableChannels.size());
-		this.switchableChannel = this.availableChannels.get(randomNr).getChannelNumber();
-		while (this.switchableChannel == this.fixedChannel) {
-			randomNr = theUniqueRandomGenerator.nextInt(availableChannels.size());
-			this.switchableChannel = this.availableChannels.get(randomNr).getChannelNumber();
-		}
-
-		this.message("Station " + this.sme.getAddress() + " is on fixed channel " + this.fixedChannel, 100);
-		this.message("Station " + this.sme.getAddress() + " is on switchable channel " + this.switchableChannel, 70);
-
-		this.assignInitialChannels();
 	}
 
-	/*
-	 * private JE802IPPacket addMetricRecord(final JE802IPPacket packet, final
-	 * int channel) {
-	 * 
-	 * if(packet instanceof JE802RREQPacket || packet instanceof
-	 * JE802RREPPacket) { double ett = routeStats.getETT(channel); double
-	 * channelUsage = this.getChannelUsage(channel); double switchingcost =
-	 * (1-channelUsage
-	 * )*JE802RoutingConstants.CHANNEL_SWITCHING_DELAY.getTimeMs()/1000;
-	 * JE802MCRHopRecord record = new JE802MCRHopRecord(ett, switchingcost,
-	 * channel); if(packet instanceof JE802RREQPacket){ JE802RREQPacket rreq =
-	 * (JE802RREQPacket) JE802IPPacket.copyPacket(packet);
-	 * rreq.addMetricRecord(record); return rreq; } else if( packet instanceof
-	 * JE802RREPPacket){ JE802RREPPacket rrep = (JE802RREPPacket)
-	 * JE802IPPacket.copyPacket(packet); rrep.addMetricRecord(record); return
-	 * rrep; } else { return null; } } else { return packet; } }
-	 */
-
-	// computes the initial channel assignment and changes the channel of the
-	// different MACs's if necessary
-	private void assignInitialChannels() {
-		// switch channels according to the chosen fixed and switchable channel
-		// numbers
-		List<Integer> inUse = this.sme.getChannelsInUse();
-		if (inUse.size() < 2) {
-			error("For using the Hybrid Channel Manager, each station has to have at least two MACS, here at Station"
-					+ this.sme.getAddress()
-					+ " this is not the case, please set channelSwitching in the Routing layer to false or add a second mac to the station");
-		}
-		if (inUse.contains(this.fixedChannel)) {
-			// fixed channel remains, switchable has to switch :)
-			if (!inUse.contains(this.switchableChannel)) {
-				if (inUse.indexOf(this.fixedChannel) == 0) {
-					switchFromTo(inUse.get(1), this.switchableChannel, this.theUniqueEventScheduler.now());
-				} else {
-					switchFromTo(inUse.get(0), this.switchableChannel, this.theUniqueEventScheduler.now());
-				}
-			}
-		} else {
-			// both channels have to switch
-			if (!inUse.contains(this.switchableChannel)) {
-				switchFromTo(inUse.get(0), this.fixedChannel, this.theUniqueEventScheduler.now());
-				switchFromTo(inUse.get(1), this.switchableChannel, this.theUniqueEventScheduler.now());
-				// fixedChannel has to switch, switchable remains
-			} else {
-				if (inUse.indexOf(this.switchableChannel) == 0) {
-					switchFromTo(inUse.get(1), this.fixedChannel, this.theUniqueEventScheduler.now());
-				} else {
-					switchFromTo(inUse.get(0), this.fixedChannel, this.theUniqueEventScheduler.now());
-				}
-			}
-		}
-	}
 
 	@Override
 	public void broadcastIPPacketAll(final JE802IPPacket packet) {
@@ -164,7 +91,8 @@ public class JE802HybridChannelManager extends JEEventHandler implements JE802IC
 		} else if (anEventName.equals("Channel_Switch_req")) {
 			state = state.handleChannelSwitchReq(anEvent);
 		} else if (anEventName.equals("push_back_packet")) {
-			JE802IPPacket packet = (JE802IPPacket) anEvent.getParameterList().get(0);
+			JE802IPPacket packet = (JE802IPPacket) anEvent.getParameterList()
+					.get(0);
 			Integer channel = (Integer) anEvent.getParameterList().get(1);
 			Integer da = (Integer) anEvent.getParameterList().get(2);
 			JE802HopInfo nextHop = new JE802HopInfo(da, channel);
@@ -176,7 +104,8 @@ public class JE802HybridChannelManager extends JEEventHandler implements JE802IC
 	}
 
 	@Override
-	public void broadcastIPPacketChannel(final JE802IPPacket packet, final int channel) {
+	public void broadcastIPPacketChannel(final JE802IPPacket packet,
+			final int channel) {
 		System.err.println("Not yet implemented because not needed");
 	}
 
@@ -189,7 +118,8 @@ public class JE802HybridChannelManager extends JEEventHandler implements JE802IC
 			}
 		}
 		if (aChannel != null) {
-			List<JE802UsageEntry> usages = this.channelUsagesTime.get(aChannel.getChannelNumber());
+			List<JE802UsageEntry> usages = this.channelUsagesTime.get(aChannel
+					.getChannelNumber());
 			if (!usages.isEmpty()) {
 				if (usages.size() > JE802RoutingConstants.USAGE_WINDOW) {
 					int fistSize = usages.get(0).getSize();
@@ -199,7 +129,8 @@ public class JE802HybridChannelManager extends JEEventHandler implements JE802IC
 				}
 				int sizeSum = dataSizeOnChannel.get(channel);
 
-				double interval = theUniqueEventScheduler.now().getTimeMs() - usages.get(0).getExpiryTime().getTimeMs();
+				double interval = theUniqueEventScheduler.now().getTimeMs()
+						- usages.get(0).getExpiryTime().getTimeMs();
 				double bytesPerSecond = sizeSum / (interval / 1000);
 				double maxBytesPerSecond = 6750000;
 				double usage = bytesPerSecond / maxBytesPerSecond;
@@ -216,22 +147,26 @@ public class JE802HybridChannelManager extends JEEventHandler implements JE802IC
 	}
 
 	private boolean isSwitching() {
-		return this.switchingUntil.isLaterThan(this.theUniqueEventScheduler.now())
-				|| this.fixedSwitchingUntil.isLaterThan(this.theUniqueEventScheduler.now());
+		return this.switchingUntil.isLaterThan(this.theUniqueEventScheduler
+				.now())
+				|| this.fixedSwitchingUntil
+				.isLaterThan(this.theUniqueEventScheduler.now());
 	}
 
 	private boolean isSwitchingSwitchable() {
-		return this.switchingUntil.isLaterThan(this.theUniqueEventScheduler.now()); // ||
-																					// this.switchingUntil.getTimeMs()
-																					// ==
-																					// theUniqueEventScheduler.now().getTimeMs();
+		return this.switchingUntil.isLaterThan(this.theUniqueEventScheduler
+				.now()); // ||
+		// this.switchingUntil.getTimeMs()
+		// ==
+		// theUniqueEventScheduler.now().getTimeMs();
 	}
 
 	private boolean isSwitchingFixed() {
-		return this.fixedSwitchingUntil.isLaterThan(this.theUniqueEventScheduler.now()); // ||
-																							// this.fixedSwitchingUntil.getTimeMs()
-																							// ==
-																							// theUniqueEventScheduler.now().getTimeMs();
+		return this.fixedSwitchingUntil
+				.isLaterThan(this.theUniqueEventScheduler.now()); // ||
+		// this.fixedSwitchingUntil.getTimeMs()
+		// ==
+		// theUniqueEventScheduler.now().getTimeMs();
 	}
 
 	private void switchFromTo(final int from, final int to, final JETime when) {
@@ -252,8 +187,10 @@ public class JE802HybridChannelManager extends JEEventHandler implements JE802IC
 		parameterList.add(from);
 		parameterList.add(to);
 		this.switchingUntil = when;
-		this.send(new JEEvent("Channel_Switch_req", this.sme, this.switchingUntil, parameterList));
-		this.send(new JEEvent("Channel_Switched_ind", getHandlerId(), this.switchingUntil, parameterList));
+		this.send(new JEEvent("Channel_Switch_req", this.theSme,
+				this.switchingUntil, parameterList));
+		this.send(new JEEvent("Channel_Switched_ind", getHandlerId(),
+				this.switchingUntil, parameterList));
 	}
 
 	@Override
@@ -266,43 +203,50 @@ public class JE802HybridChannelManager extends JEEventHandler implements JE802IC
 		int maxChannelNr = 0;
 		int maxSize = 0;
 		for (JEWirelessChannel channel : this.availableChannels) {
-			if (channel.getChannelNumber() != this.fixedChannel && channel.getChannelNumber() != this.switchableChannel
+			if (channel.getChannelNumber() != this.fixedChannel
+					&& channel.getChannelNumber() != this.switchableChannel
 					&& this.packetQueues.get(channel.getChannelNumber()).size() > maxSize) {
-				maxSize = this.packetQueues.get(channel.getChannelNumber()).size();
+				maxSize = this.packetQueues.get(channel.getChannelNumber())
+						.size();
 				maxChannelNr = channel.getChannelNumber();
 			}
 		}
 		// only switch if not already on the channel with the biggest number of
 		// packets in queue, and not currently switching
-		if (maxSize > 0 && this.switchableChannel != maxChannelNr && this.fixedChannel != maxChannelNr && !isSwitching()) {
-			switchFromTo(this.switchableChannel, maxChannelNr,
-					this.theUniqueEventScheduler.now().plus(JE802RoutingConstants.CHANNEL_SWITCHING_DELAY));
+		if (maxSize > 0 && this.switchableChannel != maxChannelNr
+				&& this.fixedChannel != maxChannelNr && !isSwitching()) {
+			switchFromTo(
+					this.switchableChannel,
+					maxChannelNr,
+					this.theUniqueEventScheduler.now().plus(
+							JE802RoutingConstants.CHANNEL_SWITCHING_DELAY));
 			this.switchableChannel = maxChannelNr;
 		} else {
-			this.send(new JEEvent("Channel_Switch_req", getHandlerId(), this.theUniqueEventScheduler.now().plus(
-					JE802RoutingConstants.MAX_SWITCHING_INTERVAL)));
+			this.send(new JEEvent("Channel_Switch_req", getHandlerId(),
+					this.theUniqueEventScheduler.now().plus(
+							JE802RoutingConstants.MAX_SWITCHING_INTERVAL)));
 		}
 	}
 
 	@Override
 	public String toString() {
-		return "ChannelMgr station " + this.sme.getAddress();
+		return "ChannelMgr station " + this.theSme.getAddress();
 	}
 
 	@Override
 	// send packet to address specified in nextHop
-	public void unicastIPPacket(final JE802IPPacket packet, final JE802HopInfo nextHop) {
+	public void unicastIPPacket(final JE802IPPacket packet,
+			final JE802HopInfo nextHop) {
 		if (packet.getTTL() >= 1) {
 			if (state instanceof JEBroadcastState) {
-				// quick fix for a bug in the channel manager
-				// TODO: somewhere is a starvation bug where it never comes out
-				// of the broadcast state again
 				JEBroadcastState broadState = (JEBroadcastState) state;
-				if (broadState.getBroadcastStart().isEarlierThan(theUniqueEventScheduler.now().minus(new JETime(20)))) {
+				if (broadState.getBroadcastStart().isEarlierThan(
+						theUniqueEventScheduler.now().minus(new JETime(20)))) {
 					this.state = new JEUnicastState();
 					this.state.sendPacket(packet, nextHop);
 				}
-				List<JE802QueueEntry> queue = this.packetQueues.get(nextHop.getChannel());
+				List<JE802QueueEntry> queue = this.packetQueues.get(nextHop
+						.getChannel());
 				queue.add(new JE802QueueEntry(packet, nextHop));
 			} else {
 				this.state.sendPacket(packet, nextHop);
@@ -311,7 +255,8 @@ public class JE802HybridChannelManager extends JEEventHandler implements JE802IC
 	}
 
 	private void addUsage(int length, int channel) {
-		JE802UsageEntry usage = new JE802UsageEntry(length, this.theUniqueEventScheduler.now());
+		JE802UsageEntry usage = new JE802UsageEntry(length,
+				this.theUniqueEventScheduler.now());
 		channelUsagesTime.get(channel).add(usage);
 		Integer newSize = dataSizeOnChannel.get(channel) + length;
 		dataSizeOnChannel.put(channel, newSize);
@@ -319,12 +264,14 @@ public class JE802HybridChannelManager extends JEEventHandler implements JE802IC
 
 	@Override
 	// checks whether to switch the fixed channel to a new channel or not
-	public int checkFixedSwitch(final Map<Integer, Integer> neighborhoodChannelUsages) {
+	public int checkFixedSwitch(
+			final Map<Integer, Integer> neighborhoodChannelUsages) {
 		int min = Integer.MAX_VALUE;
 		// determine the minimal number of neighbors
 		int minChannelNr = 0;
 		for (JEWirelessChannel channel : availableChannels) {
-			Integer count = neighborhoodChannelUsages.get(channel.getChannelNumber());
+			Integer count = neighborhoodChannelUsages.get(channel
+					.getChannelNumber());
 			if (count == null) {
 				count = 0;
 			}
@@ -336,7 +283,8 @@ public class JE802HybridChannelManager extends JEEventHandler implements JE802IC
 		// put all channels with this minimal number of neighbors into a list
 		List<Integer> minimalChannels = new ArrayList<Integer>();
 		for (JEWirelessChannel channel : availableChannels) {
-			Integer count = neighborhoodChannelUsages.get(channel.getChannelNumber());
+			Integer count = neighborhoodChannelUsages.get(channel
+					.getChannelNumber());
 			if (count != null) {
 				if (count == min) {
 					minimalChannels.add(channel.getChannelNumber());
@@ -351,20 +299,27 @@ public class JE802HybridChannelManager extends JEEventHandler implements JE802IC
 		// not uniformly distributed and more stations occupy the lower numbered
 		// channels, which is suboptimal
 		if (minimalChannels.size() > 1) {
-			minChannelNr = minimalChannels.get(theUniqueRandomGenerator.nextInt(minimalChannels.size()));
+			minChannelNr = minimalChannels.get(theUniqueRandomGenerator
+					.nextInt(minimalChannels.size()));
 		}
 		// only switch with a certain probability
 		double rand = theUniqueRandomGenerator.nextDouble();
 		if (rand <= JE802RoutingConstants.switchProbability) {
-			if (minChannelNr != this.fixedChannel && minChannelNr != this.switchableChannel) {
+			if (minChannelNr != this.fixedChannel
+					&& minChannelNr != this.switchableChannel) {
 				Vector<Object> parameterList = new Vector<Object>();
 				parameterList.add(this.fixedChannel);
 				parameterList.add(minChannelNr);
-				this.fixedSwitchingUntil = this.theUniqueEventScheduler.now().plus(JE802RoutingConstants.CHANNEL_SWITCHING_DELAY);
-				this.send(new JEEvent("Channel_Switch_req", this.sme, this.fixedSwitchingUntil, parameterList));
-				this.send(new JEEvent("Channel_Switched_ind", this.getHandlerId(), this.fixedSwitchingUntil, parameterList));
-				this.message("Station " + this.sme.getAddress() + " switching fixed channel from " + this.fixedChannel + " to "
-						+ minChannelNr);
+				this.fixedSwitchingUntil = this.theUniqueEventScheduler.now()
+						.plus(JE802RoutingConstants.CHANNEL_SWITCHING_DELAY);
+				this.send(new JEEvent("Channel_Switch_req", this.theSme,
+						this.fixedSwitchingUntil, parameterList));
+				this.send(new JEEvent("Channel_Switched_ind", this
+						.getHandlerId(), this.fixedSwitchingUntil,
+						parameterList));
+				this.message("Station " + this.theSme.getAddress()
+						+ " switching fixed channel from " + this.fixedChannel
+						+ " to " + minChannelNr);
 				this.fixedChannel = minChannelNr;
 				return minChannelNr;
 			}
@@ -378,7 +333,8 @@ public class JE802HybridChannelManager extends JEEventHandler implements JE802IC
 
 		private final JE802HopInfo nextHop;
 
-		public JE802QueueEntry(final JE802IPPacket packet, final JE802HopInfo nextHop) {
+		public JE802QueueEntry(final JE802IPPacket packet,
+				final JE802HopInfo nextHop) {
 			this.packet = packet;
 			this.nextHop = nextHop;
 		}
@@ -439,7 +395,8 @@ public class JE802HybridChannelManager extends JEEventHandler implements JE802IC
 
 		private final JETime broadcastStart = theUniqueEventScheduler.now();
 
-		private List<JEWirelessChannel> toSendBroadcastChannels = new ArrayList<JEWirelessChannel>(availableChannels);
+		private List<JEWirelessChannel> toSendBroadcastChannels = new ArrayList<JEWirelessChannel>(
+				availableChannels);
 
 		@Override
 		protected JEHybridChannelState handleBroadcastSent(JEEvent event) {
@@ -459,18 +416,25 @@ public class JE802HybridChannelManager extends JEEventHandler implements JE802IC
 				if (channelNo != fixedChannel) {
 					if (!isSwitchingSwitchable()) {
 						if (toSendBroadcastChannels.size() == 1
-								&& toSendBroadcastChannels.get(0).getChannelNumber() == fixedChannel) {
+								&& toSendBroadcastChannels.get(0)
+								.getChannelNumber() == fixedChannel) {
 							return new JEUnicastState();
 						}
-						int switchTo = toSendBroadcastChannels.get(0).getChannelNumber();
+						int switchTo = toSendBroadcastChannels.get(0)
+								.getChannelNumber();
 						int i = 0;
 						while (switchTo == fixedChannel) {
-							switchTo = toSendBroadcastChannels.get(i).getChannelNumber();
+							switchTo = toSendBroadcastChannels.get(i)
+									.getChannelNumber();
 							i++;
 						}
 						if (switchTo != switchableChannel) {
-							switchFromTo(switchableChannel, switchTo,
-									theUniqueEventScheduler.now().plus(JE802RoutingConstants.CHANNEL_SWITCHING_DELAY));
+							switchFromTo(
+									switchableChannel,
+									switchTo,
+									theUniqueEventScheduler
+									.now()
+									.plus(JE802RoutingConstants.CHANNEL_SWITCHING_DELAY));
 							switchableChannel = switchTo;
 						}
 					}
@@ -483,15 +447,20 @@ public class JE802HybridChannelManager extends JEEventHandler implements JE802IC
 					broadcastQueue.remove(0);
 				}
 				if (!broadcastQueue.isEmpty()) {
-					toSendBroadcastChannels = new ArrayList<JEWirelessChannel>(availableChannels);
+					toSendBroadcastChannels = new ArrayList<JEWirelessChannel>(
+							availableChannels);
 					// List<JEWirelessChannel> shuffled = new
 					// ArrayList<JEWirelessChannel>(availableChannels);
 					// Collections.shuffle(shuffled, theUniqueRandomGenerator);
 					for (JEWirelessChannel channel : availableChannels) {
-						if (channel.getChannelNumber() == fixedChannel && !isSwitchingFixed()) {
-							broadcast(broadcastQueue.get(0), fixedChannel, theUniqueEventScheduler.now());
-						} else if (channel.getChannelNumber() == switchableChannel && !isSwitchingSwitchable()) {
-							broadcast(broadcastQueue.get(0), switchableChannel, theUniqueEventScheduler.now());
+						if (channel.getChannelNumber() == fixedChannel
+								&& !isSwitchingFixed()) {
+							broadcast(broadcastQueue.get(0), fixedChannel,
+									theUniqueEventScheduler.now());
+						} else if (channel.getChannelNumber() == switchableChannel
+								&& !isSwitchingSwitchable()) {
+							broadcast(broadcastQueue.get(0), switchableChannel,
+									theUniqueEventScheduler.now());
 						}
 					}
 				} else {
@@ -515,9 +484,11 @@ public class JE802HybridChannelManager extends JEEventHandler implements JE802IC
 		protected JEHybridChannelState handleChannelSwitched(JEEvent event) {
 			Integer channel = (Integer) event.getParameterList().get(1);
 			if (channel == fixedChannel) {
-				broadcast(this.broadcastQueue.get(0), fixedChannel, theUniqueEventScheduler.now());
+				broadcast(this.broadcastQueue.get(0), fixedChannel,
+						theUniqueEventScheduler.now());
 			}
-			broadcast(this.broadcastQueue.get(0), switchableChannel, theUniqueEventScheduler.now());
+			broadcast(this.broadcastQueue.get(0), switchableChannel,
+					theUniqueEventScheduler.now());
 			if (toSendBroadcastChannels.isEmpty()) {
 				broadcastQueue.remove(0);
 				if (broadcastQueue.isEmpty()) {
@@ -528,7 +499,8 @@ public class JE802HybridChannelManager extends JEEventHandler implements JE802IC
 		}
 
 		@Override
-		protected JEHybridChannelState sendPacket(JE802IPPacket packet, JE802HopInfo nextHop) {
+		protected JEHybridChannelState sendPacket(JE802IPPacket packet,
+				JE802HopInfo nextHop) {
 			this.broadcastQueue.add(packet);
 			boolean isSwitching = isSwitching();
 			if (this.broadcastQueue.size() < 2 && !isSwitching) {
@@ -538,27 +510,35 @@ public class JE802HybridChannelManager extends JEEventHandler implements JE802IC
 				// ArrayList<JEWirelessChannel>(availableChannels);
 				// Collections.shuffle(shuffled, theUniqueRandomGenerator);
 				for (JEWirelessChannel channel : availableChannels) {
-					if (channel.getChannelNumber() == fixedChannel && !isSwitchingFixed()) {
+					if (channel.getChannelNumber() == fixedChannel
+							&& !isSwitchingFixed()) {
 						this.toSendBroadcastChannels.remove(channel);
-						broadcast(packet, fixedChannel, theUniqueEventScheduler.now());
-					} else if (channel.getChannelNumber() == switchableChannel && !isSwitchingSwitchable()) {
+						broadcast(packet, fixedChannel,
+								theUniqueEventScheduler.now());
+					} else if (channel.getChannelNumber() == switchableChannel
+							&& !isSwitchingSwitchable()) {
 						this.toSendBroadcastChannels.remove(channel);
-						broadcast(packet, switchableChannel, theUniqueEventScheduler.now());
+						broadcast(packet, switchableChannel,
+								theUniqueEventScheduler.now());
 					}
 				}
 			} else if (!isSwitching) {
-				broadcast(broadcastQueue.get(0), switchableChannel, theUniqueEventScheduler.now());
+				broadcast(broadcastQueue.get(0), switchableChannel,
+						theUniqueEventScheduler.now());
 			}
 			return this;
 		}
 
-		private void broadcast(final JE802IPPacket packet, final int channel, final JETime when) {
+		private void broadcast(final JE802IPPacket packet, final int channel,
+				final JETime when) {
 			JE802IPPacket broadcastPacket = packet;
 			broadcastPacket = JE802IPPacket.copyPacket(packet);
 			if (broadcastPacket instanceof JE802RREQPacket) {
 				JE802RREQPacket rreq = (JE802RREQPacket) broadcastPacket;
 				double channelUsage = getChannelUsage(channel);
-				double switchingcost = (1 - channelUsage) * JE802RoutingConstants.CHANNEL_SWITCHING_DELAY.getTimeMs() / 1000;
+				double switchingcost = (1 - channelUsage)
+						* JE802RoutingConstants.CHANNEL_SWITCHING_DELAY
+						.getTimeMs() / 1000;
 				rreq.setLastHopSwitchingCost(switchingcost);
 			}
 			addUsage(broadcastPacket.getLength(), channel);
@@ -570,7 +550,7 @@ public class JE802HybridChannelManager extends JEEventHandler implements JE802IC
 			hops.add(DA);
 			parameterList.add(hops);
 			parameterList.add(broadcastPacket);
-			send(new JEEvent("IP_Deliv_req", sme, when, parameterList));
+			send(new JEEvent("IP_Deliv_req", theSme, when, parameterList));
 		}
 	}
 
@@ -598,7 +578,8 @@ public class JE802HybridChannelManager extends JEEventHandler implements JE802IC
 			// send all packets in the queue for the fixed channel
 			List<JE802QueueEntry> channelQueue = packetQueues.get(fixedChannel);
 			for (JE802QueueEntry entry : channelQueue) {
-				addUsage(entry.getPacket().getLength(), entry.getNextHop().getChannel());
+				addUsage(entry.getPacket().getLength(), entry.getNextHop()
+						.getChannel());
 				Vector<Object> parameterList = new Vector<Object>();
 				parameterList.add(entry.getNextHop());
 				parameterList.add(entry.getPacket().getAC());
@@ -606,14 +587,16 @@ public class JE802HybridChannelManager extends JEEventHandler implements JE802IC
 				hops.add(entry.getNextHop());
 				parameterList.add(hops);
 				parameterList.add(entry.getPacket());
-				send(new JEEvent("IP_Deliv_req", sme, theUniqueEventScheduler.now(), parameterList));
+				send(new JEEvent("IP_Deliv_req", theSme,
+						theUniqueEventScheduler.now(), parameterList));
 			}
 			channelQueue.clear();
 			// send all packets in the queue for the switchable channel
 			channelQueue = packetQueues.get(switchableChannel);
 			if (!channelQueue.isEmpty() && !isSwitching()) {
 				for (JE802QueueEntry entry : channelQueue) {
-					addUsage(entry.getPacket().getLength(), entry.getNextHop().getChannel());
+					addUsage(entry.getPacket().getLength(), entry.getNextHop()
+							.getChannel());
 					Vector<Object> parameterList = new Vector<Object>();
 					parameterList.add(entry.getNextHop());
 					parameterList.add(entry.getPacket().getAC());
@@ -621,11 +604,13 @@ public class JE802HybridChannelManager extends JEEventHandler implements JE802IC
 					hops.add(entry.getNextHop());
 					parameterList.add(hops);
 					parameterList.add(entry.getPacket());
-					send(new JEEvent("IP_Deliv_req", sme, theUniqueEventScheduler.now(), parameterList));
+					send(new JEEvent("IP_Deliv_req", theSme,
+							theUniqueEventScheduler.now(), parameterList));
 				}
 				channelQueue.clear();
-				send(new JEEvent("Channel_Switch_req", getHandlerId(), theUniqueEventScheduler.now().plus(
-						JE802RoutingConstants.MAX_SWITCHING_INTERVAL)));
+				send(new JEEvent("Channel_Switch_req", getHandlerId(),
+						theUniqueEventScheduler.now().plus(
+								JE802RoutingConstants.MAX_SWITCHING_INTERVAL)));
 			} else {
 				switchToNextChannel();
 			}
@@ -634,7 +619,8 @@ public class JE802HybridChannelManager extends JEEventHandler implements JE802IC
 		// only possible if switchable queue is empty and all other queues are
 		// empty except the on for the channel to switch to
 		private boolean checkFastSwitchPossible(final int chan) {
-			if (isSwitching() || switchableChannel == chan || fixedChannel == chan) {
+			if (isSwitching() || switchableChannel == chan
+					|| fixedChannel == chan) {
 				return false;
 			}
 			for (JEWirelessChannel channel : availableChannels) {
@@ -650,7 +636,8 @@ public class JE802HybridChannelManager extends JEEventHandler implements JE802IC
 		}
 
 		@Override
-		protected JEHybridChannelState sendPacket(JE802IPPacket packet, JE802HopInfo nextHop) {
+		protected JEHybridChannelState sendPacket(JE802IPPacket packet,
+				JE802HopInfo nextHop) {
 			JE802IPPacket unicastPacket = packet;
 			unicastPacket = JE802IPPacket.copyPacket(packet);
 			/*
@@ -660,7 +647,9 @@ public class JE802HybridChannelManager extends JEEventHandler implements JE802IC
 			 */
 
 			// only transmit if medium is not switching
-			if (!isSwitching() && (fixedChannel == nextHop.getChannel() || switchableChannel == nextHop.getChannel())) {
+			if (!isSwitching()
+					&& (fixedChannel == nextHop.getChannel() || switchableChannel == nextHop
+					.getChannel())) {
 				addUsage(unicastPacket.getLength(), nextHop.getChannel());
 				Vector<Object> parameterList = new Vector<Object>();
 				parameterList.add(nextHop);
@@ -669,13 +658,19 @@ public class JE802HybridChannelManager extends JEEventHandler implements JE802IC
 				hops.add(nextHop);
 				parameterList.add(hops);
 				parameterList.add(unicastPacket);
-				send(new JEEvent("IP_Deliv_req", sme, theUniqueEventScheduler.now(), parameterList));
+				send(new JEEvent("IP_Deliv_req", theSme,
+						theUniqueEventScheduler.now(), parameterList));
 			} else {
-				List<JE802QueueEntry> queue = packetQueues.get(nextHop.getChannel());
+				List<JE802QueueEntry> queue = packetQueues.get(nextHop
+						.getChannel());
 				queue.add(new JE802QueueEntry(unicastPacket, nextHop));
 				if (checkFastSwitchPossible(nextHop.getChannel())) {
-					switchFromTo(switchableChannel, nextHop.getChannel(),
-							theUniqueEventScheduler.now().plus(JE802RoutingConstants.CHANNEL_SWITCHING_DELAY));
+					switchFromTo(
+							switchableChannel,
+							nextHop.getChannel(),
+							theUniqueEventScheduler
+							.now()
+							.plus(JE802RoutingConstants.CHANNEL_SWITCHING_DELAY));
 					switchableChannel = nextHop.getChannel();
 				}
 			}
@@ -685,13 +680,17 @@ public class JE802HybridChannelManager extends JEEventHandler implements JE802IC
 
 	private abstract class JEHybridChannelState {
 
-		protected abstract JEHybridChannelState handleChannelSwitched(JEEvent event);
+		protected abstract JEHybridChannelState handleChannelSwitched(
+				JEEvent event);
 
-		protected abstract JEHybridChannelState handleBroadcastSent(JEEvent event);
+		protected abstract JEHybridChannelState handleBroadcastSent(
+				JEEvent event);
 
-		protected abstract JEHybridChannelState handleChannelSwitchReq(JEEvent event);
+		protected abstract JEHybridChannelState handleChannelSwitchReq(
+				JEEvent event);
 
-		protected abstract JEHybridChannelState sendPacket(JE802IPPacket packet, JE802HopInfo nextHop);
+		protected abstract JEHybridChannelState sendPacket(
+				JE802IPPacket packet, JE802HopInfo nextHop);
 
 	}
 
@@ -706,7 +705,8 @@ public class JE802HybridChannelManager extends JEEventHandler implements JE802IC
 			List<JE802QueueEntry> queue = packetQueues.get(switchableChannel);
 			if (!queue.isEmpty()) {
 				JE802QueueEntry queueEntry = queue.get(0);
-				this.unicastIPPacket(queueEntry.getPacket(), queueEntry.getNextHop());
+				this.unicastIPPacket(queueEntry.getPacket(),
+						queueEntry.getNextHop());
 				queue.remove(0);
 			}
 		}

@@ -70,7 +70,7 @@ public class JE802RadioCoverageKml extends JE802KmlGenerator {
 	// attenuation factor of radio signal
 	private final double attenuationFactor;
 
-	// specifies whether mobile stations are taken into account when calculation
+	// specifies whether mobile theStations are taken into account when calculation
 	// the power distributions
 	private final boolean showMobile;
 
@@ -151,10 +151,10 @@ public class JE802RadioCoverageKml extends JE802KmlGenerator {
 				double maxPower = Double.NEGATIVE_INFINITY;
 				double nearest = Double.MAX_VALUE;
 				JE802Station nearestStation = null;
-				int size = this.stations.size();
+				int size = this.theStations.size();
 				double powerSum = 0.0;
 				for (int k = 0; k < size; k++) {
-					JE802Station station = this.stations.get(k); // this is
+					JE802Station station = this.theStations.get(k); // this is
 																	// faster
 																	// than list
 																	// iterator
@@ -169,7 +169,7 @@ public class JE802RadioCoverageKml extends JE802KmlGenerator {
 						if (currentPower > maxPower) {
 							maxPower = currentPower;
 							nearest = distance;
-							nearestStation = this.stations.get(k);
+							nearestStation = this.theStations.get(k);
 						}
 					}
 				}
@@ -179,7 +179,7 @@ public class JE802RadioCoverageKml extends JE802KmlGenerator {
 				Color addressColor;
 				if (nearest < this.reuseDistance) {
 					powerColor = calculatePowerColor(powerSum, this.minTxdBm, this.maxTxdBm, this.alpha);
-					int channel = nearestStation.getFixedChannel();
+					int channel = nearestStation.getPhy().getCurrentChannel();
 					channelColor = getChannelColor(channel);
 					addressColor = calculateAddressColor(nearestStation.getMac().getMacAddress(), maxAddress);
 				} else {
@@ -204,8 +204,8 @@ public class JE802RadioCoverageKml extends JE802KmlGenerator {
 	 * @param macAddress
 	 *            MACAddress of current station
 	 * @param maxAddress
-	 *            the biggest MACaddress of all stations
-	 * @return Color of current stations MACAddress
+	 *            the biggest MACaddress of all theStations
+	 * @return Color of current theStations MACAddress
 	 */
 	private Color calculateAddressColor(final int macAddress, final int maxAddress) {
 		double gradient = (double) macAddress / maxAddress;
@@ -276,9 +276,9 @@ public class JE802RadioCoverageKml extends JE802KmlGenerator {
 	}
 
 	/**
-	 * Get bounding box of all stations +- reuseDistance
+	 * Get bounding box of all theStations +- reuseDistance
 	 * 
-	 * @return bounding coordinates for all stations
+	 * @return bounding coordinates for all theStations
 	 *         {latitudeMaximum,latitudeMinimum
 	 *         ,longitudeMaximum,longitudeMinimuim}
 	 */
@@ -287,7 +287,7 @@ public class JE802RadioCoverageKml extends JE802KmlGenerator {
 		Double latMin = Double.POSITIVE_INFINITY;
 		Double longMax = Double.NEGATIVE_INFINITY;
 		Double longMin = Double.POSITIVE_INFINITY;
-		for (JE802Station station : this.stations) {
+		for (JE802Station station : this.theStations) {
 			JETime startTime = station.getStatEval().getEvaluationStarttime();
 			double[] position = convertXYZtoLatLonAlt(station.getXLocation(startTime), station.getYLocation(startTime),
 					station.getZLocation(startTime));
@@ -313,13 +313,13 @@ public class JE802RadioCoverageKml extends JE802KmlGenerator {
 	}
 
 	/**
-	 * Gets maximum Mac adress of all stations
+	 * Gets maximum Mac adress of all theStations
 	 * 
-	 * @return maximum mac address over all stations
+	 * @return maximum mac address over all theStations
 	 */
 	private int maxMacAddress() {
 		int maxAddress = Integer.MIN_VALUE;
-		for (JE802Station station : this.stations) {
+		for (JE802Station station : this.theStations) {
 			if (station.getMac().getMacAddress() > maxAddress) {
 				maxAddress = station.getMac().getMacAddress();
 			}

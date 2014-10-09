@@ -65,7 +65,7 @@ public class JE802StationModelKml extends JE802KmlGenerator {
 	 */
 	private List<Element> createStationModels() {
 		ArrayList<Element> models = new ArrayList<Element>();
-		for (JE802Station station : this.stations) {
+		for (JE802Station station : this.theStations) {
 			int positionCount;
 			JETime currentTime = station.getStatEval().getEvaluationStarttime();
 			JETime interval = station.getStatEval().getEvaluationInterval();
@@ -170,7 +170,7 @@ public class JE802StationModelKml extends JE802KmlGenerator {
 							.getEvaluationEnd());
 				}
 				currentTime = currentTime.plus(interval);
-				name.appendChild(this.doc.createTextNode("station " + station.getMac().getMacAddress()));
+				name.appendChild(this.doc.createTextNode("Station " + station.getMac().getMacAddress()));
 				placemark.appendChild(name);
 				placemark.appendChild(model);
 				placemark.appendChild(timeSpan);
@@ -184,7 +184,7 @@ public class JE802StationModelKml extends JE802KmlGenerator {
 	@Override
 	public Element createDOM() {
 		List<Element> models = createStationModels();
-		String folderName = "802 stations";
+		String folderName = "802 Stations";
 		Element modelFolder = createFolder(models, folderName, false);
 		return modelFolder;
 	}
