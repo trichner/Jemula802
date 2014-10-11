@@ -5,6 +5,16 @@ The emulation software to model 802.11 and other 802 wireless communication syst
 
 This project requires [Jemula](https://github.com/schmist/Jemula) as kernel.
 
+Build process
+--------
+
+This project is under maven dependency management and build system.
+Simply run `mvn package` to create an executable *.jar. The built package can
+be found in `target/Jemula802-<version>.jar`.
+
+Run it with `java -jar Jemula802-<version>.jar` or with increased heap size e.g. `java -Xmx2g -jar 
+Jemula802-<version>.jar`.
+
 Overview
 --------
 
