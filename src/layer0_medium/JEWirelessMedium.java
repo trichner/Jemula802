@@ -14,7 +14,7 @@ public interface JEWirelessMedium {
 	 */
 	public void event_handler(JEEvent anEvent);
 
-	public double getReuseDistance();
+	public double getCoverageRange_m();
 
 	public List<JEWirelessChannel> getAvailableChannels();
 
@@ -24,6 +24,6 @@ public interface JEWirelessMedium {
 
 	public double getBusyPowerLevel_mW();
 
-	public double getSnirAtRx(int da, JE802Phy je802Phy);
+//	public double getSnirAtRx(int aDestinationAddress, JE802Phy aTxPhy);
 
 }

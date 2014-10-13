@@ -36,7 +36,7 @@ JEWirelessMedium {
 
 	private final Map<Integer, JE802ChannelEntry> theChannels;
 
-	private final double theReuseDistance_m;
+	private final double theCoverageRange_m;
 
 	private final double maxAllowedPathloss = dBToFactor(-110);
 
@@ -59,12 +59,13 @@ JEWirelessMedium {
 		attenuationTable = new HashMap<Integer, Map<Integer, Double>>();
 		allPhys = new ArrayList<JE802Phy>();
 		Element wirelessElem = (Element) aTopLevelNode;
-		String aReuseDistance_m = wirelessElem
-				.getAttribute("ReuseDistance_m");
-		if (!aReuseDistance_m.isEmpty()) {
-			this.theReuseDistance_m = new Integer(aReuseDistance_m);
+		String aCoverageRange_m = wirelessElem
+				.getAttribute("theCoverageRange_m");
+		if (!aCoverageRange_m.isEmpty()) {
+			this.theCoverageRange_m = new Integer(aCoverageRange_m);
 		} else {
-			this.theReuseDistance_m = 1;
+			this.warning("missing attribute `theCoverageRange_m`, using default 10m");
+			this.theCoverageRange_m = 10;
 		}
 		String busyThresholdStr = wirelessElem
 				.getAttribute("channelBusyThreshold_dBm");
@@ -267,20 +268,14 @@ JEWirelessMedium {
 					rxStation);
 			double powerAtRx = aTxPhy.getCurrentTransmitPower_mW()
 					* attenuation;
+			// SINR = Signal to (Noise + Interference) Ratio
 			double SNIR = powerAtRx / interference;
-			// this.message("" + SINR,70);
+			double SNIR_dB = 10 * Math.log10(SNIR);
 			JE802Ppdu aRxPpdu = aPpdu.clone(); // prevent aliasing, otherwise
-			// jam signal would be set to
-			// one value for all theStations
+			// jam signal would be set to one value for all theStations
 			// jam the packet with a certain probability
-			double prob = aRxPpdu
-					.getMpdu()
-					.getPhyMode()
-					.getPacketErrorProb(aPpdu.getMpdu().getFrameBodySize(),
-							SNIR);
-			// double prob =
-			// aTxPhy.getCurrentPhyMode().getPacketErrorProb(aPpdu.getMpdu().getFrameBodySize(),
-			// SNIR);
+			double prob = aRxPpdu.getMpdu().getPhyMode()
+					.getPacketErrorProb(aPpdu.getMpdu().getFrameBodySize(),SNIR);
 			if (prob > 0) {
 				double rand = theUniqueRandomGenerator.nextDouble();
 				if (rand < prob) {
@@ -290,7 +285,6 @@ JEWirelessMedium {
 
 			Vector<Object> parameterList = new Vector<Object>();
 			parameterList.add(aRxPpdu);
-			// TODO: optimize this
 			JE802Phy rxPhy = null;
 			// search for rxPhy
 			for (JE802Phy aRxPhy : channel.getPhyList()) {
@@ -318,17 +312,12 @@ JEWirelessMedium {
 		toEntry.addPhy(phy);
 	}
 
-	/*
-	 * private double mWtodBm(final double mW) { return
-	 * 10*Math.log10(mW/1000)+30; }
-	 */
-
 	private double dBToFactor(final double dB) {
 		return Math.pow(10, dB / 10);
 	}
 
 	// compute the path loss from phy1 to phy2
-	private double computePathlossFactor(final JE802Phy srcPhy,
+	private double pathloss_factor(final JE802Phy srcPhy,
 			final JE802Phy dstPhy, final double p1m) {
 		JETime now = theUniqueEventScheduler.now();
 
@@ -356,11 +345,11 @@ JEWirelessMedium {
 		double distance = src.getDistanceTo(dst);
 
 		// compute attenuation
-		double attenuation;
+		double anAttenuation_dB;
 		if (distance > 1.0) {
-			attenuation = p1m - 20 * Math.log10(distance);
+			anAttenuation_dB = p1m - 20 * Math.log10(distance);
 		} else {
-			attenuation = p1m;
+			anAttenuation_dB = p1m;
 		}
 
 		// compute directional gains
@@ -371,7 +360,7 @@ JEWirelessMedium {
 				.getGainIndBForDirection(pathDirection.reflect(), dst.getLat(),
 						dst.getLon(), dstMob.getTraceHeading(now));
 
-		return dBToFactor(attenuation + srcDirectionalGain + dstDirectionalGain);
+		return dBToFactor(anAttenuation_dB + srcDirectionalGain + dstDirectionalGain);
 	}
 
 	// calculates the interference power level in mW at the position of atPhy
@@ -398,13 +387,13 @@ JEWirelessMedium {
 	}
 
 	private double crossChannelInterference(final int a, final int b) {
-		double distance = Math.max(0, theReuseDistance_m - Math.abs(a - b));
-		return distance / theReuseDistance_m;
+		double distance = Math.max(0, theCoverageRange_m - Math.abs(a - b));
+		return distance / theCoverageRange_m;
 	}
 
 	// conversion from dBm to milliwatt
 	private double dBmtomW(final double dBm) {
-		return Math.pow(10, (dBm - 30) / 10);
+		return Math.pow(10, (dBm) / 10);
 	}
 
 	private void registerPhy(final JEEvent anEvent) {
@@ -414,8 +403,7 @@ JEWirelessMedium {
 		// add phy to existing channel
 		entry.addPhy(newPhy);
 		// compute the pathloss to all other theStations and store in
-		// attenuation
-		// table
+		// attenuation table
 		allPhys.add(newPhy);
 		updateAttenuations(newPhy);
 	}
@@ -423,7 +411,7 @@ JEWirelessMedium {
 	private void locationUpdate(JEEvent anEvent) {
 		JE802Phy updatePhy = (JE802Phy) anEvent.getParameterList().get(0);
 		// on a location update, we have to update the attenuation table and
-		// recalculate the attenuations for the connections to all neighboring
+		// recalculate the attenuation for the connections to all neighboring
 		// theStations
 		this.updateAttenuations(updatePhy);
 	}
@@ -436,8 +424,8 @@ JEWirelessMedium {
 			attenuations = new HashMap<Integer, Double>();
 		}
 		for (JE802Phy otherPhy : allPhys) {
-			double pathLossFactor = computePathlossFactor(newPhy, otherPhy,
-					entry.getP1m());
+			double pathLossFactor = pathloss_factor(newPhy, otherPhy,
+					entry.getPathlossAt1m());
 			if (pathLossFactor < maxAllowedPathloss) {
 				pathLossFactor = maxAllowedPathloss;
 			}
@@ -464,7 +452,8 @@ JEWirelessMedium {
 			return pathloss;
 		}
 		// outside of transmission range
-		return 0.0;
+		this.warning("returning NaN for pathloss calculation");
+		return Double.NaN;
 	}
 
 	protected class JE802ChannelEntry {
@@ -478,7 +467,7 @@ JEWirelessMedium {
 		private final int channel;
 
 		// reference power at 1m;
-		private final double thePathLossAt1meter_constant;
+		private final double thePathlossAt1m_constant;
 
 		public JE802ChannelEntry(final int channel, final double frequencyMhz) {
 			phyList = new ArrayList<JE802Phy>();
@@ -494,7 +483,7 @@ JEWirelessMedium {
 				}
 			}
 			double lambda = 3E8 / (frequencyMhz * 1E6);
-			this.thePathLossAt1meter_constant = 20 * Math.log((lambda / 4 * Math.PI));
+			this.thePathlossAt1m_constant = 20 * Math.log((lambda / 4 * Math.PI));
 		}
 
 		public void removePhy(JE802Phy toRemove) {
@@ -548,8 +537,8 @@ JEWirelessMedium {
 			return txRec;
 		}
 
-		public double getP1m() {
-			return thePathLossAt1meter_constant;
+		public double getPathlossAt1m() {
+			return thePathlossAt1m_constant;
 		}
 
 		public List<JE802MediumTxRecord> getTransmittingPhys() {
@@ -694,8 +683,8 @@ JEWirelessMedium {
 	}
 
 	@Override
-	public double getReuseDistance() {
-		return this.theReuseDistance_m;
+	public double getCoverageRange_m() {
+		return this.theCoverageRange_m;
 	}
 
 	@Override
@@ -741,13 +730,11 @@ JEWirelessMedium {
 		}
 	}
 
-	@Override
-	// only reception power according to distance
-	public double getSnirAtRx(int rxAddr, JE802Phy txPhy) {
-		double ownChannelInterference = noiseLevel_mW;
-		double attenuation = getPathloss(txPhy.getMac().getMacAddress(), rxAddr);
-		double rxPower = txPhy.getCurrentTransmitPower_mW() * attenuation;
-		double snir = rxPower / ownChannelInterference;
-		return snir;
-	}
+	//	public double getSnirAtRx(int aDestinationAddress, JE802Phy aTxPhy) {
+	//		double ownChannelInterference = noiseLevel_mW;
+	//		double attenuation = getPathloss(aTxPhy.getMac().getMacAddress(), aDestinationAddress);
+	//		double rxPower = aTxPhy.getCurrentTransmitPower_mW() * attenuation;
+	//		double snir = rxPower / ownChannelInterference;
+	//		return snir;
+	//	}
 }

@@ -315,7 +315,7 @@ public class JE802Control extends JEmula {
 		if (new Boolean(animationNode.getAttribute("generateGoogleEarth"))) {
 			kmlWriter = new JE802KmlWriter(animationNode, resultPath,
 					this.configuration.getDocumentURI(), this.stations,
-					this.theUniqueWirelessMedium.getReuseDistance());
+					this.theUniqueWirelessMedium.getCoverageRange_m());
 		}
 
 	}

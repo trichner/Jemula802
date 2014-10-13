@@ -98,7 +98,7 @@ public class JE802_11Phy extends JE802Phy {
 				this.currentTransmitPowerLevel_dBm = new Double(
 						mibElem.getAttribute("dot11CurrentTransmitPowerLevel_dBm"));
 				this.currentTransmitPower_mW = Math.pow(10,
-						(currentTransmitPowerLevel_dBm - 30) / 10);
+						(currentTransmitPowerLevel_dBm) / 10);
 				this.currentChannelNumber = new Integer(
 						mibElem.getAttribute("dot11CurrentChannelNumber"));
 			} else {
@@ -176,11 +176,7 @@ public class JE802_11Phy extends JE802Phy {
 				JE802_11Ppdu aPpdu = (JE802_11Ppdu) this.parameterlist
 						.elementAt(0);
 				if (!aPpdu.isJammed() && currentTxEnd.isEarlierThan(now)
-						&& concurrentRx == 1) { // Pietro:
-					// get
-					// the
-					// mac
-					// Mpdu
+						&& concurrentRx == 1) {
 					JE802_11Mpdu aMpdu = aPpdu.getMpdu();
 					this.parameterlist = new Vector<Object>();
 					this.parameterlist.add(aMpdu.getDA());
@@ -383,8 +379,8 @@ public class JE802_11Phy extends JE802Phy {
 		return (JE802_11Mac) theMac;
 	}
 
-	public double getReuseDistance() {
-		return this.theUniqueRadioChannel.getReuseDistance();
+	public double getCoverageRange_m() {
+		return this.theUniqueRadioChannel.getCoverageRange_m();
 	}
 
 	public Integer getPLCPTail_bit() {

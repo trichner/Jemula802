@@ -225,19 +225,19 @@ public class JE802KmlWriter extends JEmula {
 
 		List<JE802KmlGenerator> generators = new ArrayList<JE802KmlGenerator>();
 
-		boolean visible = true;
 		// Ground overlays
 		List<JE802KmlGenerator> grounds = new ArrayList<JE802KmlGenerator>();
+		boolean visible = false;
 		grounds.add(new JE802RadioCoverageGenerator(this.doc, this.stations,
-				"animation_files/white.png", "White", 5000, false,
+				"animation_files/white.png", "White", 3000, true,
 				this.reuseDistance, this.attenuationFactor, visible));
 
-		visible = false;
 		grounds.add(new JE802RadioCoverageGenerator(this.doc, this.stations,
 				"animation_files/cobbles.png", "Cobbles", 300, true,
 				this.reuseDistance, this.attenuationFactor, visible));
+		visible = true;
 		grounds.add(new JE802RadioCoverageGenerator(this.doc, this.stations,
-				"animation_files/black.png", "Black", 5000, true,
+				"animation_files/black.png", "Black", 3000, true,
 				this.reuseDistance, this.attenuationFactor, visible));
 		Element overlayFolder = createFolder(grounds, "Ground Overlays");
 		document.appendChild(overlayFolder);

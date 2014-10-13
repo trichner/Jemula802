@@ -83,6 +83,8 @@ public class JE802PhyMode extends JEmula {
 					Double probability = new Double(bitErrorsDb[i]);
 					this.bitErrorProbabilities.put(i, probability);
 				}
+			} else {
+				this.warning("Missing xml attribute bitErrorProbabilitiesPerDb.");
 			}
 		} else {
 			error("aPhyMode not found in " + phyModeNode.getNodeName() + " !!!");

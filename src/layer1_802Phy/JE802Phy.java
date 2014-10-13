@@ -132,10 +132,8 @@ public abstract class JE802Phy extends JEEventHandler {
 			Element antennaElem = (Element) xpath.evaluate("JEAntenna", phyElem, XPathConstants.NODE);
 			if (antennaElem != null) {
 				double gain = new Double(antennaElem.getAttribute("gain_dBi"));
-
-				if (gain <= 0) {
-					this.warning("Station " + this.theMac.getMacAddress()
-							+ ": Antenna gain must be positive, using an omnidirectional antenna instead.");
+				if (gain < 0) {
+					this.warning("Antenna gain must be positive, using an omnidirectional antenna instead.");
 				}
 
 				/*
@@ -169,8 +167,8 @@ public abstract class JE802Phy extends JEEventHandler {
 	 * @see jemula.kernel.JEEventHandler#event_handler(jemula.kernel.JEEvent)
 	 */
 
-	public double getReuseDistance() {
-		return this.theUniqueRadioChannel.getReuseDistance();
+	public double getCoverageRange_m() {
+		return this.theUniqueRadioChannel.getCoverageRange_m();
 	}
 
 	public JE802Mobility getMobility() {
@@ -269,6 +267,8 @@ public abstract class JE802Phy extends JEEventHandler {
 
 	public void setCurrentTransmitPowerLevel_dBm(double currentTransmitPowerLevel_dBm) {
 		this.currentTransmitPowerLevel_dBm = currentTransmitPowerLevel_dBm;
+		this.currentTransmitPower_mW = Math.pow(10,(currentTransmitPowerLevel_dBm) / 10);
+ 
 	}
 
 	public double getCurrentTransmitPower_mW() {
@@ -277,6 +277,7 @@ public abstract class JE802Phy extends JEEventHandler {
 
 	public void setCurrentTransmitPower_mW(double currentTransmitPower_mW) {
 		this.currentTransmitPower_mW = currentTransmitPower_mW;
+		this.currentTransmitPowerLevel_dBm = 10 * Math.log10(this.currentTransmitPower_mW);
 	}
 
 	public void setMac(JE802_11Mac mac) {

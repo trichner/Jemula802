@@ -71,7 +71,7 @@ public class JEMediumUnitDisk extends JEEventHandler implements JEWirelessMedium
 
 	private final Map<Integer, JE802ChannelEntry> channels;
 
-	private double theReuseDistance;
+	private double theCoverageRange_m;
 
 	private JE802Gui theUniqueGui;
 
@@ -92,7 +92,7 @@ public class JEMediumUnitDisk extends JEEventHandler implements JEWirelessMedium
 		Element wirelessElem = (Element) aTopLevelNode;
 		if (wirelessElem.getNodeName().equals("JEWirelessChannels")) {
 
-			this.theReuseDistance = new Double(wirelessElem.getAttribute("theReuseDistance_m"));
+			this.theCoverageRange_m = new Double(wirelessElem.getAttribute("theCoverageRange_m"));
 
 			XPath xpath = XPathFactory.newInstance().newXPath();
 			NodeList channelNodeList = (NodeList) xpath.evaluate("aChannel", wirelessElem, XPathConstants.NODESET);
@@ -186,11 +186,6 @@ public class JEMediumUnitDisk extends JEEventHandler implements JEWirelessMedium
 				JE802Ppdu rxPpdu = aPpdu.clone();
 				if ((rxPhys.get(rxPhy) && rxPhy.isOnceTx()) || aPpdu.isJammed()) {
 					rxPpdu.jam();
-					// this.warning("jamming during tx end");
-					// if(this.theUniqueGui != null)
-					// theUniqueGui.addLine(theUniqueEventScheduler.now(),
-					// rxPpdu.getMpdu().getSA(), 1, "magenta",1);
-
 				}
 				this.parameterlist.add(rxPpdu);
 				this.send(new JEEvent("MEDIUM_RxEnd_ind", rxPhy, anEvent.getScheduledTime(), this.parameterlist));
@@ -224,8 +219,8 @@ public class JEMediumUnitDisk extends JEEventHandler implements JEWirelessMedium
 	}
 
 	@Override
-	public double getReuseDistance() {
-		return this.theReuseDistance;
+	public double getCoverageRange_m() {
+		return this.theCoverageRange_m;
 	}
 
 	@Override
@@ -254,7 +249,7 @@ public class JEMediumUnitDisk extends JEEventHandler implements JEWirelessMedium
 		double y2 = aPhy2.getMobility().getYLocation(now);
 		double z2 = aPhy2.getMobility().getZLocation(now);
 		double aDistance = Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2) + (z1 - z2) * (z1 - z2));
-		return this.theReuseDistance > aDistance;
+		return this.theCoverageRange_m > aDistance;
 	}
 
 	@Override
@@ -284,10 +279,11 @@ public class JEMediumUnitDisk extends JEEventHandler implements JEWirelessMedium
 		return 100;
 	}
 
-	@Override
-	public double getSnirAtRx(int da, JE802Phy je802Phy) {
-		return Double.MAX_VALUE;
-	}
+//	@Override
+//	public double getSnirAtRx(int aDestinationAddress, JE802Phy aTxPhy) {
+//		this.warning("SNIR calculation in unit disk model");
+//		return Double.MAX_VALUE;
+//	}
 
 	protected class JE802ChannelEntry {
 

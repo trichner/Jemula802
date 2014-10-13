@@ -61,7 +61,7 @@ public class JE802RadioCoverageGenerator extends JE802KmlGenerator {
 	private final String name;
 
 	private final double reuseDistance;
-
+ 
 	private final double attenuationFactor;
 
 	private final boolean isVisible;
@@ -107,7 +107,7 @@ public class JE802RadioCoverageGenerator extends JE802KmlGenerator {
 		return result;
 	}
 
-	protected double calculatePower(double dBm, double distance) {
+	protected double calculatePower_dBm(double dBm, double distance) {
 		// dBm to mWatt
 		double mWatt = Math.pow(10.0, dBm / 10.0);
 		double factor = 1.0;
@@ -118,7 +118,7 @@ public class JE802RadioCoverageGenerator extends JE802KmlGenerator {
 		}
 		mWatt = mWatt * factor;
 		// mWatt to dBm
-		double power = 10.0 * Math.log10(mWatt / 1000) + 30;
+		double power = 10.0 * Math.log10(mWatt);
 		return dBm - power;
 	}
 
