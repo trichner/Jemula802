@@ -65,6 +65,7 @@ public class JE802StatEval extends JEEventHandler {
 	private boolean flag_EvalTotalThrp;
 	private boolean flag_EvalTotalOffer;
 	private boolean flag_EvalTotalDelay;
+	private boolean flag_EvalPower;
 	private Vector<JEStatEvalThrp> theThrpResultsPerACList;
 	private Vector<JEStatEvalDelay> theDelayResultsPerACList;
 	private Vector<JEStatEvalThrp> theOfferResultsPerACList;
@@ -105,6 +106,7 @@ public class JE802StatEval extends JEEventHandler {
 			this.flag_EvalTotalDelay80215Disc = new Boolean(statEvalElem.getAttribute("EvalTotalDelay80215Discovery"));
 			this.flag_EvalTotalThrp = new Boolean(statEvalElem.getAttribute("EvalTotalThrp"));
 			this.flag_EvalTotalOffer = new Boolean(statEvalElem.getAttribute("EvalTotalOffer"));
+			this.flag_EvalPower = new Boolean(statEvalElem.getAttribute("EvalPower"));
 			this.theEvaluationInterval = new JETime(Double.parseDouble(statEvalElem.getAttribute("EvaluationInterval_ms")));
 			this.theEvaluationStarttime = new JETime(Double.parseDouble(statEvalElem.getAttribute("EvaluationStarttime_ms")));
 			this.powerEval = new JE802PowerEval(path2Results, this.theEvaluationStarttime,
@@ -375,7 +377,9 @@ public class JE802StatEval extends JEEventHandler {
 		if (this.flag_EvalTotalOffer) {
 			this.theTotalOfferResults.end_of_emulation();
 		}
-		powerEval.evaluatePowerConsumption();
+		if (this.flag_EvalPower) {
+			powerEval.evaluatePowerConsumption();
+		}
 		phyModeEval.endOfEmulation();
 		countEval.endOfEmulation();
 		tcpRetransmissionEval.endOfEmulation();
@@ -438,11 +442,15 @@ public class JE802StatEval extends JEEventHandler {
 	}
 
 	public void recordPowerTx(int station, int phyId, JETime when, JETime duration) {
-		powerEval.recordPowerTx(station, phyId, when, duration);
+		if (this.flag_EvalPower) {
+			powerEval.recordPowerTx(station, phyId, when, duration);
+		}
 	}
 
 	public void recordPowerRx(int station, int phyId, JETime when, JETime duration) {
-		powerEval.recordPowerRx(station, phyId, when, duration);
+		if (this.flag_EvalPower) {
+			powerEval.recordPowerRx(station, phyId, when, duration);
+		}
 	}
 
 	public void linkBroken(JE802HopInfo linkSource, JE802HopInfo linkDestination, JETime when) {

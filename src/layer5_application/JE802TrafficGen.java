@@ -573,7 +573,7 @@ public class JE802TrafficGen extends JEEventHandler {
 			this.port = theUniqueRandomGenerator.nextInt(1000000000);
 			this.warning("no port specified in trafficgen, using random port " + this.port);
 		}
-		this.EvalOffer = new Boolean(trafficElem.getAttribute("EvalThrpOffer"));
+		this.EvalOffer = new Boolean(trafficElem.getAttribute("EvalOffer"));
 		this.EvalThrp = new Boolean(trafficElem.getAttribute("EvalThrp"));
 		this.EvalDelay = new Boolean(trafficElem.getAttribute("EvalDelay"));
 		this.theHistogramNumOfBins = new Integer(trafficElem.getAttribute("HistogramNumOfBins"));

@@ -139,7 +139,8 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 	private long previousReceivedAck = -1;
 	private int successfullyTxedCount;
 
-	public JE802_11BackoffEntity(JEEventScheduler aScheduler, Random aGenerator, JE802Gui aGui, Node aTopLevelNode,
+	public JE802_11BackoffEntity(JEEventScheduler aScheduler,
+			Random aGenerator, JE802Gui aGui, Node aTopLevelNode,
 			JE802_11Mac aMac, JE802_11Vch aVch) throws XPathExpressionException {
 
 		super(aScheduler, aGenerator);
@@ -159,24 +160,34 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 		if (backoffElem.getNodeName().equals("JE802BackoffEntity")) {
 			this.theAC = new Integer(backoffElem.getAttribute("AC"));
 			this.theQueue = new Vector<JE802_11Mpdu>();
-			this.theQueueSize = new Integer(backoffElem.getAttribute("queuesize"));
+			this.theQueueSize = new Integer(
+					backoffElem.getAttribute("queuesize"));
 
 			XPath xpath = XPathFactory.newInstance().newXPath();
-			Element mibElem = (Element) xpath.evaluate("MIB802.11e", backoffElem, XPathConstants.NODE);
+			Element mibElem = (Element) xpath.evaluate("MIB802.11e",
+					backoffElem, XPathConstants.NODE);
 			if (mibElem != null) {
-				this.dot11EDCACWmin = new Integer(mibElem.getAttribute("dot11EDCACWmin"));
-				this.dot11EDCACWmax = new Integer(mibElem.getAttribute("dot11EDCACWmax"));
-				this.dot11EDCAPF = new Double(mibElem.getAttribute("dot11EDCAPF"));
-				this.dot11EDCAAIFSN = new Integer(mibElem.getAttribute("dot11EDCAAIFSN"));
-				this.dot11EDCAMMSDULifeTime = new JETime(new Double(mibElem.getAttribute("dot11EDCAMSDULifetime")));
-				this.dot11EDCATXOPLimit = new Integer(mibElem.getAttribute("dot11EDCATXOPLimit"));
+				this.dot11EDCACWmin = new Integer(
+						mibElem.getAttribute("dot11EDCACWmin"));
+				this.dot11EDCACWmax = new Integer(
+						mibElem.getAttribute("dot11EDCACWmax"));
+				this.dot11EDCAPF = new Double(
+						mibElem.getAttribute("dot11EDCAPF"));
+				this.dot11EDCAAIFSN = new Integer(
+						mibElem.getAttribute("dot11EDCAAIFSN"));
+				this.dot11EDCAMMSDULifeTime = new JETime(new Double(
+						mibElem.getAttribute("dot11EDCAMSDULifetime")));
+				this.dot11EDCATXOPLimit = new Integer(
+						mibElem.getAttribute("dot11EDCATXOPLimit"));
 			} else {
-				this.error("Station " + this.theMac.getMacAddress() + " no MIB parameters found.");
+				this.error("Station " + this.theMac.getMacAddress()
+						+ " no MIB parameters found.");
 			}
 
 			this.theSIFS = this.theMac.getPhy().getSIFS();
 			this.theSlotTime = this.theMac.getPhy().getSlotTime();
-			this.theAIFS = this.theSIFS.plus(this.theSlotTime.times(this.dot11EDCAAIFSN));
+			this.theAIFS = this.theSIFS.plus(this.theSlotTime
+					.times(this.dot11EDCAAIFSN));
 
 			// contention window
 			this.theCW = this.dot11EDCACWmin;
@@ -185,14 +196,20 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 			this.theShortRetryCnt = 0;
 			this.theLongRetryCnt = 0;
 
-			this.theNavTimer = new JE802_11TimerNav(theUniqueEventScheduler, theUniqueRandomGenerator, aGui, "nav_expired_ind",
+			this.theNavTimer = new JE802_11TimerNav(theUniqueEventScheduler,
+					theUniqueRandomGenerator, aGui, "nav_expired_ind",
 					this.getHandlerId());
-			this.theTxTimeoutTimer = new JETimer(theUniqueEventScheduler, theUniqueRandomGenerator, "tx_timeout_ind",
+			this.theTxTimeoutTimer = new JETimer(theUniqueEventScheduler,
+					theUniqueRandomGenerator, "tx_timeout_ind",
 					this.getHandlerId());
-			this.theInterFrameSpaceTimer = new JETimer(theUniqueEventScheduler, theUniqueRandomGenerator,
-					"interframespace_expired_ind", this.getHandlerId());
-			this.theBackoffTimer = new JE802_11TimerBackoff(theUniqueEventScheduler, theUniqueRandomGenerator, theUniqueGui,
-					this.theMac.getMacAddress(), this.theAC, "backoff_expired_ind", this.getHandlerId(), this.theSlotTime, this);
+			this.theInterFrameSpaceTimer = new JETimer(theUniqueEventScheduler,
+					theUniqueRandomGenerator, "interframespace_expired_ind",
+					this.getHandlerId());
+			this.theBackoffTimer = new JE802_11TimerBackoff(
+					theUniqueEventScheduler, theUniqueRandomGenerator,
+					theUniqueGui, this.theMac.getMacAddress(), this.theAC,
+					"backoff_expired_ind", this.getHandlerId(),
+					this.theSlotTime, this);
 
 			this.theTxState = txState.idle;
 			this.updateBackoffTimer();
@@ -203,7 +220,8 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 			this.theMpduCtrl = null;
 
 		} else {
-			this.warning("Station " + this.theMac.getMacAddress() + " messed up xml, dude.");
+			this.warning("Station " + this.theMac.getMacAddress()
+					+ " messed up xml, dude.");
 		}
 
 		this.faultToleranceThreshold = 3;
@@ -215,8 +233,9 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 		String anEventName = anEvent.getName();
 		this.theLastRxEvent = anEvent;
 
-		this.message("Station " + this.theMac.getMacAddress() + " on Channel " + this.theMac.getPhy().getCurrentChannel() + " AC " + this.theAC
-				+ " received event '" + anEventName + "'", 30);
+		this.message("Station " + this.theMac.getMacAddress() + " on Channel "
+				+ this.theMac.getPhy().getCurrentChannel() + " AC "
+				+ this.theAC + " received event '" + anEventName + "'", 30);
 
 		if (anEventName.contains("update_backoff_timer_req")) {
 			this.updateBackoffTimer();
@@ -244,12 +263,9 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 			this.event_virtual_collision_ind(anEvent);
 		} else if (anEventName.equals("PHY_TxEnd_ind")) {
 			this.event_PHY_TxEnd_ind(anEvent);
-		} else if (anEventName.equals("decrease_phy_mode")) {
-			this.event_reduce_phy_mode_ind(anEvent);
-		} else if (anEventName.equals("increase_phy_mode")) {
-			this.event_increase_phy_mode_ind(anEvent);
 		} else {
-			this.error("Station " + this.theMac.getMacAddress() + " undefined event '" + anEventName + "'");
+			this.error("Station " + this.theMac.getMacAddress()
+					+ " undefined event '" + anEventName + "'");
 		}
 	}
 
@@ -258,72 +274,24 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 		this.updateBackoffTimer();
 	}
 
-	private void event_reduce_phy_mode_ind(JEEvent anEvent) {
-		// this.message("Current phy:"+this.theMac.getPhy().getCurrentPhyMode().toString());
-		// Check for current Phy mode, and switch to the next lower one.
-		if (this.theMac.getPhy().getCurrentPhyMode().toString().equals("54Mb/s")) {
-			this.theMac.getPhy().setCurrentPhyMode("64QAM23");
-		} else if (this.theMac.getPhy().getCurrentPhyMode().toString().equals("48Mb/s")) {
-			this.theMac.getPhy().setCurrentPhyMode("16QAM34");
-		} else if (this.theMac.getPhy().getCurrentPhyMode().toString().equals("36Mb/s")) {
-			this.theMac.getPhy().setCurrentPhyMode("16QAM12");
-		} else if (this.theMac.getPhy().getCurrentPhyMode().toString().equals("24Mb/s")) {
-			this.theMac.getPhy().setCurrentPhyMode("QPSK34");
-		} else if (this.theMac.getPhy().getCurrentPhyMode().toString().equals("18Mb/s")) {
-			this.theMac.getPhy().setCurrentPhyMode("QPSK12");
-		} else if (this.theMac.getPhy().getCurrentPhyMode().toString().equals("12Mb/s")) {
-			this.theMac.getPhy().setCurrentPhyMode("BPSK34");
-		} else if (this.theMac.getPhy().getCurrentPhyMode().toString().equals("9Mb/s")) {
-			this.theMac.getPhy().setCurrentPhyMode("BPSK12");
-		} else {
-			// this.theMac.getPhy().setCurrentPhyMode("64QAM34"); //TODO:Change
-			// this later, this is here only for testing purposes now!!!
-			// do nothing, as already in lowest phy mode.
-			// Possibly increase transmission power, to increase reachability
-		}
-		// this.message("Reducing to next lower PHY mode");
-	}
-
-	private void event_increase_phy_mode_ind(JEEvent anEvent) {
-		// this.message("Current phy:"+this.theMac.getPhy().getCurrentPhyMode().toString());
-		// Check for current Phy mode, and switch to the next lower one.
-		if (this.theMac.getPhy().getCurrentPhyMode().toString().equals("6Mb/s")) {
-			this.theMac.getPhy().setCurrentPhyMode("BPSK34");
-		} else if (this.theMac.getPhy().getCurrentPhyMode().toString().equals("9Mb/s")) {
-			this.theMac.getPhy().setCurrentPhyMode("QPSK12");
-		} else if (this.theMac.getPhy().getCurrentPhyMode().toString().equals("12Mb/s")) {
-			this.theMac.getPhy().setCurrentPhyMode("QPSK34");
-		} else if (this.theMac.getPhy().getCurrentPhyMode().toString().equals("18Mb/s")) {
-			this.theMac.getPhy().setCurrentPhyMode("16QAM12");
-		} else if (this.theMac.getPhy().getCurrentPhyMode().toString().equals("24Mb/s")) {
-			this.theMac.getPhy().setCurrentPhyMode("16QAM34");
-		} else if (this.theMac.getPhy().getCurrentPhyMode().toString().equals("36Mb/s")) {
-			this.theMac.getPhy().setCurrentPhyMode("64QAM23");
-		} else if (this.theMac.getPhy().getCurrentPhyMode().toString().equals("48Mb/s")) {
-			this.theMac.getPhy().setCurrentPhyMode("64QAM34");
-		} else {
-			// this.theMac.getPhy().setCurrentPhyMode("64QAM34"); //TODO:Change
-			// this later, this is here only for testing purposes now!!!
-			// do nothing, as already in highest phy mode.
-			// possibly reduce transmission power of the station, to save power
-		}
-		// this.message("Reducing to next lower PHY mode");
-	}
-
 	private void event_PHY_TxEnd_ind(JEEvent anEvent) {
-		if (this.theTxState.equals(txState.txAck) || this.theTxState.equals(txState.txCts)) {
+		if (this.theTxState.equals(txState.txAck)
+				|| this.theTxState.equals(txState.txCts)) {
 			this.theTxState = txState.idle;
 			this.theMpduCtrl = null;
 			this.keep_going(); // now let us continue our own backoff, because
-								// the backoff timer was paused before. we do
-								// this even after CTS, so in case data is not
-								// following, we just go ahead with our own
-								// stuff.
-		} else if (this.theMpduData != null && this.theMpduData.getDA() == this.theMac.getDot11BroadcastAddress()) {
+			// the backoff timer was paused before. we do
+			// this even after CTS, so in case data is not
+			// following, we just go ahead with our own
+			// stuff.
+		} else if (this.theMpduData != null
+				&& this.theMpduData.getDA() == this.theMac
+				.getDot11BroadcastAddress()) {
 			this.theMpduData = null;
 			this.theTxState = txState.idle;
 			this.theMpduCtrl = null;
-			this.send(new JEEvent("broadcast_sent", this.theMac.getHandlerId(), anEvent.getScheduledTime()));
+			this.send(new JEEvent("broadcast_sent", this.theMac.getHandlerId(),
+					anEvent.getScheduledTime()));
 			this.keep_going();
 		} else {
 			// nothing
@@ -340,50 +308,22 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 	}
 
 	private void event_tx_timeout_ind(JEEvent anEvent) {
-		// TODO: Add code here to check for failed transmissions.
 		if (this.theTxState == txState.txRts) { // RTS was sent, but station did
-												// not receive CTS frame
+			// not receive CTS frame
 			this.theTxState = txState.idle;
 			collisionCount++;
-
-			// this.noAckCount++;
-			// if(noAckCount==4){
-			// noAckCount=0;
-			// // this.send(new JEEvent("decrease_phy_mode_request",
-			// this.getHandlerId(),this.getTime()),this.theMac.getMlme());
-			// this.send("decrease_phy_mode_request",this.theMac.getMlme());
-			// //noAckCount=0;
-			// }
-
 			this.retryRts();
 		} else if (this.theTxState == txState.txData) { // data was sent, but
-														// station did not
-														// receive an ack frame
+			// station did not
+			// receive an ack frame
 			this.theTxState = txState.idle;
 			collisionCount++;
 
-			// this.noAckCount++;
-			// if(this.noAckCount==4){
-			// this.noAckCount=0;
-			// this.send("decrease_phy_mode_request",this.theMac.getMlme());
-			// // this.send(new JEEvent("decrease_phy_mode_request",
-			// this.getHandlerId(),this.getTime()),this.theMac.getMlme());
-			// //this.theMac.getPhy().setCurrentPhyMode("16QAM12");
-			// }
-
 			this.retryData();
-		} else if (this.theTxState == txState.txCts) { // TODO: not sure if this
-														// should ever happen,
-														// because there is no
-														// timeout for control
-														// frames
+		} else if (this.theTxState == txState.txCts) {
 			this.theTxState = txState.idle;
 			this.theMpduCtrl = null;
-		} else if (this.theTxState == txState.txAck) { // TODO: not sure if this
-														// should ever happen,
-														// because there is no
-														// timeout for control
-														// frames
+		} else if (this.theTxState == txState.txAck) {
 			this.theTxState = txState.idle;
 			this.theMpduCtrl = null;
 		}
@@ -393,48 +333,23 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 
 	private void retryData() {
 
-		// this.message("Data retry at :"+ this.getTime().toString());
-		// this.noAckCount++;
-		//
-		// if(this.noAckCount>3){
-		// this.noAckCount=0;
-		// this.send(new JEEvent("decrease_phy_mode_request",
-		// this.getHandlerId(),this.getTime()),this.theMac.getMlme());
-		// }
-
 		if (this.theMpduData == null) {
-			this.error("Station " + this.theMac.getMacAddress() + " retryData: no pending RTS/DATA frame to transmit");
+			this.error("Station " + this.theMac.getMacAddress()
+					+ " retryData: no pending RTS/DATA frame to transmit");
 		}
 
-		// this.message("Station "+this.theMac.getMacAddress()+" Retrying packet:"+theMpduData.getSeqNo()+" for attempt:"+this.noAckCount);
-		if (this.theMpduData.getFrameBodySize() < this.theMac.getDot11RTSThreshold()) {
+		if (this.theMpduData.getFrameBodySize() < this.theMac
+				.getDot11RTSThreshold()) {
 			this.theShortRetryCnt++; // station Short Retry Count
 
-			// if(this.theShortRetryCnt>3){
-			// this.message("More than 3 short retries. Switch to next lower PHY mode at:"+this.getTime());
-			// this.theMac.getPhy().setCurrentPhyMode("BPSK12");
-			// }
-			// if(previuosDiscarded==this.theMpduData.getSeqNo()){
-			// continuousDiscardCounter++;
-			// }
-			// else{
-			// previuosDiscarded=this.theMpduData.getSeqNo();
-			// }
-			//
-			// if(continuousDiscardCounter==3){
-			// this.message("3 packets discarded in a row. Switching to lower Phy mode at:"+this.getTime());
-			// this.theMac.getPhy().setCurrentPhyMode("BPSK12");
-			// continuousDiscardCounter=0;
-			// }
-
 			if (this.theShortRetryCnt > this.theMac.getDot11ShortRetryLimit()) { // retransmissions
-																					// exceeded
-																					// the
-																					// limit,
-																					// now
-																					// discard
-																					// the
-																					// frame
+				// exceeded
+				// the
+				// limit,
+				// now
+				// discard
+				// the
+				// frame
 
 				JE802_11Mpdu data = this.theMpduData;
 				this.theMpduData = null;
@@ -443,28 +358,19 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 				this.parameterlist.add(data);
 				this.parameterlist.add(false);
 				this.parameterlist.add(this.theShortRetryCnt);
-				setMaxRetryCountShort(Math.max(getMaxRetryCountShort(), theShortRetryCnt));
+				setMaxRetryCountShort(Math.max(getMaxRetryCountShort(),
+						theShortRetryCnt));
 				this.discardedCounter++;
 				this.theShortRetryCnt = 0;
-				this.send(new JEEvent("MSDU_discarded_ind", this.theMac, theUniqueEventScheduler.now(), this.parameterlist));
+				this.send(new JEEvent("MSDU_discarded_ind", this.theMac,
+						theUniqueEventScheduler.now(), this.parameterlist));
 			} else {
 				this.increaseCw(); // increase the CW and ...
 				this.deferForIFS(); // ... retry after the backoff
 			}
 		} else {
 			this.theLongRetryCnt++; // station Long Retry Count
-			// if(this.theLongRetryCnt>3){
-			// this.message("More than 3 long retries. Switch to next lower PHY mode at:"+this.getTime());
-			// this.theMac.getPhy().setCurrentPhyMode("BPSK12");
-			// }
-			if (this.theLongRetryCnt > this.theMac.getDot11LongRetryLimit()) {// retransmissions
-																				// exceeded
-																				// the
-																				// limit,
-																				// now
-																				// discard
-																				// the
-																				// frame
+			if (this.theLongRetryCnt > this.theMac.getDot11LongRetryLimit()) {
 				JE802_11Mpdu data = this.theMpduData;
 				this.theMpduData = null;
 				this.theCW = this.dot11EDCACWmin; // reset contention window
@@ -472,10 +378,12 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 				this.parameterlist.add(data);
 				this.parameterlist.add(false);
 				this.parameterlist.add(this.theLongRetryCnt);
-				maxRetryCountLong = Math.max(maxRetryCountLong, theLongRetryCnt);
+				maxRetryCountLong = Math
+						.max(maxRetryCountLong, theLongRetryCnt);
 				this.discardedCounter++;
 				this.theLongRetryCnt = 0;
-				this.send(new JEEvent("MSDU_discarded_ind", this.theMac, theUniqueEventScheduler.now(), this.parameterlist));
+				this.send(new JEEvent("MSDU_discarded_ind", this.theMac,
+						theUniqueEventScheduler.now(), this.parameterlist));
 			} else {
 				this.increaseCw(); // increase the CW and ...
 				this.deferForIFS(); // ... retry after the backoff
@@ -485,50 +393,18 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 	}
 
 	private void retryRts() {
-		// this.message("RTS retry at :"+ this.getTime().toString());
 		if ((this.theMpduData == null) | (this.theMpduRts == null)) {
-			this.error("Station " + this.theMac.getMacAddress() + " retryRTS: no pending RTS/DATA frame to transmit");
+			this.error("Station " + this.theMac.getMacAddress()
+					+ " retryRTS: no pending RTS/DATA frame to transmit");
 		}
-
-		// if(previuosDiscarded==this.theMpduData.getSeqNo()){
-		// continuousDiscardCounter++;
-		// }
-		// else{
-		// previuosDiscarded=this.theMpduData.getSeqNo();
-		// }
-		//
-		// if(continuousDiscardCounter==3){
-		// this.message("3 packets discarded in a row. Switching to lower Phy mode at:"+this.getTime());
-		// this.theMac.getPhy().setCurrentPhyMode("BPSK12");
-		// continuousDiscardCounter=0;
-		// }
-
-		// this.noAckCount++;
-		// if(noAckCount>3){
-		//
-		// this.send(new JEEvent("decrease_phy_mode_request",
-		// this.getHandlerId(),this.getTime()),this.theMac.getMlme());
-		// noAckCount=0;
-		// //
-		// this.message("More than 3 ACKs not received.Use next lower Phy mode at:"+this.getTime());
-		// // this.noAckCount=0;
-		// // this.theMac.getPhy().setCurrentPhyMode("BPSK12");
-		// }
-		// this.message("Station "+this.theMac.getMacAddress()+" Retrying RTS packet:"+theMpduData.getSeqNo()+" for attempt:"+this.noAckCount);
 		this.theShortRetryCnt++; // station Short Retry Count
-		if (this.theShortRetryCnt > this.theMac.getDot11ShortRetryLimit()) { // retransmissions
-																				// exceeded
-																				// the
-																				// limit,
-																				// now
-																				// discard
-																				// the
-																				// frame
+		if (this.theShortRetryCnt > this.theMac.getDot11ShortRetryLimit()) {
 			JE802_11Mpdu data = this.theMpduData;
 			this.theMpduRts = null;
 			this.theMpduData = null;
 			maxRetryCountLong = Math.max(maxRetryCountLong, theLongRetryCnt);
-			setMaxRetryCountShort(Math.max(getMaxRetryCountShort(), theShortRetryCnt));
+			setMaxRetryCountShort(Math.max(getMaxRetryCountShort(),
+					theShortRetryCnt));
 			this.theShortRetryCnt = 0;
 			this.theLongRetryCnt = 0;
 			this.discardedCounter++;
@@ -536,7 +412,8 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 			this.parameterlist.clear();
 			this.parameterlist.add(data);
 			this.parameterlist.add(false);
-			this.send(new JEEvent("MSDU_discarded_ind", this.theMac, theUniqueEventScheduler.now(), this.parameterlist));
+			this.send(new JEEvent("MSDU_discarded_ind", this.theMac,
+					theUniqueEventScheduler.now(), this.parameterlist));
 		} else {
 			this.increaseCw(); // increase the CW and ...
 			this.deferForIFS(); // ... retry after the backoff
@@ -545,8 +422,10 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 
 	private void event_backoff_expired_ind(JEEvent anEvent) {
 		if (this.theMpduCtrl != null) {
-			if (this.theBackoffTimer.is_idle() & this.theInterFrameSpaceTimer.is_idle()) {
-				this.message("Station " + this.theMac.getMacAddress() + " backoff error?",10);
+			if (this.theBackoffTimer.is_idle()
+					& this.theInterFrameSpaceTimer.is_idle()) {
+				this.message("Station " + this.theMac.getMacAddress()
+						+ " backoff error?", 10);
 				return;
 			}
 		}
@@ -559,14 +438,18 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 	}
 
 	private void event_interframespace_expired_ind(JEEvent anEvent) {
-		if ((this.theMpduCtrl == null) && (this.theMpduRts == null) && (this.theMpduData == null)) {
+		if ((this.theMpduCtrl == null) && (this.theMpduRts == null)
+				&& (this.theMpduData == null)) {
 			this.keep_going();
 		} else {
 			if (this.checkAndTxCTRL()) {
 			} else {
 				if (this.theBackoffTimer.is_active()) {
-					this.message("Station " + this.theMac.getMacAddress()
-							+ " defer problem (possibly due to hidden station): backoff active while AIFS or any other IFS", 10);
+					this.message(
+							"Station "
+									+ this.theMac.getMacAddress()
+									+ " defer problem (possibly due to hidden station): backoff active while AIFS or any other IFS",
+									10);
 				} else {
 					if (this.checkAndTxRTS(true)) {
 					} else {
@@ -584,8 +467,8 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 
 	private void keep_going() {
 		if (this.theBackoffTimer.is_paused() && !this.busy()) { // now let us
-																// continue our
-																// own backoff
+			// continue our
+			// own backoff
 			this.deferForIFS();
 		} else { // or check next Mpdu
 			this.nextMpdu();
@@ -593,23 +476,24 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 	}
 
 	private void event_PHY_RxEnd_ind(JEEvent anEvent) { // received packet
-														// completely or
-														// collision occurred
+		// completely or
+		// collision occurred
 
 		this.parameterlist = anEvent.getParameterList();
 
 		if (this.parameterlist.elementAt(0) == null) { // bad luck: no packet at
-														// all, just garbage
+			// all, just garbage
 			this.theMpduRx = null;
 			this.keep_going();
 		} else { // we successfully received a packet, which is now given to us
-					// as event parameter.
+			// as event parameter.
 			this.theMpduRx = (JE802_11Mpdu) this.parameterlist.elementAt(0);
 			if (this.theMpduRx.getDA() != theMac.getDot11BroadcastAddress()) {
-				if ((this.theMpduRx.getDA() != this.theMac.getMacAddress()) || (this.theMpduRx.getAC() != this.theAC)) {
+				if ((this.theMpduRx.getDA() != this.theMac.getMacAddress())
+						|| (this.theMpduRx.getAC() != this.theAC)) {
 					this.theMpduRx = null;
 					return; // this is all for this backoff entity. The frame is
-							// not for us.
+					// not for us.
 				}
 			}
 			JE80211MpduType type = this.theMpduRx.getType();
@@ -619,18 +503,27 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 				break;
 			case ack:
 				discardedCounter = 0;
-				this.message("Station " + this.theMac.getMacAddress() + " received ACK " + this.theMpduRx.getSeqNo()
-						+ "from Station " + this.theMpduRx.getSA() + " on channel " + this.theMac.getPhy().getCurrentChannel(), 10);
+				this.message("Station " + this.theMac.getMacAddress()
+						+ " received ACK " + this.theMpduRx.getSeqNo()
+						+ "from Station " + this.theMpduRx.getSA()
+						+ " on channel "
+						+ this.theMac.getPhy().getCurrentChannel(), 10);
 				receiveAck();
 				break;
 			case rts:
-				this.message("Station " + this.theMac.getMacAddress() + " received RTS " + this.theMpduRx.getSeqNo()
-						+ "from Station " + this.theMpduRx.getSA() + " on channel " + this.theMac.getPhy().getCurrentChannel(), 10);
+				this.message("Station " + this.theMac.getMacAddress()
+						+ " received RTS " + this.theMpduRx.getSeqNo()
+						+ "from Station " + this.theMpduRx.getSA()
+						+ " on channel "
+						+ this.theMac.getPhy().getCurrentChannel(), 10);
 				receiveRts();
 				break;
 			case cts:
-				this.message("Station " + this.theMac.getMacAddress() + " received CTS " + this.theMpduRx.getSeqNo()
-						+ "from Station " + this.theMpduRx.getSA() + " on channel " + this.theMac.getPhy().getCurrentChannel(), 10);
+				this.message("Station " + this.theMac.getMacAddress()
+						+ " received CTS " + this.theMpduRx.getSeqNo()
+						+ "from Station " + this.theMpduRx.getSA()
+						+ " on channel "
+						+ this.theMac.getPhy().getCurrentChannel(), 10);
 				receiveCts();
 				break;
 			default:
@@ -640,11 +533,7 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 		}
 	}
 
-	private void event_PHY_SyncStart_ind(JEEvent anEvent) { // phy starts
-															// syncing. Lets
-															// check the cca and
-															// stop backoff if
-															// needed.
+	private void event_PHY_SyncStart_ind(JEEvent anEvent) {
 		this.updateBackoffTimer();
 	}
 
@@ -652,23 +541,15 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 		boolean busy = this.busy();
 		if (this.theBackoffTimer.is_paused()) {
 			if (busy) { // if busy then come back in 5 microseconds again and
-						// see if channel is idle then
-				this.send(new JEEvent("update_backoff_timer_req", this.getHandlerId(), theUniqueEventScheduler.now().plus(
-						this.theSlotTime)));
+				// see if channel is idle then
+				this.send(new JEEvent("update_backoff_timer_req", this
+						.getHandlerId(), theUniqueEventScheduler.now().plus(
+								this.theSlotTime)));
 			} else {
 				this.deferForIFS();
 				// this.theBackoffTimer.resume();
 			}
-		} else if (this.theBackoffTimer.is_active() && busy) { // react on
-																// collision.
-																// May even
-																// happen
-																// multiple
-																// times right
-																// away, for
-																// each
-																// colliding
-																// frame.
+		} else if (this.theBackoffTimer.is_active() && busy) {
 			this.theBackoffTimer.pause();
 		}
 	}
@@ -676,8 +557,10 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 	private void receiveRts() {
 		if (this.theMpduRx.getDA() - this.theMac.getMacAddress() == 0) {
 			if ((this.theMpduRx.getAC() - this.theAC) != 0) {
-				this.error("Station " + this.theMac.getMacAddress() + " generating CTS for wrong AC: AC[theMpduRx]="
-						+ this.theMpduRx.getAC() + " and AC[this]=" + this.theAC);
+				this.error("Station " + this.theMac.getMacAddress()
+						+ " generating CTS for wrong AC: AC[theMpduRx]="
+						+ this.theMpduRx.getAC() + " and AC[this]="
+						+ this.theAC);
 			}
 			this.generateCts();
 			if (this.theInterFrameSpaceTimer.is_active()) {
@@ -695,33 +578,35 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 		this.noAckCount = 0;
 		if (this.theTxState == txState.txData) {
 			if (this.theMpduData == null) {
-				this.error("Station " + this.theMac.getMacAddress() + " receiveAck: station has no data frame");
+				this.error("Station " + this.theMac.getMacAddress()
+						+ " receiveAck: station has no data frame");
 			}
 			JE802_11Mpdu receivedData = this.theMpduData; // store for
-															// forwarding
+			// forwarding
 			this.parameterlist.clear();
 			this.parameterlist.add(receivedData);
 
 			if (this.getMac().getMlme().isARFEnabled()) {
 				if (receivedData.getSeqNo() == this.previousReceivedAck + 1) {
 					this.successfullyTxedCount++;
-					// this.message("Packets successfully delivered:"+this.successfullyTxedCount);
 					this.previousReceivedAck = receivedData.getSeqNo();
 
 					if (this.successfullyTxedCount == 10) {
-						this.send(new JEEvent("increase_phy_mode_request", this.theMac.getMlme(), this.getTime()));
 						this.successfullyTxedCount = 0;
 					}
 				}
 			}
 
-			if (this.theMpduData.getFrameBodySize() < this.theMac.getDot11RTSThreshold()) {
+			if (this.theMpduData.getFrameBodySize() < this.theMac
+					.getDot11RTSThreshold()) {
 				this.parameterlist.add(this.theShortRetryCnt);
-				setMaxRetryCountShort(Math.max(getMaxRetryCountShort(), theShortRetryCnt));
+				setMaxRetryCountShort(Math.max(getMaxRetryCountShort(),
+						theShortRetryCnt));
 				this.theShortRetryCnt = 0;
 			} else {
 				this.parameterlist.add(this.theLongRetryCnt);
-				maxRetryCountLong = Math.max(maxRetryCountLong, theLongRetryCnt);
+				maxRetryCountLong = Math
+						.max(maxRetryCountLong, theLongRetryCnt);
 				this.theLongRetryCnt = 0;
 			}
 
@@ -730,11 +615,8 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 			this.theCW = this.dot11EDCACWmin; // reset contention window
 			this.theTxState = txState.idle;
 			this.theTxTimeoutTimer.stop();
-			if (this.theBackoffTimer.is_active()) {
-				this.warning("Station " + this.theMac.getMacAddress() + " receiveAck: backoff timer is active.");
-			}
-			// report successful delivery to MAC
-			this.send(new JEEvent("MSDU_delivered_ind", this.theMac.getHandlerId(), theUniqueEventScheduler.now(),
+			this.send(new JEEvent("MSDU_delivered_ind", this.theMac
+					.getHandlerId(), theUniqueEventScheduler.now(),
 					this.parameterlist));
 			this.deferForIFS();
 		} else {
@@ -745,22 +627,25 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 	private void receiveCts() {
 
 		if (this.theTxState != txState.txRts) { // do nothing in case the
-												// station did not transmit rts
-												// frame
+			// station did not transmit rts
+			// frame
 		} else {
 			this.noAckCount = 0; // received CTS, so the packet is acknowledged,
-									// now restart the counter.
+			// now restart the counter.
 			if (this.theMpduRts == null) {
-				this.message("Station " + this.theMac.getMacAddress() + " receiveCts: station has no pending rts frame", 30);
+				this.message("Station " + this.theMac.getMacAddress()
+						+ " receiveCts: station has no pending rts frame", 30);
 			}
 			this.theMpduRts = null; // we sent the rts, and received cts. So
-									// let's assume rts has done its job.
+			// let's assume rts has done its job.
 			if (this.theMpduData == null) {
-				this.message("Station " + this.theMac.getMacAddress() + " receiveCts: station has no pending data frame", 30);
+				this.message("Station " + this.theMac.getMacAddress()
+						+ " receiveCts: station has no pending data frame", 30);
 			}
 			this.theTxTimeoutTimer.stop();
 			this.theShortRetryCnt = 0;
-			setMaxRetryCountShort(Math.max(theShortRetryCnt, getMaxRetryCountShort()));
+			setMaxRetryCountShort(Math.max(theShortRetryCnt,
+					getMaxRetryCountShort()));
 			this.theCW = this.dot11EDCACWmin; // reset contention window
 			this.deferForIFS();
 		}
@@ -769,7 +654,8 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 	private void receiveData() {
 		if (this.theMpduRx.getDA() == this.theMac.getMacAddress()) {
 			if (this.theMpduRx.getAC() != this.theAC) {
-				this.error("Station " + this.theMac.getMacAddress()
+				this.error("Station "
+						+ this.theMac.getMacAddress()
 						+ " this backoff entity generates an ACK for a data frame of different AC.");
 			}
 			this.theMpduCtrl = null;
@@ -777,22 +663,20 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 			// send received packet back to its source, for evaluation:
 			this.parameterlist.clear();
 			this.parameterlist.add(this.theMpduRx.clone()); // make a copy since
-															// arrival time will
-															// be changed until
-															// mpdu gets
-															// evaluated
+			// arrival time will
+			// be changed until
+			// mpdu gets
+			// evaluated
 			this.theMpduRx.setLastArrivalTime(theUniqueEventScheduler.now());
 			this.parameterlist.add(theUniqueEventScheduler.now());
 			this.parameterlist.add(this.theAC);
-			// this.send(new JEEvent("hop_evaluation",
-			// this.theMpduRx.getSourceHandler(), theUniqueEventScheduler.now(),
-			// this.parameterlist));
-			// if there are more addresses in the list, the packet is forwarded,
-			// otherwise it reached its final destination
-			if (this.theMpduRx.getHopAddresses() != null && !this.theMpduRx.getHopAddresses().isEmpty()) {
-				this.send(new JEEvent("packet_forward", this.theMac, theUniqueEventScheduler.now(), this.parameterlist));
+			if (this.theMpduRx.getHopAddresses() != null
+					&& !this.theMpduRx.getHopAddresses().isEmpty()) {
+				this.send(new JEEvent("packet_forward", this.theMac,
+						theUniqueEventScheduler.now(), this.parameterlist));
 			} else {
-				this.send(new JEEvent("packet_exiting_system_ind", this.theMac.getHandlerId(), theUniqueEventScheduler.now(),
+				this.send(new JEEvent("packet_exiting_system_ind", this.theMac
+						.getHandlerId(), theUniqueEventScheduler.now(),
 						this.parameterlist));
 			}
 			this.theMpduRx.setLastArrivalTime(theUniqueEventScheduler.now());
@@ -808,12 +692,14 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 				this.parameterlist.add(this.theMpduRx.clone());
 				this.parameterlist.add(theUniqueEventScheduler.now());
 				this.parameterlist.add(this.theAC);
-				this.send(new JEEvent("packet_exiting_system_ind", this.theMac.getHandlerId(), theUniqueEventScheduler.now(),
+				this.send(new JEEvent("packet_exiting_system_ind", this.theMac
+						.getHandlerId(), theUniqueEventScheduler.now(),
 						this.parameterlist));
 			}
 			this.deferForIFS();
 		} else {
-			this.error("Station " + this.theMac.getMacAddress()
+			this.error("Station "
+					+ this.theMac.getMacAddress()
 					+ " the received MPDU should be ours, but it is for another station. Not good.");
 		}
 	}
@@ -825,28 +711,19 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 		JETime aNav = new JETime((JETime) this.parameterlist.elementAt(2));
 
 		if (this.theBackoffTimer.is_active()) { // the classical case: while
-												// down-counting, another
-												// station initiated a frame
-												// exchange
+			// down-counting, another
+			// station initiated a frame
+			// exchange
 			this.theBackoffTimer.pause();
 		}
 		this.theMpduRx = new JE802_11Mpdu();
 		this.theMpduRx.setDA(aMacId); // destination MAC address
 		this.theMpduRx.setAC(anAc); // access category
 		this.theMpduRx.setNAV(aNav); // NAV value
-		if (!(aMacId == this.theMac.getMacAddress() && anAc == this.theAC) || aMacId == theMac.getDot11BroadcastAddress()) { // we
-																																// only
-																																// set
-																																// the
-																																// nav
-																																// timer
-																																// if
-																																// we
-																																// are
-																																// NOT
-																																// the
-																																// destination
-			this.theNavTimer.start(aNav, this.theMac.getMacAddress(), this.theAC, this.theMac.getPhy().getCurrentChannel());
+		if (!(aMacId == this.theMac.getMacAddress() && anAc == this.theAC)
+				|| aMacId == theMac.getDot11BroadcastAddress()) {
+			this.theNavTimer.start(aNav, this.theMac.getMacAddress(),
+					this.theAC, this.theMac.getPhy().getCurrentChannel());
 		}
 	}
 
@@ -856,27 +733,29 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 		JE802IPPacket packet = (JE802IPPacket) this.parameterlist.elementAt(3);
 		int size = packet.getLength();
 		long seqno = (Long) anEvent.getParameterList().get(4); // MAC Seq No,
-																// not TCP
+		// not TCP
 		int DA = ((JE802HopInfo) this.parameterlist.elementAt(0)).getAddress();
-		ArrayList<JE802HopInfo> hopAdresses = (ArrayList<JE802HopInfo>) this.parameterlist.elementAt(2);
+		ArrayList<JE802HopInfo> hopAdresses = (ArrayList<JE802HopInfo>) this.parameterlist
+				.elementAt(2);
 		int sourceHandler = (Integer) anEvent.getParameterList().get(5);
 		int headersize = this.theMac.getDot11MacHeaderDATA_byte();
-		JE802_11Mpdu aMpdu = new JE802_11Mpdu(this.theMac.getMacAddress(), DA, JE80211MpduType.data, seqno, size, headersize,
-				this.theAC, sourceHandler, hopAdresses, theUniqueEventScheduler.now(), packet);
+		JE802_11Mpdu aMpdu = new JE802_11Mpdu(this.theMac.getMacAddress(), DA,
+				JE80211MpduType.data, seqno, size, headersize, this.theAC,
+				sourceHandler, hopAdresses, theUniqueEventScheduler.now(),
+				packet);
 
 		// no queue handling needed here: this is done in event_MPDUDeliv_req
 		// ... . Just request MPDUDeliv_req and thats it.
 		this.parameterlist.clear();
 		this.parameterlist.add(aMpdu);
-		this.send(new JEEvent("MPDUDeliv_req", this, theUniqueEventScheduler.now(), this.parameterlist));
+		this.send(new JEEvent("MPDUDeliv_req", this, theUniqueEventScheduler
+				.now(), this.parameterlist));
 	}
 
 	private void event_MPDUDeliv_req(JEEvent anEvent) {
 
 		specificTPCtr++;
 		overallTPCtr++;
-
-		// TODO: Better place to check sequence no.
 
 		this.parameterlist = anEvent.getParameterList();
 		JE802_11Mpdu aMpdu = (JE802_11Mpdu) this.parameterlist.elementAt(0);
@@ -887,9 +766,11 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 		aMpdu.setNAV(this
 				.calcTxTime(aMpdu)
 				.minus(this.theMac.getPhy().getPLCPHeaderDuration())
-				.plus(this.theSIFS.plus(this.calcTxTime(0, this.theMac.getDot11MacHeaderACK_byte(), this.theMac.getPhy()
+				.plus(this.theSIFS.plus(this.calcTxTime(0, this.theMac
+						.getDot11MacHeaderACK_byte(), this.theMac.getPhy()
 						.getBasicPhyMode(aMpdu.getPhyMode())))));
-		if ((this.theMpduData == null) && (!this.theInterFrameSpaceTimer.is_active())) {
+		if ((this.theMpduData == null)
+				&& (!this.theInterFrameSpaceTimer.is_active())) {
 			this.theMpduData = aMpdu;
 			this.theMpduData.setType(JE80211MpduType.data);
 			this.theMpduData.setSA(this.theMac.getMacAddress());
@@ -897,8 +778,11 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 			this.theMpduData.setNAV(this
 					.calcTxTime(aMpdu)
 					.minus(this.theMac.getPhy().getPLCPHeaderDuration())
-					.plus(this.theSIFS.plus(this.calcTxTime(0, this.theMac.getDot11MacHeaderACK_byte(), this.theMac.getPhy()
-							.getBasicPhyMode(aMpdu.getPhyMode())))));
+					.plus(this.theSIFS.plus(this.calcTxTime(
+							0,
+							this.theMac.getDot11MacHeaderACK_byte(),
+							this.theMac.getPhy().getBasicPhyMode(
+									aMpdu.getPhyMode())))));
 			this.generateRts();
 			boolean busy = this.busy();
 			if (!this.theBackoffTimer.is_active()) {
@@ -906,12 +790,13 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 					if (!this.theInterFrameSpaceTimer.is_active()) {
 						this.deferForIFS();
 					} else {
-						this.error("Station " + this.theMac.getMacAddress() + " already deferring");
+						this.error("Station " + this.theMac.getMacAddress()
+								+ " already deferring");
 					}
 				} else {
 					if (this.theBackoffTimer.is_idle()) {
 						this.theBackoffTimer.start(this.theCW, busy); // new
-																		// backoff
+						// backoff
 						this.updateBackoffTimer();
 					}
 				}
@@ -920,17 +805,17 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 				// post backoff.
 			}
 		} else { // queue the MPDU or discard if queue full - in this case
-					// inform TrafficGen
+			// inform TrafficGen
 			if (this.theQueue.size() >= this.theQueueSize) {
 				this.parameterlist.clear();
 				this.parameterlist.add(this.theMpduData);
 				this.parameterlist.add(true);
-				this.send(new JEEvent("MSDU_discarded_ind", this.theMac, theUniqueEventScheduler.now(), this.parameterlist));
+				this.send(new JEEvent("MSDU_discarded_ind", this.theMac,
+						theUniqueEventScheduler.now(), this.parameterlist));
 			} else {
 				this.theQueue.add(aMpdu);
 			}
 		}
-		// this.message("Trying packet no:"+aMpdu.getSeqNo());
 	}
 
 	private void nextMpdu() {
@@ -939,13 +824,14 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 				this.theLongRetryCnt = 0;
 				this.theShortRetryCnt = 0;
 				JE802_11Mpdu aMpdu = this.theQueue.remove(0); // we pull out a
-																// new mpdu from
-																// the queue
+				// new mpdu from
+				// the queue
 				this.parameterlist.clear();
 				this.parameterlist.add(aMpdu);
-				this.send(new JEEvent("MPDUDeliv_req", this, theUniqueEventScheduler.now(), this.parameterlist));
+				this.send(new JEEvent("MPDUDeliv_req", this,
+						theUniqueEventScheduler.now(), this.parameterlist));
 			} else { // backoff was stopped before. Resume it by starting IFS
-						// defer.
+				// defer.
 				this.deferForIFS();
 			}
 		} else {
@@ -960,17 +846,18 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 			// So let us ask for another MPDU:
 			this.parameterlist.clear();
 			this.parameterlist.add(this.theAC);
-			this.send(new JEEvent("empty_queue_ind", this.theMac, theUniqueEventScheduler.now(), this.parameterlist));
-
+			this.send(new JEEvent("empty_queue_ind", this.theMac,
+					theUniqueEventScheduler.now(), this.parameterlist));
 		}
 	}
 
 	private void event_MlmeRequests(JEEvent anEvent) {
 		String anEventName = anEvent.getName();
 		if (anEventName.equals("undefinded")) { // nothing defined in MLME so
-												// far
+			// far
 		} else {
-			this.error("Station " + this.theMac.getMacAddress() + " undefined MLME request event '" + anEventName + "'");
+			this.error("Station " + this.theMac.getMacAddress()
+					+ " undefined MLME request event '" + anEventName + "'");
 		}
 	}
 
@@ -981,9 +868,7 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 			if (aTxPdu.getSeqNo() == previousDiscardedPacket) {
 				// this.noAckCount++;
 				if (noAckCount == 3) {
-					this.send(new JEEvent("decrease_phy_mode_request", this.theMac.getMlme(), this.getTime()));
 					noAckCount = 0;
-					// noAckCount=0;
 				}
 				this.noAckCount++;
 			} else {
@@ -993,7 +878,8 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 
 		this.parameterlist.clear();
 		this.parameterlist.add(aTxPdu);
-		this.send(new JEEvent("txattempt_req", this.theVch, theUniqueEventScheduler.now(), this.parameterlist));
+		this.send(new JEEvent("txattempt_req", this.theVch,
+				theUniqueEventScheduler.now(), this.parameterlist));
 		if (aTxPdu.isData() || aTxPdu.isRts()) {
 			// only RTS and DATA know the timeout, because they expect something
 			// back: CTS or ACK, resp.
@@ -1003,8 +889,8 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 
 	private void deferForIFS() {
 		if (!this.theInterFrameSpaceTimer.is_active()) { // ignore during
-															// interframe space
-															// defering interval
+			// interframe space
+			// defering interval
 			if (this.theMpduCtrl != null) { // CTS or ACK required
 				this.theInterFrameSpaceTimer.start(this.theSIFS);
 			} else if (this.theMpduRts != null) {
@@ -1015,27 +901,30 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 				if (!this.theBackoffTimer.is_active()) {
 					if (this.theTxState == txState.txRts) {
 						this.theInterFrameSpaceTimer.start(this.theSIFS); // we
-																			// sent
-																			// RTS
-																			// before
-																			// and
-																			// just
-																			// received
-																			// CTS.
-																			// Now
-																			// SIFS
-																			// is
-																			// used
-																			// before
-																			// DATA,
-																			// not
-																			// AIFS
+						// sent
+						// RTS
+						// before
+						// and
+						// just
+						// received
+						// CTS.
+						// Now
+						// SIFS
+						// is
+						// used
+						// before
+						// DATA,
+						// not
+						// AIFS
 					} else {
 						this.theInterFrameSpaceTimer.start(this.theAIFS);
 					}
 				} else { // backoff is busy. Do nothing though data is pending.
-					this.message("Station " + this.theMac.getMacAddress()
-							+ " deferForIFS: doing nothing though data is pending: backoff timer already busy.", 10);
+					this.message(
+							"Station "
+									+ this.theMac.getMacAddress()
+									+ " deferForIFS: doing nothing though data is pending: backoff timer already busy.",
+									10);
 				}
 			} else { // the transmission was successful.
 				this.theTxState = txState.idle;
@@ -1045,9 +934,11 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 	}
 
 	private boolean busy() { // returns true if NAV or medium is busy, or
-								// interframe space is ongoing (SIFS, AIFS)
+		// interframe space is ongoing (SIFS, AIFS)
 
-		if (this.theNavTimer.getExpiryTime().isLaterThan(theUniqueEventScheduler.now()) || this.theMac.getPhy().isCcaBusy()
+		if (this.theNavTimer.getExpiryTime().isLaterThan(
+				theUniqueEventScheduler.now())
+				|| this.theMac.getPhy().isCcaBusy()
 				|| this.theInterFrameSpaceTimer.is_active()) {
 			// theUniqueGui.addLine(theUniqueEventScheduler.now(),
 			// this.theMac.getMacAddress(), this.theAC-1, "red",
@@ -1064,35 +955,64 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 	private void generateRts() {
 		if (this.theMpduData != null) {
 			if (this.theMpduRts == null) {
-				if ((this.theMpduData.getFrameBodySize() < this.theMac.getDot11RTSThreshold())) {
+				if ((this.theMpduData.getFrameBodySize() < this.theMac
+						.getDot11RTSThreshold())) {
 					this.theMpduRts = null;
 				} else {
-					Integer headersize = this.theMac.getDot11MacHeaderRTS_byte();
-					this.theMpduRts = new JE802_11Mpdu(this.theMpduData.getSA(), this.theMpduData.getDA(), JE80211MpduType.rts,
-							0, 0, headersize, this.theAC, -1, null, null, null);
-					this.theMpduRts.setPhyMode(this.theMac.getPhy().getBasicPhyMode(this.theMpduData.getPhyMode()));
+					Integer headersize = this.theMac
+							.getDot11MacHeaderRTS_byte();
+					this.theMpduRts = new JE802_11Mpdu(
+							this.theMpduData.getSA(), this.theMpduData.getDA(),
+							JE80211MpduType.rts, 0, 0, headersize, this.theAC,
+							-1, null, null, null);
+					this.theMpduRts.setPhyMode(this.theMac.getPhy()
+							.getBasicPhyMode(this.theMpduData.getPhyMode()));
 					// calculate transmission time, with RTS framebody size 0
-					this.theMpduRts.setTxTime(this.calcTxTime(0, this.theMac.getDot11MacHeaderRTS_byte(), this.theMac.getPhy()
-							.getBasicPhyMode(this.theMpduData.getPhyMode())));
+					this.theMpduRts.setTxTime(this.calcTxTime(
+							0,
+							this.theMac.getDot11MacHeaderRTS_byte(),
+							this.theMac.getPhy().getBasicPhyMode(
+									this.theMpduData.getPhyMode())));
 					// set seqno
 					this.theMpduRts.setSeqNo(this.theMpduData.getSeqNo());
 					// calculate RTS NAV duration field
-					this.theMpduRts.setNAV(this.theMpduRts
+					this.theMpduRts
+					.setNAV(this.theMpduRts
 							.getTxTime()
-							.minus(this.theMac.getPhy().getPLCPHeaderDuration())
-							.plus(this.theSIFS.plus(this.calcTxTime(0, this.theMac.getDot11MacHeaderCTS_byte(),
-									this.theMac.getPhy().getBasicPhyMode(this.theMpduData.getPhyMode())).plus(
-									this.theSIFS
-											.plus(this.theMpduData.getTxTime())
-											.plus(this.theSIFS)
-											.plus(this.calcTxTime(0, this.theMac.getDot11MacHeaderACK_byte(), this.theMac
-													.getPhy().getBasicPhyMode(this.theMpduData.getPhyMode())))))));
+							.minus(this.theMac.getPhy()
+									.getPLCPHeaderDuration())
+									.plus(this.theSIFS.plus(this
+											.calcTxTime(
+													0,
+													this.theMac
+													.getDot11MacHeaderCTS_byte(),
+													this.theMac
+													.getPhy()
+													.getBasicPhyMode(
+															this.theMpduData
+															.getPhyMode()))
+															.plus(this.theSIFS
+																	.plus(this.theMpduData
+																			.getTxTime())
+																			.plus(this.theSIFS)
+																			.plus(this
+																					.calcTxTime(
+																							0,
+																							this.theMac
+																							.getDot11MacHeaderACK_byte(),
+																							this.theMac
+																							.getPhy()
+																							.getBasicPhyMode(
+																									this.theMpduData
+																									.getPhyMode())))))));
 				}
 			} else {
-				this.error("Station " + this.theMac.getMacAddress() + " backoff entity has ongoing RTS frame.");
+				this.error("Station " + this.theMac.getMacAddress()
+						+ " backoff entity has ongoing RTS frame.");
 			}
 		} else {
-			this.error("Station " + this.theMac.getMacAddress() + " backoff entity has ongoing MPDU.");
+			this.error("Station " + this.theMac.getMacAddress()
+					+ " backoff entity has ongoing MPDU.");
 		}
 	}
 
@@ -1101,53 +1021,68 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 		JETime anRtsNav = this.theMpduRx.getNav();
 		if (this.theMpduCtrl == null) {
 			int headersize = this.theMac.getDot11MacHeaderCTS_byte();
-			this.theMpduCtrl = new JE802_11Mpdu(0, aDA, JE80211MpduType.cts, 0, 0, headersize, this.theAC, -1, null, null, null);
+			this.theMpduCtrl = new JE802_11Mpdu(0, aDA, JE80211MpduType.cts, 0,
+					0, headersize, this.theAC, -1, null, null, null);
 			this.theMpduCtrl.setSA(this.theMac.getMacAddress());
 			// calculate CTS transmission time
-			this.theMpduCtrl.setPhyMode(this.theMac.getPhy().getCurrentPhyMode());
-			this.theMpduCtrl.setTxTime(this.calcTxTime(0, this.theMac.getDot11MacHeaderCTS_byte(), this.theMac.getPhy()
+			this.theMpduCtrl.setPhyMode(this.theMac.getPhy()
+					.getCurrentPhyMode());
+			this.theMpduCtrl.setTxTime(this.calcTxTime(0, this.theMac
+					.getDot11MacHeaderCTS_byte(), this.theMac.getPhy()
 					.getCurrentPhyMode()));
 			// set seqno
 			this.theMpduCtrl.setSeqNo(this.theMpduRx.getSeqNo());
 			// calculate CTS's nav value:
-			this.theMpduCtrl.setNAV(anRtsNav.minus(this.theSIFS).minus(this.theMpduCtrl.getTxTime())
+			this.theMpduCtrl.setNAV(anRtsNav.minus(this.theSIFS)
+					.minus(this.theMpduCtrl.getTxTime())
 					.minus(this.theMac.getPhy().getPLCPHeaderDuration()));
 		} else {
-			this.message("Station " + this.theMac.getMacAddress() + "generateCTS: backoff entity has pending CTS/ACK frame", 10); // this
-																																	// can
-																																	// happen
-																																	// in
-																																	// hidden
-																																	// node
-																																	// scenarios
+			this.message("Station " + this.theMac.getMacAddress()
+					+ "generateCTS: backoff entity has pending CTS/ACK frame",
+					10); // this
+			// can
+			// happen
+			// in
+			// hidden
+			// node
+			// scenarios
 		}
 	}
 
 	private void generateAck() {
 		if (this.theMpduCtrl == null) {
 			int headersize = this.theMac.getDot11MacHeaderACK_byte();
-			this.theMpduCtrl = new JE802_11Mpdu(0, this.theMpduRx.getSA(), JE80211MpduType.ack, 0, 0, headersize, this.theAC, -1,
+			this.theMpduCtrl = new JE802_11Mpdu(0, this.theMpduRx.getSA(),
+					JE80211MpduType.ack, 0, 0, headersize, this.theAC, -1,
 					null, null, null);
-			this.theMpduCtrl.setTxTime(this.calcTxTime(0, this.theMac.getDot11MacHeaderACK_byte(), this.theMac.getPhy()
+			this.theMpduCtrl.setTxTime(this.calcTxTime(0, this.theMac
+					.getDot11MacHeaderACK_byte(), this.theMac.getPhy()
 					.getBasicPhyMode(this.theMpduRx.getPhyMode())));
-			this.theMpduCtrl.setNAV(this.theMpduCtrl.getTxTime().minus(this.theMac.getPhy().getPLCPHeaderDuration()));
+			this.theMpduCtrl.setNAV(this.theMpduCtrl.getTxTime().minus(
+					this.theMac.getPhy().getPLCPHeaderDuration()));
 			this.theMpduCtrl.setSA(this.theMac.getMacAddress());
-			this.theMpduCtrl.setPhyMode(this.theMac.getPhy().getBasicPhyMode(this.theMpduRx.getPhyMode()));
+			this.theMpduCtrl.setPhyMode(this.theMac.getPhy().getBasicPhyMode(
+					this.theMpduRx.getPhyMode()));
 			// set seqno
 			this.theMpduCtrl.setSeqNo(this.theMpduRx.getSeqNo());
-			this.message("Station " + this.theMac.getMacAddress() + " sent ACK " + this.theMpduCtrl.getSeqNo() + " to Station "
-					+ this.theMpduCtrl.getDA() + " on channel " + this.theMac.getPhy().getCurrentChannel(), 10);
+			this.message(
+					"Station " + this.theMac.getMacAddress() + " sent ACK "
+							+ this.theMpduCtrl.getSeqNo() + " to Station "
+							+ this.theMpduCtrl.getDA() + " on channel "
+							+ this.theMac.getPhy().getCurrentChannel(), 10);
 		} else {
-			this.error("Station " + this.theMac.getMacAddress() + " generateACK: backoff entity has pending CTS/ACK frame");
+			this.error("Station " + this.theMac.getMacAddress()
+					+ " generateACK: backoff entity has pending CTS/ACK frame");
 		}
 	}
 
 	private boolean checkAndTxRTS(boolean IfsExpired) {
 		if (this.theBackoffTimer.is_active()) {
-			this.warning("Station " + this.theMac.getMacAddress() + " backoff still busy"); // this
-																							// should
-																							// not
-																							// happen.
+			this.warning("Station " + this.theMac.getMacAddress()
+					+ " backoff still busy"); // this
+			// should
+			// not
+			// happen.
 			return false;
 		}
 		if (this.theMpduRts == null) {
@@ -1169,20 +1104,24 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 			if (!this.busy()) {
 				this.theTxState = txState.txRts;
 				this.updateBackoffTimer();
-				JETime aTimeout = new JETime(this.calcTxTime(0, this.theMac.getDot11MacHeaderRTS_byte(),
+				JETime aTimeout = new JETime(this.calcTxTime(0,
+						this.theMac.getDot11MacHeaderRTS_byte(),
 						this.theMpduRts.getPhyMode()));
 				aTimeout = aTimeout.plus(this.theSIFS);
-				aTimeout = aTimeout
-						.plus(this.calcTxTime(0, this.theMac.getDot11MacHeaderCTS_byte(), this.theMpduRts.getPhyMode()));
+				aTimeout = aTimeout.plus(this.calcTxTime(0,
+						this.theMac.getDot11MacHeaderCTS_byte(),
+						this.theMpduRts.getPhyMode()));
 				aTimeout = aTimeout.plus(this.theSlotTime);
 				this.tx(this.theMpduRts, aTimeout);
 				return true; // RTS was sent (if no error occurred. But then we
-								// are in trouble anyway.)
+				// are in trouble anyway.)
 			} else {
 				return false;
 			}
 		} else {
-			this.error("Station " + this.theMac.getMacAddress() + " has Mpdu of wrong subtype, expected " + JE80211MpduType.rts);
+			this.error("Station " + this.theMac.getMacAddress()
+					+ " has Mpdu of wrong subtype, expected "
+					+ JE80211MpduType.rts);
 			return false;
 		}
 	}
@@ -1196,8 +1135,9 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 		} else if (this.theMpduCtrl.isAck()) {
 			this.theTxState = txState.txAck;
 		} else {
-			this.error("Station " + this.theMac.getMacAddress() + " has Mpdu of wrong subtype, expected " + JE80211MpduType.ack
-					+ " or " + JE80211MpduType.cts);
+			this.error("Station " + this.theMac.getMacAddress()
+					+ " has Mpdu of wrong subtype, expected "
+					+ JE80211MpduType.ack + " or " + JE80211MpduType.cts);
 		}
 		this.tx(this.theMpduCtrl, /* no timeout for CTS or ACK: */null);
 		this.theMpduCtrl = null;
@@ -1206,7 +1146,8 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 
 	private boolean checkAndTxDATA(boolean IfsExpired) {
 		if (this.theBackoffTimer.is_active()) {
-			this.warning("Station " + this.theMac.getMacAddress() + " backoff still busy");
+			this.warning("Station " + this.theMac.getMacAddress()
+					+ " backoff still busy");
 			return false;
 		}
 		if (this.theMpduData == null) {
@@ -1229,7 +1170,8 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 				this.updateBackoffTimer();
 				JETime aTimeout = new JETime(this.theMpduData.getTxTime());
 				aTimeout = aTimeout.plus(this.theSIFS);
-				aTimeout = aTimeout.plus(this.calcTxTime(0, this.theMac.getDot11MacHeaderACK_byte(), this.theMac.getPhy()
+				aTimeout = aTimeout.plus(this.calcTxTime(0, this.theMac
+						.getDot11MacHeaderACK_byte(), this.theMac.getPhy()
 						.getBasicPhyMode(this.theMpduData.getPhyMode())));
 				aTimeout = aTimeout.plus(this.theSlotTime);
 				this.tx(this.theMpduData, aTimeout);
@@ -1238,26 +1180,34 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 				return false;
 			}
 		} else {
-			this.error("Station " + this.theMac.getMacAddress() + " has Mpdu of wrong subtype, expected " + JE80211MpduType.data);
+			this.error("Station " + this.theMac.getMacAddress()
+					+ " has Mpdu of wrong subtype, expected "
+					+ JE80211MpduType.data);
 			return false;
 		}
 	}
 
-	private JETime calcTxTime(int framebodysize, int headersize, JE802PhyMode aPhyMode) {
+	private JETime calcTxTime(int framebodysize, int headersize,
+			JE802PhyMode aPhyMode) {
 
 		// first the preamble:
 		JETime aTxTime = this.theMac.getPhy().getPLCPPreamble();
 		// now add the phy header:
-		aTxTime = aTxTime.plus(this.theMac.getPhy().getPLCPHeaderWithoutServiceField());
+		aTxTime = aTxTime.plus(this.theMac.getPhy()
+				.getPLCPHeaderWithoutServiceField());
 		// now calc the payload duration incl MAC Header in byte:
-		int framesize = framebodysize + headersize + this.theMac.getDot11MacFCS_byte();
+		int framesize = framebodysize + headersize
+				+ this.theMac.getDot11MacFCS_byte();
 		if (this.theMac.isDot11WepEncr()) {
 			framesize = framesize + 8 * 32;// this.theMac.get("MACCONFIG.WEP_byte");
 		}
 		// now calc the duration of this payload:
-		int aNumOfPayload_bit = this.theMac.getPhy().getPLCPServiceField_bit() + framesize * 8;
-		int aNumOfSymbols = (aNumOfPayload_bit + aPhyMode.getBitsPerSymbol() - 1) / aPhyMode.getBitsPerSymbol();
-		JETime aPayloadDuration = this.theMac.getPhy().getSymbolDuration().times(aNumOfSymbols);
+		int aNumOfPayload_bit = this.theMac.getPhy().getPLCPServiceField_bit()
+				+ framesize * 8;
+		int aNumOfSymbols = (aNumOfPayload_bit + aPhyMode.getBitsPerSymbol() - 1)
+				/ aPhyMode.getBitsPerSymbol();
+		JETime aPayloadDuration = this.theMac.getPhy().getSymbolDuration()
+				.times(aNumOfSymbols);
 		// now calculate the final duration and return it:
 		aTxTime = aTxTime.plus(aPayloadDuration);
 		return aTxTime;
@@ -1307,7 +1257,7 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 	}
 
 	public int getQueueSize() {
-		return theQueueSize;
+		return this.theQueueSize;
 	}
 
 	public int getCurrentQueueSize() {
@@ -1318,28 +1268,18 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 		return theMac;
 	}
 
-	/**
-	 * @param maxRetryCountShort
-	 *            the maxRetryCountShort to set
-	 */
 	public void setMaxRetryCountShort(int maxRetryCountShort) {
 		this.maxRetryCountShort = maxRetryCountShort;
 	}
 
-	/** @return the maxRetryCountShort */
 	public int getMaxRetryCountShort() {
 		return maxRetryCountShort;
 	}
 
-	/**
-	 * @param maxRetryCountLong
-	 *            the maxRetryCountLong to set
-	 */
 	public void setMaxRetryCountLong(int maxRetryCountLong) {
 		this.maxRetryCountLong = maxRetryCountLong;
 	}
 
-	/** @return the maxRetryCountLong */
 	public int getMaxRetryCountLong() {
 		return maxRetryCountLong;
 	}
@@ -1350,11 +1290,13 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 
 	public void setDot11EDCAAIFSN(Integer dot11edcaaifsn) {
 		if (dot11edcaaifsn < 1) {
-			this.warning("Station " + this.theMac.getMacAddress() + " AIFSN < 1: " + dot11edcaaifsn);
+			this.warning("Station " + this.theMac.getMacAddress()
+					+ " AIFSN < 1: " + dot11edcaaifsn);
 			dot11edcaaifsn = 1;
 		}
 		this.dot11EDCAAIFSN = dot11edcaaifsn;
-		this.theAIFS = this.theSIFS.plus(this.theSlotTime.times(this.dot11EDCAAIFSN));
+		this.theAIFS = this.theSIFS.plus(this.theSlotTime
+				.times(this.dot11EDCAAIFSN));
 	}
 
 	public void setDot11EDCACWmax(Integer dot11edcacWmax) {
@@ -1363,7 +1305,8 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 
 	public void setDot11EDCACWmin(Integer dot11edcacWmin) {
 		if (dot11edcacWmin < 1) {
-			this.warning("Station " + this.theMac.getMacAddress() + " CWmin < 1: " + dot11edcacWmin);
+			this.warning("Station " + this.theMac.getMacAddress()
+					+ " CWmin < 1: " + dot11edcacWmin);
 			dot11edcacWmin = 1;
 		}
 		dot11EDCACWmin = dot11edcacWmin;
@@ -1383,7 +1326,8 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 
 	@Override
 	public String toString() {
-		return "BE in Station " + this.theMac.getMacAddress() + " AC: " + this.theAC;
+		return "BE in Station " + this.theMac.getMacAddress() + " AC: "
+				+ this.theAC;
 	}
 
 	public void discardQueue() {
@@ -1392,12 +1336,14 @@ public final class JE802_11BackoffEntity extends JEEventHandler {
 			Vector<Object> params = new Vector<Object>();
 			params.add(this.theQueue.get(i));
 			params.add(this.theMac.getPhy().getCurrentChannel());
-			this.send(new JEEvent("push_back_packet", this.theMac.getHandlerId(), theUniqueEventScheduler.now(), params));
+			this.send(new JEEvent("push_back_packet", this.theMac
+					.getHandlerId(), theUniqueEventScheduler.now(), params));
 		}
 		this.theQueue.clear();
 		this.parameterlist.clear();
 		this.parameterlist.add(this.theAC);
-		this.send(new JEEvent("empty_queue_ind", this.theMac, theUniqueEventScheduler.now(), this.parameterlist));
+		this.send(new JEEvent("empty_queue_ind", this.theMac,
+				theUniqueEventScheduler.now(), this.parameterlist));
 	}
 
 	/**

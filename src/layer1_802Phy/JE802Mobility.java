@@ -60,8 +60,6 @@ public class JE802Mobility extends JEmula {
 
 	private JETime interpolationInterval_ms;
 
-	private double minAccuracy;
-
 	// sorted by time
 	private List<JE802LocationInfo> locations;
 
@@ -107,12 +105,6 @@ public class JE802Mobility extends JEmula {
 			if (this.mobile == true) {
 				String traceFile = mobilityElem.getAttribute("traceFile");
 				if (!traceFile.isEmpty()) {
-					String minAccuracyStr = mobilityElem.getAttribute("minAccuracy");
-					if (!minAccuracyStr.isEmpty()) {
-						this.minAccuracy = new Double(minAccuracyStr);
-					} else {
-						this.minAccuracy = 150;
-					}
 
 					String traceStartOffset = mobilityElem.getAttribute("offsetTime_ms");
 					if (!traceStartOffset.isEmpty()) {

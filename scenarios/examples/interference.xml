@@ -93,7 +93,7 @@
 
 	<JE802Station>
 		<JE802TrafficGen AC="4" DA="1" EvalDelay="true"
-			EvalThrp="true" EvalThrpOffer="true" HistogramMax_ms="60"
+			EvalThrp="true" EvalOffer="true" HistogramMax_ms="60"
 			HistogramNumOfBins="600" isTcpTraffic="false" max_packet_size_byte="2000"
 			mean_load_Mbps="5" port="47768196" starttime_ms="0" stoptime_ms="0"
 			type="data" />

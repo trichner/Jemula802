@@ -32,7 +32,7 @@ import org.w3c.dom.NodeList;
 import animation.JE802KmlGenerator;
 
 public class JE8MediumWithInterference extends JEEventHandler implements
-JEWirelessMedium {
+		JEWirelessMedium {
 
 	private final Map<Integer, JE802ChannelEntry> theChannels;
 
@@ -125,12 +125,11 @@ JEWirelessMedium {
 		}
 	}
 
-	// there are basically two things to do at the start of a transmission,
+	// there are two things to do at the start of a transmission,
 	// first calculate the interference of all other transmissions for all our
-	// receivers
-	// second compute the interference introduced by this transmission at all
-	// the receivers of the other transmission
-	// we also have to do this for neighboring channels
+	// receivers. Second, compute the interference introduced by this
+	// transmission at all the receivers of the other transmission, also for
+	// neighboring channels.
 	private void transmitStart(final JEEvent anEvent) {
 		JETime now = anEvent.getScheduledTime();
 		JE802Ppdu aPpdu = (JE802Ppdu) anEvent.getParameterList().elementAt(1);
@@ -208,7 +207,7 @@ JEWirelessMedium {
 				JE802Ppdu rxPpdu = aPpdu.clone();
 				Vector<Object> parameterList = new Vector<Object>();
 
-				// jam the packet with a certain probabilty
+				// jam the packet with a certain probability
 				double prob = rxPpdu
 						.getMpdu()
 						.getPhyMode()
@@ -271,11 +270,17 @@ JEWirelessMedium {
 			// SINR = Signal to (Noise + Interference) Ratio
 			double SNIR = powerAtRx / interference;
 			double SNIR_dB = 10 * Math.log10(SNIR);
+			// this.message("RX_dB N+I SNIR_dB:" + " " + 10 *
+			// Math.log10(powerAtRx)+ " " + 10 * Math.log10(interference) + " "
+			// + SNIR_dB);
 			JE802Ppdu aRxPpdu = aPpdu.clone(); // prevent aliasing, otherwise
 			// jam signal would be set to one value for all theStations
 			// jam the packet with a certain probability
-			double prob = aRxPpdu.getMpdu().getPhyMode()
-					.getPacketErrorProb(aPpdu.getMpdu().getFrameBodySize(),SNIR);
+			double prob = aRxPpdu
+					.getMpdu()
+					.getPhyMode()
+					.getPacketErrorProb(aPpdu.getMpdu().getFrameBodySize(),
+							SNIR);
 			if (prob > 0) {
 				double rand = theUniqueRandomGenerator.nextDouble();
 				if (rand < prob) {
@@ -296,6 +301,9 @@ JEWirelessMedium {
 			// rx Station could have switched the channel during the time a
 			// packet is transmitted
 			if (rxPhy != null && rxPhy != aTxPhy) {
+				// this.message("RX_dB N+I SNIR_dB:" + " " + 10 *
+				// Math.log10(powerAtRx)+ " " + 10 * Math.log10(interference) +
+				// " " + SNIR_dB);
 				this.send(new JEEvent("MEDIUM_RxEnd_ind", rxPhy.getHandlerId(),
 						now, parameterList));
 			}
@@ -318,7 +326,7 @@ JEWirelessMedium {
 
 	// compute the path loss from phy1 to phy2
 	private double pathloss_factor(final JE802Phy srcPhy,
-			final JE802Phy dstPhy, final double p1m) {
+			final JE802Phy dstPhy, final double aPathLossAt1m_dB) {
 		JETime now = theUniqueEventScheduler.now();
 
 		JE802Mobility srcMob = srcPhy.getMobility();
@@ -347,9 +355,9 @@ JEWirelessMedium {
 		// compute attenuation
 		double anAttenuation_dB;
 		if (distance > 1.0) {
-			anAttenuation_dB = p1m - 20 * Math.log10(distance);
+			anAttenuation_dB = aPathLossAt1m_dB - 20 * Math.log10(distance);
 		} else {
-			anAttenuation_dB = p1m;
+			anAttenuation_dB = aPathLossAt1m_dB;
 		}
 
 		// compute directional gains
@@ -360,7 +368,8 @@ JEWirelessMedium {
 				.getGainIndBForDirection(pathDirection.reflect(), dst.getLat(),
 						dst.getLon(), dstMob.getTraceHeading(now));
 
-		return dBToFactor(anAttenuation_dB + srcDirectionalGain + dstDirectionalGain);
+		return dBToFactor(anAttenuation_dB + srcDirectionalGain
+				+ dstDirectionalGain);
 	}
 
 	// calculates the interference power level in mW at the position of atPhy
@@ -483,7 +492,8 @@ JEWirelessMedium {
 				}
 			}
 			double lambda = 3E8 / (frequencyMhz * 1E6);
-			this.thePathlossAt1m_constant = 20 * Math.log((lambda / 4 * Math.PI));
+			this.thePathlossAt1m_constant = 20 * Math
+					.log((lambda / 4 * Math.PI));
 		}
 
 		public void removePhy(JE802Phy toRemove) {
@@ -697,7 +707,8 @@ JEWirelessMedium {
 		double neighborChannelInterference = 0.0;
 		JE802ChannelEntry channel = theChannels.get(aPhy.getCurrentChannel());
 		if (channel == null) {
-			this.error("Channel " + aPhy.getCurrentChannel() + " not defined in XML");
+			this.error("Channel " + aPhy.getCurrentChannel()
+					+ " not defined in XML");
 			return 0.0;
 		} else {
 			for (Integer interferingChannel : channel.getInterferingChannels()) {
@@ -730,11 +741,12 @@ JEWirelessMedium {
 		}
 	}
 
-	//	public double getSnirAtRx(int aDestinationAddress, JE802Phy aTxPhy) {
-	//		double ownChannelInterference = noiseLevel_mW;
-	//		double attenuation = getPathloss(aTxPhy.getMac().getMacAddress(), aDestinationAddress);
-	//		double rxPower = aTxPhy.getCurrentTransmitPower_mW() * attenuation;
-	//		double snir = rxPower / ownChannelInterference;
-	//		return snir;
-	//	}
+	// public double getSnirAtRx(int aDestinationAddress, JE802Phy aTxPhy) {
+	// double ownChannelInterference = noiseLevel_mW;
+	// double attenuation = getPathloss(aTxPhy.getMac().getMacAddress(),
+	// aDestinationAddress);
+	// double rxPower = aTxPhy.getCurrentTransmitPower_mW() * attenuation;
+	// double snir = rxPower / ownChannelInterference;
+	// return snir;
+	// }
 }

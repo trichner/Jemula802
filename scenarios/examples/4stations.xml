@@ -93,7 +93,7 @@
 
 	<JE802Station>
 		<JE802TrafficGen AC="2" DA="1" EvalDelay="true"
-			EvalThrp="true" EvalThrpOffer="true" HistogramMax_ms="60"
+			EvalThrp="true" EvalOffer="true" HistogramMax_ms="60"
 			HistogramNumOfBins="600" isTcpTraffic="false" max_packet_size_byte="2000"
 			mean_load_Mbps="2.2" port="47768196" starttime_ms="0" stoptime_ms="0"
 			type="data" />
@@ -167,7 +167,7 @@
 
 	<JE802Station>
 		<JE802TrafficGen AC="2" DA="1" EvalDelay="true"
-			EvalThrp="true" EvalThrpOffer="true" HistogramMax_ms="60"
+			EvalThrp="true" EvalOffer="true" HistogramMax_ms="60"
 			HistogramNumOfBins="600" isTcpTraffic="false" max_packet_size_byte="2000"
 			mean_load_Mbps="2.2" port="47768196" starttime_ms="0" stoptime_ms="0"
 			type="data" />
@@ -240,7 +240,7 @@
 	</JE802Station>
 	<JE802Station>
 		<JE802TrafficGen AC="2" DA="1" EvalDelay="true"
-			EvalThrp="true" EvalThrpOffer="true" HistogramMax_ms="60"
+			EvalThrp="true" EvalOffer="true" HistogramMax_ms="60"
 			HistogramNumOfBins="600" isTcpTraffic="false" max_packet_size_byte="2000"
 			mean_load_Mbps="2.2" port="47768196" starttime_ms="0" stoptime_ms="0"
 			type="data" />
