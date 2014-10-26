@@ -124,16 +124,17 @@ public class JE802Control extends JEmula {
 	public void animate() {
 		if (kmlWriter != null) {
 			this.message(
-					"Creating animation now. This might take some time ...",
+					"Creating visualization ...",
 					100);
-			long beforeAnim = System.currentTimeMillis();
+//			long beforeAnim = System.currentTimeMillis();
 			kmlWriter.createDOM();
 			kmlWriter.writeDOMtoFile();
 			kmlWriter.createKMZArchive();
-			this.message(
-					"Done. Creating animation took "
-							+ (System.currentTimeMillis() - beforeAnim) / 60
-							+ " seconds.", 100);
+			this.message("done.");
+//			this.message(
+//					"Visualization done (in "
+//							+ (System.currentTimeMillis() - beforeAnim) / 600
+//							+ " seconds).", 100);
 		}
 		this.configuration = null;
 	}
@@ -315,7 +316,7 @@ public class JE802Control extends JEmula {
 		if (new Boolean(animationNode.getAttribute("generateGoogleEarth"))) {
 			kmlWriter = new JE802KmlWriter(animationNode, resultPath,
 					this.configuration.getDocumentURI(), this.stations,
-					this.theUniqueWirelessMedium.getReuseDistance());
+					this.theUniqueWirelessMedium.getCoverageRange_m());
 		}
 
 	}

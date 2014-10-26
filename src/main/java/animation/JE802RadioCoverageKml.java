@@ -34,22 +34,19 @@
 
 package animation;
 
-import java.awt.Color;
+import kernel.JETime;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import station.JE802Station;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.imageio.ImageIO;
-
-import kernel.JETime;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
-import station.JE802Station;
 
 public class JE802RadioCoverageKml extends JE802KmlGenerator {
 
@@ -77,17 +74,17 @@ public class JE802RadioCoverageKml extends JE802KmlGenerator {
 	// lenght of a pixel in the images in meters
 	private final double pixelLength;
 
-	private final double reuseDistance;
+	private final double theCoverageRadius_m;
 	
 	private String resultPath;
 
 	public JE802RadioCoverageKml(final Document doc, final List<JE802Station> stations, final String filename,
-			final double pixelLength, final boolean showMobile, final double reuseDistance, final double maxTxdBm,
+			final double pixelLength, final boolean showMobile, final double aCoverageRadius_m, final double maxTxdBm,
 			final double minTxdBm, final double attenuationFactor, String path) {
 		super(doc, stations);
 		this.pixelLength = pixelLength;
 		this.showMobile = showMobile;
-		this.reuseDistance = reuseDistance;
+		this.theCoverageRadius_m = aCoverageRadius_m;
 		this.pathInKmz = "animation_files/";
 		this.minTxdBm = minTxdBm;
 		this.maxTxdBm = maxTxdBm;
@@ -154,10 +151,8 @@ public class JE802RadioCoverageKml extends JE802KmlGenerator {
 				int size = this.theStations.size();
 				double powerSum = 0.0;
 				for (int k = 0; k < size; k++) {
-					JE802Station station = this.theStations.get(k); // this is
-																	// faster
-																	// than list
-																	// iterator
+					// this is faster than list iterator:
+					JE802Station station = this.theStations.get(k);
 					JETime startTime = station.getStatEval().getEvaluationStarttime();
 					if (this.showMobile || !station.isMobile()) {
 						double dBm = station.getTransmitPowerLeveldBm();
@@ -173,11 +168,11 @@ public class JE802RadioCoverageKml extends JE802KmlGenerator {
 						}
 					}
 				}
-				// make transparent if not in reuse distance
+				// make transparent if not in coverage range
 				Color powerColor;
 				Color channelColor;
 				Color addressColor;
-				if (nearest < this.reuseDistance) {
+				if (nearest < this.theCoverageRadius_m) {
 					powerColor = calculatePowerColor(powerSum, this.minTxdBm, this.maxTxdBm, this.alpha);
 					int channel = nearestStation.getPhy().getCurrentChannel();
 					channelColor = getChannelColor(channel);
@@ -237,8 +232,8 @@ public class JE802RadioCoverageKml extends JE802KmlGenerator {
 	 * Returns color according to currentLevel of power in dBm Creates a color
 	 * gradient from blue over green to yellow (yellow is highest power)
 	 * 
-	 * @param currentdBm
-	 *            currentPower level in dBm
+	 * @param current_mW
+	 *            currentPower level in mW
 	 * @param mindBm
 	 *            dBm value which is blue
 	 * @param maxdBm
@@ -247,26 +242,28 @@ public class JE802RadioCoverageKml extends JE802KmlGenerator {
 	 *            alpha value of color
 	 * @return Color of current power level
 	 */
-	private Color calculatePowerColor(final double current_mW, final double mindBm, final double maxdBm, final int alphaValue) {
-		double current_dBm = 10 * Math.log10(1000 * current_mW);
+	private Color calculatePowerColor(final double current_mW, final double mindBm, final double maxdBm, int alphaValue) {
+		double current_dBm = 10 * Math.log10(current_mW);
 		double gradient = (current_dBm - mindBm) / (maxdBm - mindBm);
 		Double r = 0.0;
 		Double g = 0.0;
 		Double b = 0.0;
 
-		if (gradient > 0) {
+		alphaValue = Math.max(0,Math.min(255,new Double(gradient * 600.0).intValue()));
+		
+		if (gradient > 0.05) {
 			if (gradient < 1.0 / 3.0) {
 				b = 255.0;
 				g = gradient * 3.0 * 255.0;
 			} else if (gradient < 2.0 / 3.0) {
 				g = 255.0;
 				b = 255.0 - (gradient - 1.0 / 3.0) * 3.0 * 255.0;
-			} else if (gradient < 1) {
+			} else if (gradient < 0.9) {
 				g = 255.0;
 				r = (gradient - 2.0 / 3.0) * 3.0 * 255.0;
 			} else {
 				r = 255.0;
-				g = 255.0;
+				g = 50.0;
 			}
 		} else {
 			b = 255.0;
@@ -276,7 +273,7 @@ public class JE802RadioCoverageKml extends JE802KmlGenerator {
 	}
 
 	/**
-	 * Get bounding box of all theStations +- reuseDistance
+	 * Get bounding box of all theStations +- theCoverageRadius_m
 	 * 
 	 * @return bounding coordinates for all theStations
 	 *         {latitudeMaximum,latitudeMinimum
@@ -291,19 +288,19 @@ public class JE802RadioCoverageKml extends JE802KmlGenerator {
 			JETime startTime = station.getStatEval().getEvaluationStarttime();
 			double[] position = convertXYZtoLatLonAlt(station.getXLocation(startTime), station.getYLocation(startTime),
 					station.getZLocation(startTime));
-			double latHigh = position[0] + meters2DegreesLatitude(this.reuseDistance);
+			double latHigh = position[0] + meters2DegreesLatitude(this.theCoverageRadius_m);
 			if (latHigh > latMax) {
 				latMax = latHigh;
 			}
-			double latLow = position[0] - meters2DegreesLatitude(this.reuseDistance);
+			double latLow = position[0] - meters2DegreesLatitude(this.theCoverageRadius_m);
 			if (latLow < latMin) {
 				latMin = latLow;
 			}
-			double lonHigh = position[1] + meters2DegreesLongitude(this.reuseDistance, position[0]);
+			double lonHigh = position[1] + meters2DegreesLongitude(this.theCoverageRadius_m, position[0]);
 			if (lonHigh > longMax) {
 				longMax = lonHigh;
 			}
-			double lonLow = position[1] - meters2DegreesLongitude(this.reuseDistance, position[0]);
+			double lonLow = position[1] - meters2DegreesLongitude(this.theCoverageRadius_m, position[0]);
 			if (lonLow < longMin) {
 				longMin = lonLow;
 			}
@@ -338,7 +335,7 @@ public class JE802RadioCoverageKml extends JE802KmlGenerator {
 	 */
 	private double calculatePower_mW(final double dBm, final double distance) {
 		// dBm to mWatt
-		double watts = Math.pow(10.0, (dBm - 30) / 10.0);
+		double watts = Math.pow(10.0, (dBm) / 10.0);
 		double factor = 1.0;
 		// attenuation over distance
 		double co = Math.pow(distance, this.attenuationFactor);

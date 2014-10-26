@@ -36,25 +36,25 @@ package layer1_80211Phy;
 
 import emulator.JE802StatEval;
 import gui.JE802Gui;
-import java.util.List;
-import java.util.Random;
-import java.util.Vector;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 import kernel.JEEvent;
 import kernel.JEEventScheduler;
 import kernel.JETime;
-import layer0_medium.JEWirelessMedium;
 import layer0_medium.JEWirelessChannel;
+import layer0_medium.JEWirelessMedium;
 import layer1_802Phy.JE802Phy;
 import layer1_802Phy.JE802Ppdu;
 import layer2_80211Mac.JE802_11Mac;
 import layer2_80211Mac.JE802_11Mpdu;
-
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+import java.util.List;
+import java.util.Random;
+import java.util.Vector;
 
 public class JE802_11Phy extends JE802Phy {
 
@@ -98,7 +98,7 @@ public class JE802_11Phy extends JE802Phy {
 				this.currentTransmitPowerLevel_dBm = new Double(
 						mibElem.getAttribute("dot11CurrentTransmitPowerLevel_dBm"));
 				this.currentTransmitPower_mW = Math.pow(10,
-						(currentTransmitPowerLevel_dBm - 30) / 10);
+						(currentTransmitPowerLevel_dBm) / 10);
 				this.currentChannelNumber = new Integer(
 						mibElem.getAttribute("dot11CurrentChannelNumber"));
 			} else {
@@ -176,11 +176,7 @@ public class JE802_11Phy extends JE802Phy {
 				JE802_11Ppdu aPpdu = (JE802_11Ppdu) this.parameterlist
 						.elementAt(0);
 				if (!aPpdu.isJammed() && currentTxEnd.isEarlierThan(now)
-						&& concurrentRx == 1) { // Pietro:
-					// get
-					// the
-					// mac
-					// Mpdu
+						&& concurrentRx == 1) {
 					JE802_11Mpdu aMpdu = aPpdu.getMpdu();
 					this.parameterlist = new Vector<Object>();
 					this.parameterlist.add(aMpdu.getDA());
@@ -383,8 +379,8 @@ public class JE802_11Phy extends JE802Phy {
 		return (JE802_11Mac) theMac;
 	}
 
-	public double getReuseDistance() {
-		return this.theUniqueRadioChannel.getReuseDistance();
+	public double getCoverageRange_m() {
+		return this.theUniqueRadioChannel.getCoverageRange_m();
 	}
 
 	public Integer getPLCPTail_bit() {

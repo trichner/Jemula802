@@ -13,7 +13,7 @@
 
 		<JE802Animation attenuationFactor="3.5" baseLatitude="47.37655200000001"
 			baseLongitude="8.548604999999982" maxDelay="5" maxThrp="5"
-			mbPerBlock="0.5" maxTxdBm="20" minTxdBm="-60" overlayAccuracy=".2"
+			mbPerBlock="0.5" maxTxdBm="30" minTxdBm="-95" overlayAccuracy="3"
 			generateGoogleEarth="true" />
 	</JE802Control>
 
@@ -39,7 +39,7 @@
 				dot11CurrentChannelNumber="6"
 				dot11CurrentTransmitPowerLevel_dBm="0" />
 			<JEAntenna xDirection="0" yDirection="-5" zDirection="1.6"
-				angle_degrees="360" gain_dBi="50" />
+				angle_degrees="360" gain_dBi="0" />
 		</JE80211PHY>
 		<JE80211MAC dot11MacAddress4_byte="6" dot11MacFCS_byte="4"
 			dot11MacHeaderACK_byte="10" dot11MacHeaderCTS_byte="10"
@@ -93,7 +93,7 @@
 
 	<JE802Station>
 		<JE802TrafficGen AC="2" DA="1" EvalDelay="true"
-			EvalThrp="true" EvalThrpOffer="true" HistogramMax_ms="60"
+			EvalThrp="true" EvalOffer="true" HistogramMax_ms="60"
 			HistogramNumOfBins="600" isTcpTraffic="false" max_packet_size_byte="2000"
 			mean_load_Mbps="2.2" port="47768196" starttime_ms="0" stoptime_ms="0"
 			type="data" />
@@ -159,7 +159,7 @@
 				dot11CurrentChannelNumber="6"
 				dot11CurrentTransmitPowerLevel_dBm="0" />
 			<JEAntenna xDirection="0" yDirection="-5" zDirection="1.6"
-				angle_degrees="360" gain_dBi="50" />
+				angle_degrees="360" gain_dBi="0" />
 		</JE80211PHY>
 
 
@@ -167,7 +167,7 @@
 
 	<JE802Station>
 		<JE802TrafficGen AC="2" DA="1" EvalDelay="true"
-			EvalThrp="true" EvalThrpOffer="true" HistogramMax_ms="60"
+			EvalThrp="true" EvalOffer="true" HistogramMax_ms="60"
 			HistogramNumOfBins="600" isTcpTraffic="false" max_packet_size_byte="2000"
 			mean_load_Mbps="2.2" port="47768196" starttime_ms="0" stoptime_ms="0"
 			type="data" />
@@ -232,7 +232,7 @@
 				dot11CurrentChannelNumber="6"
 				dot11CurrentTransmitPowerLevel_dBm="0" />
 			<JEAntenna xDirection="0" yDirection="-5" zDirection="1.6"
-				angle_degrees="360" gain_dBi="50" />
+				angle_degrees="360" gain_dBi="0" />
 
 		</JE80211PHY>
 
@@ -240,7 +240,7 @@
 	</JE802Station>
 	<JE802Station>
 		<JE802TrafficGen AC="2" DA="1" EvalDelay="true"
-			EvalThrp="true" EvalThrpOffer="true" HistogramMax_ms="60"
+			EvalThrp="true" EvalOffer="true" HistogramMax_ms="60"
 			HistogramNumOfBins="600" isTcpTraffic="false" max_packet_size_byte="2000"
 			mean_load_Mbps="2.2" port="47768196" starttime_ms="0" stoptime_ms="0"
 			type="data" />
@@ -307,13 +307,13 @@
 				dot11CurrentChannelNumber="6"
 				dot11CurrentTransmitPowerLevel_dBm="0" />
 			<JEAntenna xDirection="0" yDirection="-5" zDirection="1.6"
-				angle_degrees="360" gain_dBi="50" />
+				angle_degrees="360" gain_dBi="0" />
 
 		</JE80211PHY>
 
 
 	</JE802Station>
-	<JEWirelessChannels theReuseDistance_m="20"
+	<JEWirelessChannels theCoverageRange_m="20"
 		useInterference="false" orthogonalChannelDistance="1"
 		channelBusyThreshold_dBm="-82" noiseLevel_dBm="-95">
 		<aChannel aChannelNumber="1" dot11FreqBandWidth_MHz="22.0"
@@ -324,21 +324,13 @@
 			dot11CenterFreq_MHz="2462" dot11MaximumTransmitPowerLevel_dBm="0.0" />
 	</JEWirelessChannels>
 	<JE802PhyModes>
-		<aPhyMode Mbps="06" Name="BPSK12" basic="true"
-			bit_per_symbol="24" id="1" />
-		<aPhyMode Mbps="09" Name="BPSK34" basic="false"
-			bit_per_symbol="36" id="2" />
-		<aPhyMode Mbps="12" Name="QPSK12" basic="true"
-			bit_per_symbol="48" id="3" />
-		<aPhyMode Mbps="18" Name="QPSK34" basic="false"
-			bit_per_symbol="72" id="4" />
-		<aPhyMode Mbps="24" Name="16QAM12" basic="true"
-			bit_per_symbol="96" id="5" />
-		<aPhyMode Mbps="36" Name="16QAM34" basic="false"
-			bit_per_symbol="144" id="6" />
-		<aPhyMode Mbps="48" Name="64QAM23" basic="false"
-			bit_per_symbol="192" id="7" />
-		<aPhyMode Mbps="54" Name="64QAM34" basic="false"
-			bit_per_symbol="216" id="8" />
+	       <aPhyMode Mbps="06" Name="BPSK12" basic="true" bit_per_symbol="24" id="1" bitErrorProbabilitiesPerDb="1,2.26E-1,1.844E-2,1.071E-3,4.854E-5,1.649E-6,3.357E-8,3.146E-10" />
+	       <aPhyMode Mbps="09" Name="BPSK34" basic="false" bit_per_symbol="36" id="2" bitErrorProbabilitiesPerDb="1,1,1,1,1,8.429E-2,1.750E-3,4.702E-5, 1.138E-6,1.51E-8,7.762E-11,1.128E-13,3.278E-17,1.251E-21"/>
+	       <aPhyMode Mbps="12" Name="QPSK12" basic="true" bit_per_symbol="48" id="3" bitErrorProbabilitiesPerDb="1,1,1,1,1.712E-1,1.543E-2,9.755E-4,4.694E-5,1.655E-6,3.454E-8, 3.298E-10, 1.111E-12, 9.825E-16, 1.598E-19"/>
+	       <aPhyMode Mbps="18" Name="QPSK34" basic="false" bit_per_symbol="72" id="4" bitErrorProbabilitiesPerDb="1,1,1,1,1,1,1,1,1,8.465E-2,1.795E-3, 4.859E-5, 1.184E-6, 1.585E-8, 8.243E-11, 1.216E-13,3.599E-17, 1.406E-21"/>
+	       <aPhyMode Mbps="24" Name="16QAM12" basic="true" bit_per_symbol="96" id="5" bitErrorProbabilitiesPerDb="1,1,1,1,1,1,1,1,1,5.64E-1,1.151E-1,1.698E-2,1.806E-3,1.436E-4,8.583E-6,3.436E-7,7.550E-9,7.32E-11,2.459E-13,2.149E-16,3.431E-020"/>
+	       <aPhyMode Mbps="36" Name="16QAM34" basic="false" bit_per_symbol="144" id="6" bitErrorProbabilitiesPerDb="1,1,1,1,1,1,1,1,1,1,1,1,1,1,5.179E-1,1.61E-2,4.972E-4,1.746E-5,4.633E-7,6.316E-9,3.27E-11,4.759E-14,1.384E-17"/>
+	       <aPhyMode Mbps="48" Name="64QAM23" basic="false" bit_per_symbol="192" id="7" bitErrorProbabilitiesPerDb="1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3.771E-1,3.584E-2,2.462E-3,1.378E-4,6.731E-6, 2.638E-7,7.182E-9,1.104E-10,7.1896E-13"/>
+	       <aPhyMode Mbps="54" Name="64QAM34" basic="false" bit_per_symbol="216" id="8" bitErrorProbabilitiesPerDb="1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2.319E-1,9.428E-3,3.813E-4,1.629E-5,5.156E-7,8.636E-9,5.784E-11"/>
 	</JE802PhyModes>
 </JE802>
