@@ -7,13 +7,17 @@ import java.util.List;
 /**
  * Created by trichner on 10/27/14.
  */
-public class IntTracker {
+public class AggregateIntTracker {
     private List<Integer> list = new ArrayList<>(Collections.singletonList(0));
     private int last = 0;
 
-    public void push(int i){
+    public void pushAggregated(int i){
         list.add(i-last);
         last = i;
+    }
+
+    public void push(int i){
+        list.add(i);
     }
 
     public List<Integer> getList(){
@@ -22,6 +26,19 @@ public class IntTracker {
 
     public int getLast(){
         return list.get(list.size()-1);
+    }
+
+    public int get(int i){
+        if(Math.abs(i)>=list.size()){
+            throw new IndexOutOfBoundsException();
+        }
+        int ret;
+        if(i<0){
+            ret = list.get(list.size()+i);
+        }else {
+            ret = list.get(i);
+        }
+        return ret;
     }
 
     public int getLast(int ref){
@@ -35,7 +52,7 @@ public class IntTracker {
     public int intLast(int window,int ref){
         int min = Math.min(window,list.size()-1);
         int integrated = 0;
-        List<Integer> sublist = list.subList(min,list.size());
+        List<Integer> sublist = list.subList(list.size()-min,list.size());
         for(int i : sublist){
             integrated += i-ref;
         }

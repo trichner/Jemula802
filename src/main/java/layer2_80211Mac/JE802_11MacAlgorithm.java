@@ -35,6 +35,8 @@
 package layer2_80211Mac;
 
 import kernel.JEmula;
+import layer2_802Algorithms.RRMController;
+import layer2_802Algorithms.RRMInput;
 import plot.JEMultiPlotter;
 
 public abstract class JE802_11MacAlgorithm extends JEmula {
@@ -43,6 +45,9 @@ public abstract class JE802_11MacAlgorithm extends JEmula {
 	protected final Integer dot11MACAddress;
 	protected JEMultiPlotter plotter;
 	protected String algorithmName;
+    protected JE802_11BackoffEntity theBackoffEntity;
+
+    protected RRMController controller;
 
 	public JE802_11MacAlgorithm(String name, JE802_11Mac mac) {
 		this.mac = mac;
@@ -50,6 +55,20 @@ public abstract class JE802_11MacAlgorithm extends JEmula {
 		this.dot11MACAddress = this.mac.getMacAddress();
 		this.theUniqueEventScheduler = this.mac.getTheUniqueEventScheduler();
 	}
+
+
+    protected RRMInput prepareInput(){
+        int aAIFSN      = this.theBackoffEntity.getDot11EDCAAIFSN();
+        int aCWmin      = this.theBackoffEntity.getDot11EDCACWmin();
+        int aQueueSize  = this.theBackoffEntity.getQueueSize();
+        int aCurrentQueueSize = this.theBackoffEntity.getCurrentQueueSize();
+        double txPower  = this.mac.getPhy().getCurrentTransmitPower_mW();
+        String phyMode  = this.mac.getPhy().getCurrentPhyMode().getName();
+        int collisions  = this.theBackoffEntity.getCollisionCount();
+        int discardes   = this.theBackoffEntity.getDiscardedCounter();
+        return new RRMInput(aAIFSN,aCWmin,collisions,discardes,aQueueSize,aCurrentQueueSize,txPower,
+                phyMode);
+    }
 
 	public abstract void compute();
 

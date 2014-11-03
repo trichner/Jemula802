@@ -1,11 +1,33 @@
 package layer2_802Algorithms;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+
 /**
  * Created on 02.11.2014.
  *
  * @author Thomas
  */
 public class TXPowerController extends StatefulController {
+
+    private static final int TX_POWER = 1000;
+
+    private File logFile;
+    private BufferedWriter writer;
+
+    public TXPowerController() {
+        super();
+        logFile = new File("log_"+TX_POWER + "-"+System.currentTimeMillis()+".txt");
+        try {
+            writer = new BufferedWriter(new FileWriter(logFile));
+            writer.write("collision,discarded,queueSize");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     protected RRMConfig evaluate(RRMInput input) {
         double txPower = input.getCurrentTxPower();
@@ -35,9 +57,16 @@ public class TXPowerController extends StatefulController {
 
         // do calculate
 
+        try {
+            writer.write(collision + "," + discarded + "," + queueSize + "\n");
+            writer.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         // static phymode
         phymode = PhyMinion.max(); //PhyMinion.offset(PhyMinion.max(),-2);
-        txPower = 100;
+        txPower = TX_POWER;
 
         //txPower += P*iQueueSize;
 

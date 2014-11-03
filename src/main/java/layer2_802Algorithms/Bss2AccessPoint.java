@@ -1,13 +1,9 @@
 package layer2_802Algorithms;
 
-import plot.JEMultiPlotter;
-import layer2_80211Mac.JE802_11BackoffEntity;
 import layer2_80211Mac.JE802_11Mac;
 import layer2_80211Mac.JE802_11MacAlgorithm;
 
 public class Bss2AccessPoint extends JE802_11MacAlgorithm {
-
-	private JE802_11BackoffEntity theBackoffEntity;
 
 	private int theBSS;
 
@@ -18,6 +14,8 @@ public class Bss2AccessPoint extends JE802_11MacAlgorithm {
 		this.theBSS = 02;
 		this.theBackoffEntity = this.mac.getBackoffEntity(theBSS);
 		this.step = 0;
+
+        this.controller  = new TXPowerController();
 	}
 
 	@Override
@@ -26,10 +24,17 @@ public class Bss2AccessPoint extends JE802_11MacAlgorithm {
 		message(step + ": AP " + this.theBSS + " with MAC address "
 				+ this.dot11MACAddress.toString() + ". Algorithm: '"
 				+ this.algorithmName + "'.", 10);
+
+        RRMConfig conf = controller.compute(prepareInput());
+
+        double txPower = Math.min(1000,Math.max(0,conf.getTxPower()));
+        this.mac.getPhy().setCurrentTransmitPower_mW(txPower);
+        this.mac.getPhy().setCurrentPhyMode(conf.getPhymode());
 	}
 
 	@Override
 	public void plot() {
+
 	}
 
 }

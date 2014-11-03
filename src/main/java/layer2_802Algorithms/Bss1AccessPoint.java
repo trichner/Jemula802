@@ -1,14 +1,15 @@
 package layer2_802Algorithms;
 
-import layer1_802Phy.JE802PhyMode;
-import layer2_80211Mac.JE802_11BackoffEntity;
 import layer2_80211Mac.JE802_11Mac;
 import layer2_80211Mac.JE802_11MacAlgorithm;
-import util.IntTracker;
+import plot.JEMultiPlotter;
+import util.AggregateIntTracker;
 
 public class Bss1AccessPoint extends JE802_11MacAlgorithm {
 
-	private JE802_11BackoffEntity theBackoffEntity;
+
+
+
 
 	private int theBSS;
 
@@ -19,25 +20,29 @@ public class Bss1AccessPoint extends JE802_11MacAlgorithm {
 		this.theBSS = 01;
 		this.theBackoffEntity = this.mac.getBackoffEntity(theBSS);
 		this.step = 0;
+
+        this.controller  = new TXPowerController();
 	}
 
-    private IntTracker collisions = new IntTracker();
-    private IntTracker discardeds = new IntTracker();
+
 
 	@Override
 	public void compute() {
+
 		this.step++;
+
 		message(step + ": AP " + this.theBSS + " with MAC address "
 				+ this.dot11MACAddress.toString() + ". Algorithm: '"
 				+ this.algorithmName + "'.", 10);
 
-		int aAIFSN = this.theBackoffEntity.getDot11EDCAAIFSN();
-		int aCWmin = this.theBackoffEntity.getDot11EDCACWmin();
+        RRMConfig conf = controller.compute(prepareInput());
 
-        // minimize
-        collisions.push(this.theBackoffEntity.getCollisionCount());
-        discardeds.push(this.theBackoffEntity.getDiscardedCounter());
+        double txPower = Math.min(1000,Math.max(0,conf.getTxPower()));
+        this.mac.getPhy().setCurrentTransmitPower_mW(txPower);
+        this.mac.getPhy().setCurrentPhyMode(conf.getPhymode());
 
+
+        /*
         // c_n, d_n
         int collision = collisions.getLast(20);
         int discarded = discardeds.getLast(20);
@@ -79,7 +84,7 @@ public class Bss1AccessPoint extends JE802_11MacAlgorithm {
 
 
 
-
+        */
 
 //		if (step == 1) {
 //			this.mac.getPhy().setCurrentPhyMode("BPSK12");
@@ -107,25 +112,41 @@ public class Bss1AccessPoint extends JE802_11MacAlgorithm {
 //		}
 	}
 
+    private AggregateIntTracker collisions = new AggregateIntTracker();
+    private AggregateIntTracker discards = new AggregateIntTracker();
+
 	@Override
 	public void plot() {
-//		if (plotter == null) {
-//			plotter = new JEMultiPlotter("", "TxPower/30dBm",
-//					"emulation time [ms]", "Access Point 1" + "", theUniqueEventScheduler.getEmulationEnd().getTimeMs(), true);
-//			plotter.addSeries("PhyMode/54Mb/s");
-//			plotter.addSeries("queue");
-//			plotter.display();
-//		}
-//		plotter.plot(((Double) theUniqueEventScheduler.now().getTimeMs())
-//				.doubleValue(), this.mac.getPhy()
-//				.getCurrentTransmitPowerLevel_dBm() / 30.0, 0);
-//		plotter.plot(((Double) theUniqueEventScheduler.now().getTimeMs())
-//				.doubleValue(), new Double(this.mac.getPhy()
-//				.getCurrentPhyMode().getRateMbps()) / 54.0, 1);
-//		plotter.plot(((Double) theUniqueEventScheduler.now().getTimeMs())
-//				.doubleValue(),
-//				0.01 + new Double(this.theBackoffEntity.getCurrentQueueSize()
-//						/ this.theBackoffEntity.getQueueSize()), 2);
+		if (plotter == null) {
+			plotter = new JEMultiPlotter("", "TxPower/30dBm",
+					"emulation time [ms]", "Access Point 1" + "", theUniqueEventScheduler.getEmulationEnd().getTimeMs(), true);
+			plotter.addSeries("PhyMode/54Mb/s");
+			plotter.addSeries("queue");
+            plotter.addSeries("collisions");
+            plotter.addSeries("retry");
+			plotter.display();
+		}
+		plotter.plot(((Double) theUniqueEventScheduler.now().getTimeMs())
+				.doubleValue(), this.mac.getPhy()
+				.getCurrentTransmitPowerLevel_dBm() / 30.0, 0);
+		plotter.plot(((Double) theUniqueEventScheduler.now().getTimeMs())
+				.doubleValue(), new Double(this.mac.getPhy()
+				.getCurrentPhyMode().getRateMbps()) / 54.0, 1);
+		plotter.plot(((Double) theUniqueEventScheduler.now().getTimeMs())
+				.doubleValue(),
+				0.01 + new Double(this.theBackoffEntity.getCurrentQueueSize()
+						/ this.theBackoffEntity.getQueueSize()), 2);
+
+        collisions.pushAggregated(this.theBackoffEntity.getCollisionCount());
+        discards.pushAggregated(this.theBackoffEntity.getDiscardedCounter());
+        System.out.println("Colls: " + collisions.getLast());
+        System.out.println("Discards: " + discards.getLast() + " counter: " + this.theBackoffEntity.getDiscardedCounter());
+        plotter.plot(((Double) theUniqueEventScheduler.now().getTimeMs())
+                        .doubleValue(),
+                0.01 + new Double(collisions.getLast())/50, 3);
+        plotter.plot(((Double) theUniqueEventScheduler.now().getTimeMs())
+                        .doubleValue(),
+                0.01 + new Double(discards.getLast())/50, 4);
 	}
 
 }
