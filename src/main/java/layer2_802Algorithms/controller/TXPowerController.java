@@ -1,4 +1,8 @@
-package layer2_802Algorithms;
+package layer2_802Algorithms.controller;
+
+import layer2_802Algorithms.PhyMinion;
+import layer2_802Algorithms.RRMConfig;
+import layer2_802Algorithms.RRMInput;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -19,6 +23,7 @@ public class TXPowerController extends StatefulController {
 
     public TXPowerController() {
         super();
+
         logFile = new File("log_"+TX_POWER + "-"+System.currentTimeMillis()+".txt");
         try {
             writer = new BufferedWriter(new FileWriter(logFile));

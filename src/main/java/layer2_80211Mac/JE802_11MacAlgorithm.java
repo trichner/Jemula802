@@ -35,7 +35,7 @@
 package layer2_80211Mac;
 
 import kernel.JEmula;
-import layer2_802Algorithms.RRMController;
+import layer2_802Algorithms.controller.RRMController;
 import layer2_802Algorithms.RRMInput;
 import plot.JEMultiPlotter;
 

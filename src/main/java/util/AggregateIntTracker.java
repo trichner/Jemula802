@@ -59,4 +59,7 @@ public class AggregateIntTracker {
         return integrated;
     }
 
+    public int intLast(int window){
+        return intLast(window,0);
+    }
 }

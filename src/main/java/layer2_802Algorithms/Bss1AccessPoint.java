@@ -2,6 +2,7 @@ package layer2_802Algorithms;
 
 import layer2_80211Mac.JE802_11Mac;
 import layer2_80211Mac.JE802_11MacAlgorithm;
+import layer2_802Algorithms.controller.NopController;
 import plot.JEMultiPlotter;
 import util.AggregateIntTracker;
 
@@ -21,7 +22,7 @@ public class Bss1AccessPoint extends JE802_11MacAlgorithm {
 		this.theBackoffEntity = this.mac.getBackoffEntity(theBSS);
 		this.step = 0;
 
-        this.controller  = new TXPowerController();
+        this.controller  = new NopController();// new PhyController();
 	}
 
 
@@ -40,7 +41,6 @@ public class Bss1AccessPoint extends JE802_11MacAlgorithm {
         double txPower = Math.min(1000,Math.max(0,conf.getTxPower()));
         this.mac.getPhy().setCurrentTransmitPower_mW(txPower);
         this.mac.getPhy().setCurrentPhyMode(conf.getPhymode());
-
 
         /*
         // c_n, d_n
