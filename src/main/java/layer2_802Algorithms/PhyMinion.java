@@ -10,6 +10,7 @@ import java.util.List;
  */
 public class PhyMinion {
     private static List<String> phymodes = Arrays.asList("BPSK12","BPSK34","QPSK12","QPSK34","16QAM12","16QAM34","64QAM23" ,"64QAM34");
+    private static List<Integer> speed = Arrays.asList(6,9,12,18,24,36,48,54);
 
     public static String increase(String phy){
         return offset(phy,1);
@@ -28,6 +29,9 @@ public class PhyMinion {
     public static int getIndex(String phy){
         return phymodes.indexOf(phy);
     }
+    public static int getSpeed(String phy){
+        return speed.get(getIndex(phy));
+    }
     public static String max(){
         return phymodes.get(phymodes.size()-1);
     }
@@ -36,5 +40,9 @@ public class PhyMinion {
         if(i<0) return  0;
         if(i>=phymodes.size()) return phymodes.size()-1;
         return i;
+    }
+
+    public static String min() {
+        return phymodes.get(0);
     }
 }

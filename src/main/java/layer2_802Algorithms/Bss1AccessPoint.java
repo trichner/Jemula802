@@ -2,16 +2,11 @@ package layer2_802Algorithms;
 
 import layer2_80211Mac.JE802_11Mac;
 import layer2_80211Mac.JE802_11MacAlgorithm;
-import layer2_802Algorithms.controller.NopController;
+import layer2_802Algorithms.controller.APPhyController;
 import plot.JEMultiPlotter;
 import util.AggregateIntTracker;
 
 public class Bss1AccessPoint extends JE802_11MacAlgorithm {
-
-
-
-
-
 	private int theBSS;
 
 	private int step;
@@ -22,7 +17,7 @@ public class Bss1AccessPoint extends JE802_11MacAlgorithm {
 		this.theBackoffEntity = this.mac.getBackoffEntity(theBSS);
 		this.step = 0;
 
-        this.controller  = new NopController();// new PhyController();
+        this.controller  = new APPhyController();
 	}
 
 
@@ -117,36 +112,53 @@ public class Bss1AccessPoint extends JE802_11MacAlgorithm {
 
 	@Override
 	public void plot() {
+        /*
 		if (plotter == null) {
 			plotter = new JEMultiPlotter("", "TxPower/30dBm",
 					"emulation time [ms]", "Access Point 1" + "", theUniqueEventScheduler.getEmulationEnd().getTimeMs(), true);
 			plotter.addSeries("PhyMode/54Mb/s");
-			plotter.addSeries("queue");
-            plotter.addSeries("collisions");
-            plotter.addSeries("retry");
+			//plotter.addSeries("queue");
+            //plotter.addSeries("collisions");
+            //plotter.addSeries("retry");
 			plotter.display();
 		}
-		plotter.plot(((Double) theUniqueEventScheduler.now().getTimeMs())
-				.doubleValue(), this.mac.getPhy()
+		plotter.plot(theUniqueEventScheduler.now().getTimeMs(), this.mac.getPhy()
 				.getCurrentTransmitPowerLevel_dBm() / 30.0, 0);
-		plotter.plot(((Double) theUniqueEventScheduler.now().getTimeMs())
-				.doubleValue(), new Double(this.mac.getPhy()
-				.getCurrentPhyMode().getRateMbps()) / 54.0, 1);
-		plotter.plot(((Double) theUniqueEventScheduler.now().getTimeMs())
-				.doubleValue(),
-				0.01 + new Double(this.theBackoffEntity.getCurrentQueueSize()
-						/ this.theBackoffEntity.getQueueSize()), 2);
+		plotter.plot(theUniqueEventScheduler.now().getTimeMs(), (double) this.mac.getPhy()
+                .getCurrentPhyMode().getRateMbps() / 54.0, 1);
+        */
+        /*
+		plotter.plot(theUniqueEventScheduler.now().getTimeMs(),
+				0.01 + (double) (this.theBackoffEntity.getCurrentQueueSize()
+                        / this.theBackoffEntity.getQueueSize()), 2);
 
         collisions.pushAggregated(this.theBackoffEntity.getCollisionCount());
         discards.pushAggregated(this.theBackoffEntity.getDiscardedCounter());
-        System.out.println("Colls: " + collisions.getLast());
-        System.out.println("Discards: " + discards.getLast() + " counter: " + this.theBackoffEntity.getDiscardedCounter());
+        //System.out.println("Colls: " + collisions.getLast());
+        //System.out.println("Discards: " + discards.getLast() + " counter: " + this.theBackoffEntity
+        //        .getDiscardedCounter());
         plotter.plot(((Double) theUniqueEventScheduler.now().getTimeMs())
                         .doubleValue(),
                 0.01 + new Double(collisions.getLast())/50, 3);
         plotter.plot(((Double) theUniqueEventScheduler.now().getTimeMs())
                         .doubleValue(),
                 0.01 + new Double(discards.getLast())/50, 4);
+                */
+
+        if (plotter == null) {
+            plotter = new JEMultiPlotter("", "TxPower/30dBm",
+                    "emulation time [ms]", "Station 1" + "", theUniqueEventScheduler.getEmulationEnd()
+                    .getTimeMs(), true);
+            plotter.addSeries("PhyMode/54Mb/s");
+            //plotter.addSeries("queue");
+            //plotter.addSeries("collisions");
+            //plotter.addSeries("retry");
+            plotter.display();
+        }
+        plotter.plot(theUniqueEventScheduler.now().getTimeMs(), this.mac.getPhy()
+                .getCurrentTransmitPowerLevel_dBm() / 30.0, 0);
+        plotter.plot(theUniqueEventScheduler.now().getTimeMs(), (double) this.mac.getPhy()
+                .getCurrentPhyMode().getRateMbps() / 54.0, 1);
 	}
 
 }

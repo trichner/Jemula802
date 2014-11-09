@@ -2,7 +2,7 @@ package layer2_802Algorithms;
 
 import layer2_80211Mac.JE802_11Mac;
 import layer2_80211Mac.JE802_11MacAlgorithm;
-import layer2_802Algorithms.controller.NopController;
+import layer2_802Algorithms.controller.APPhyController;
 
 public class Bss2AccessPoint extends JE802_11MacAlgorithm {
 
@@ -16,7 +16,7 @@ public class Bss2AccessPoint extends JE802_11MacAlgorithm {
 		this.theBackoffEntity = this.mac.getBackoffEntity(theBSS);
 		this.step = 0;
 
-        this.controller  = new NopController();//new PhyController();
+        this.controller  = new APPhyController();
 	}
 
 	@Override

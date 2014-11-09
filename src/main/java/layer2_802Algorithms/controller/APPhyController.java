@@ -4,40 +4,40 @@ import layer2_802Algorithms.PhyMinion;
 import layer2_802Algorithms.RRMConfig;
 import layer2_802Algorithms.RRMInput;
 
-import java.util.Random;
-
 /**
  * Created by trichner on 11/3/14.
  */
-public class PhyController extends StatefulController{
-    private static Random rand = new Random();
-
+public class APPhyController extends StatefulController{
     private int step = 0;
-    private double previous = 0;
-    private String prevPhy = PhyMinion.min();
+    private double prevFrac = 0;
+
     @Override
     protected RRMConfig evaluate(RRMInput input) {
         String phymode = input.getCurrentPhyMode();
         step++;
 
-        // static TX Power, 100mW
-        double txPower = 80;
-
         // average collisions over the last WINDOW values
-        double WINDOW = 10;
+        double WINDOW = 5;
         double iCollisions = this.collisions.intLast((int)WINDOW)/WINDOW;
+        double iQueueSize = this.queueSizes.intLast((int) WINDOW)/WINDOW;
 
-        // MAGIC NUMBER
-        int C_THRESHOLD = 25;
+        double fraction = iCollisions/iQueueSize;
 
         // only allow changes every WINDOW steps
-        if(step %WINDOW==0) {
-            if (iCollisions >= C_THRESHOLD) {
-                phymode = PhyMinion.increase(phymode);
-            } else {
+        if(step %5==0) {
+            if (fraction > prevFrac*1.1) {
                 phymode = PhyMinion.decrease(phymode);
+
+            } else {
+                phymode = PhyMinion.increase(phymode);
             }
+            prevFrac = fraction;
         }
+
+        double TX_MAX = 600;
+        // adjust TX, keep SNR leveled
+        double speed = PhyMinion.getSpeed(phymode);
+        double txPower = 100 + (speed-6)/48*TX_MAX;
 
         return new RRMConfig(phymode,txPower);
     }
