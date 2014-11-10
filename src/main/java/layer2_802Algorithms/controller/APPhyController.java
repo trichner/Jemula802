@@ -20,11 +20,11 @@ public class APPhyController extends StatefulController{
         double WINDOW = 5;
         double iCollisions = this.collisions.intLast((int)WINDOW)/WINDOW;
         double iQueueSize = this.queueSizes.intLast((int) WINDOW)/WINDOW;
-
+        iQueueSize = Math.max(1,iQueueSize);
         double fraction = iCollisions/iQueueSize;
 
         // only allow changes every WINDOW steps
-        if(step %5==0) {
+        if(step %WINDOW==0) {
             if (fraction > prevFrac*1.1) {
                 phymode = PhyMinion.decrease(phymode);
 

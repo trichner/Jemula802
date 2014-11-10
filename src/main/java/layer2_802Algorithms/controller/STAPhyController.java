@@ -18,6 +18,7 @@ public class STAPhyController extends StatefulController{
         double WINDOW = 10;
         double iCollisions = this.collisions.intLast((int)WINDOW)/WINDOW;
         double iQueueSize = this.queueSizes.intLast((int) WINDOW)/WINDOW;
+        iQueueSize = Math.max(1,iQueueSize);
         double fraction = iCollisions/iQueueSize;
 
         // only allow changes every WINDOW steps
