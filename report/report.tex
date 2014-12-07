@@ -1,0 +1,93 @@
+\documentclass[12pt]{article}
+
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{amsmath}
+\usepackage[cm]{fullpage}
+\usepackage{calc}
+\usepackage{subfig}
+
+\title{\textbf{Wireless and Mobile Computing, Assignment 5}}
+\author{Thomas Richner, 09-920-539}
+\begin{document}
+\maketitle
+
+\section{Sound Analysis}
+ 
+\subsection{Time domain}
+From the amplitude analysis (see figure \ref{fig:graphs}) in the time domain we can see that song 2 has a higher amplitude on average and a more constant amplitude than song 1.
+\subsection{Frequency Domain}
+Song 2 has a relatively high spectral power density of -70dB at lower frequencies i.e. below 5 kHz, but above the power density is mostly below -100 dB. \
+
+Song 1 has a more balanced power density which is similar at around -90dB from 5 kHz to 20 kHz.
+
+\subsubsection{Conclusion}
+In order to hide information there must be a signal to hide in. Song 1 has only short bursts of power, which makes transmission of an entire packet relatively unlikely, Song 2 on the other hand has a more or less constant signal with acceptable amplitude below 4 kHz.
+
+Hence I would propose to use Song 2 as the signal to hide in. Furthermore I would choose a frequency between 1 kHz and 4 kHz.
+
+
+\begin{figure}
+\centering
+\subfloat[frequency domain 1]{
+  \includegraphics[width=80mm]{img/1_freq_domain.png}
+}
+\subfloat[frequency domain 2]{
+  \includegraphics[width=80mm]{img/2_freq_domain.png}
+}
+\hspace{0mm}
+\subfloat[time domain 1]{
+  \includegraphics[width=80mm]{img/1_time_domain.png}
+}
+\subfloat[time domain 2]{
+  \includegraphics[width=80mm]{img/2_time_domain.png}
+}
+\hspace{0mm}
+\subfloat[spectrogram 1]{
+  \includegraphics[width=80mm]{img/1_spectrogram.png}
+}
+\subfloat[spectrogram 2]{
+  \includegraphics[width=80mm]{img/2_spectrogram.png}
+}
+\caption{sound analysis \label{fig:graphs}}
+\end{figure}
+
+\section{Song Quality}
+I can not distinguish the modified song from the original with a non-negligible higher probablility than 50\%. This might be due to the already bad quality of my sound equipment.
+
+\section{Received Signal}
+\subsection{Song 1}
+Decoding results:
+\begin{verbatim}
+block offset: 3298
+Sync offset: 1
+Max sync coefficient: 0.96627
+Elapsed time decoding: 26.3004 seconds.
+ 
+Bit Error Rate (BER): 0%
+\end{verbatim}
+Song 1 can be fully decoded without any bit-errors.
+
+\subsection{Song 2}
+Decoding results:
+\begin{verbatim}
+block offset: 3309
+Sync offset: 1
+Max sync coefficient: 0.71403
+Elapsed time decoding: 42.4579 seconds.
+ 
+Bit Error Rate (BER): 0.3%
+\end{verbatim}
+Song 2 has some bit-errors, mostly due to the fact that the first second of the song has no signal to hide in.
+
+
+\section{Feedback}
+
+\begin{description}
+  \item[Difficulty] \hfill \\ veery easy
+  \item[Clarity] \hfill \\ Very clear
+  \item[Time Spent] \hfill \\  2h
+  \item[Conclusion] \hfill \\ Fun assignment, instructions how to play and record it would have been nice.
+\end{description}
+
+\end{document}
