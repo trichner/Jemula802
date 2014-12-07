@@ -22,8 +22,6 @@ public abstract class StatefulController implements RRMController {
         discards.push(input.getDiscardedCount());
         queueSizes.push(input.getCurrentQueueSize());
 
-
-
         return this.evaluate(input);
     }
 

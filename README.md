@@ -14,6 +14,10 @@ Simulator
 The tool is written in Java and has an event-based architecture. The connectivity model used is a unit disk model which means that whenever a station is inside a specified radius of another, the stations have a perfect, error free connection, outside this radius the stations are not connected. Simulations are configured using an XML file. In this XML file it is possible to specify values for almost every parameter in the system. The configuration parameters of the MAC layer are configurable separately for each station. 
 The results of the simulation currently include throughput (end to end and per hop), offered throughput and delay (end to end and per hop).
 
+Build Instructions
+---
+This version is under *Maven* dependency management, use `mvn package` to build Jemula802.
+
 GUI
 ---
 
