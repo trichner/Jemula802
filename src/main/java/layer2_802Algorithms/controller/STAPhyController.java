@@ -18,10 +18,10 @@ public class STAPhyController extends StatefulController{
         double WINDOW = 10;
         double iCollisions = this.collisions.intLast((int)WINDOW)/WINDOW;
         double iQueueSize = this.queueSizes.intLast((int) WINDOW)/WINDOW;
-        iQueueSize = Math.max(1,iQueueSize);
+        iQueueSize = Math.max(0.01,iQueueSize);
         double fraction = iCollisions/iQueueSize;
 
-        // only allow changes every WINDOW steps
+        // only allow changes every few steps
         if(step %3==0) {
             if (fraction > prevFrac*1.3) {
                 phymode = PhyMinion.decrease(phymode);

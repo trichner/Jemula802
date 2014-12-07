@@ -37,7 +37,7 @@ public class Bss1Station extends JE802_11MacAlgorithm {
 	@Override
 	public void plot() {
         if (plotter == null) {
-            plotter = new JEMultiPlotter("", "TxPower/30dBm",
+            plotter = new JEMultiPlotter("STA1", "TxPower/30dBm",
                     "emulation time [ms]", "Station 1" + "", theUniqueEventScheduler.getEmulationEnd()
                     .getTimeMs(), true);
             plotter.addSeries("PhyMode/54Mb/s");

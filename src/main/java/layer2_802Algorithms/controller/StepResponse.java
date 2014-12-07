@@ -29,6 +29,7 @@ public class StepResponse {
             int queueSize = 0;
 
             int step=0;
+            /*
             for(; step<100;step++){
                 RRMInput input = new RRMInput(0,0,collisions,0,0,queueSize,txPower, phymode);
 
@@ -37,17 +38,16 @@ public class StepResponse {
                 phymode = output.getPhymode();
                 writer.write("" + step + ',' + collisions + ',' + queueSize + ',' + txPower + ","
                  + phymode + "," +  PhyMinion.getSpeed(phymode)  + '\n');
-            }
+            }*/
 
             queueSize = 100;
-            for(; step<1000;step++){
-                //collisions+=100;
+            for(; step<100;step++){
+                collisions+=100;
                 RRMInput input = new RRMInput(0,0,collisions,0,0,queueSize,txPower, phymode);
                 RRMConfig output = controller.compute(input);
                 txPower = output.getTxPower();
                 phymode = output.getPhymode();
-                writer.write("" + step + ',' + collisions + ',' + queueSize + ',' + txPower + ","
-                        + phymode + "," +  PhyMinion.getSpeed(phymode)  + '\n');
+                writer.write("" + step + ',' + collisions + ',' + queueSize + ',' + txPower + "," +  PhyMinion.getSpeed(phymode)  + '\n');
             }
 
             writer.flush();

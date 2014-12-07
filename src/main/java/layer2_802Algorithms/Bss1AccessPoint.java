@@ -146,7 +146,7 @@ public class Bss1AccessPoint extends JE802_11MacAlgorithm {
                 */
 
         if (plotter == null) {
-            plotter = new JEMultiPlotter("", "TxPower/30dBm",
+            plotter = new JEMultiPlotter("AP1", "TxPower/30dBm",
                     "emulation time [ms]", "Station 1" + "", theUniqueEventScheduler.getEmulationEnd()
                     .getTimeMs(), true);
             plotter.addSeries("PhyMode/54Mb/s");
@@ -159,6 +159,7 @@ public class Bss1AccessPoint extends JE802_11MacAlgorithm {
                 .getCurrentTransmitPowerLevel_dBm() / 30.0, 0);
         plotter.plot(theUniqueEventScheduler.now().getTimeMs(), (double) this.mac.getPhy()
                 .getCurrentPhyMode().getRateMbps() / 54.0, 1);
+
 	}
 
 }

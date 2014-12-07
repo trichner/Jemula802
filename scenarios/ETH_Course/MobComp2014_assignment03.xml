@@ -4,7 +4,7 @@
 		resume="false" resumeFile="results\hibernation.zip">
 		<JE802StatEval seed="9" EvalThrpPerAC="true"
 			EvalDelayPerAC="true" EvalOfferPerAC="true" EvaluationStarttime_ms="0"
-			EvaluationInterval_ms="1000" Path2Results="assignment03_sta017"
+			EvaluationInterval_ms="1000" Path2Results="assignment03_sta023"
 			EvalTotalOffer="true" EvalTotalThrp="true" EvalTotalDelay="true"
 			HistogramMax_ms="100" HistogramNumOfBins="100" EvalPower="false">
 			<!--JE802StatEval defines the parameters needed for statistical analysis 
