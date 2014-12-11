@@ -95,7 +95,7 @@
         <JE802TrafficGen AC="1" DA="1" EvalDelay="true"
                          EvalThrp="true" EvalOffer="true" HistogramMax_ms="60"
                          HistogramNumOfBins="600" isTcpTraffic="false" max_packet_size_byte="2000"
-                         mean_load_Mbps="2.2" port="47768196" starttime_ms="0" stoptime_ms="0"
+                         mean_load_Mbps="50" port="47768196" starttime_ms="0" stoptime_ms="0"
                          type="saturation" />
         <!--<JE802TrafficGen AC="2" DA="1" EvalDelay="true"-->
         <!--EvalThrp="true" EvalOffer="true" HistogramMax_ms="60"-->
@@ -117,7 +117,7 @@
                     dot11WepEncryption="false">
 
             <JE802Mlme NameOfAlgorithm="Anna"
-                       ComputingInterval_ms="100" ShowPlot="false">
+                       ComputingInterval_ms="100" ShowPlot="true">
                 <!-- // MLME = MAC Layer Management Entity -->
                 <!-- // "NameOfAlgorithm" determines the actual algorithm used for dynamically
                     adapting the MAC parameters. This string value will be compared to the list
@@ -174,7 +174,7 @@
         <JE802TrafficGen AC="1" DA="1" EvalDelay="true"
                          EvalThrp="true" EvalOffer="true" HistogramMax_ms="60"
                          HistogramNumOfBins="600" isTcpTraffic="false" max_packet_size_byte="2000"
-                         mean_load_Mbps="2.2" port="47768196" starttime_ms="0" stoptime_ms="0"
+                         mean_load_Mbps="50" port="47768196" starttime_ms="0" stoptime_ms="0"
                          type="saturation" />
         <!--<JE802TrafficGen AC="2" DA="1" EvalDelay="true"-->
         <!--EvalThrp="true" EvalOffer="true" HistogramMax_ms="60"-->

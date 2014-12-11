@@ -4,9 +4,10 @@ package layer2_802Algorithms;
  * Created by marcel on 12/11/14.
  */
 public class AnnaConfig {
-    public static final int EVIL_AC1_CWMIN = 2;
-    public static final int EVIL_AC1_CWMAX = 2;
-    public static final int EVIL_AC1_AIFSN = 1;
+    public static final int EVIL_AC1_CWMIN = 0;
+    public static final int EVIL_AC1_CWMAX = 0;
+    public static final int EVIL_AC1_AIFSN = 0;
+
     public static final int FAIR_AC1_CWMIN = 10;
     public static final int FAIR_AC1_CWMAX = 10;
     public static final int FAIR_AC1_AIFSN = 10;

@@ -52,7 +52,7 @@ public class Anna extends JE802_11MacAlgorithm {
         message("    CWmax[AC01] = " + CWmax_AC01.toString() + " and CWmax[AC02] = " + CWmax_AC02.toString(), 80);
         message("... the backoff entity queues perform like this:", 80);
 
-        if(this.slot == this.step%hiddenDSSSChannel.get()) {
+        if(this.slot == (this.step >>> 3)%hiddenDSSSChannel.get()) {
             AIFSN_AC01 = AnnaConfig.EVIL_AC1_AIFSN;
             CWmin_AC01 = AnnaConfig.EVIL_AC1_CWMIN;
             CWmax_AC01 = AnnaConfig.EVIL_AC1_CWMAX;
@@ -87,17 +87,17 @@ public class Anna extends JE802_11MacAlgorithm {
             plotter.addSeries("queue(AC02)");
             plotter.display();
         }
-        plotter.plot(((Double) theUniqueEventScheduler.now().getTimeMs()).doubleValue(),
+        plotter.plot(theUniqueEventScheduler.now().getTimeMs(),
                 theBackoffEntityAC01.getDot11EDCAAIFSN(), 0);
-        plotter.plot(((Double) theUniqueEventScheduler.now().getTimeMs()).doubleValue(),
+        plotter.plot(theUniqueEventScheduler.now().getTimeMs(),
                 theBackoffEntityAC01.getDot11EDCACWmin(), 1);
-        plotter.plot(((Double) theUniqueEventScheduler.now().getTimeMs()).doubleValue(),
+        plotter.plot(theUniqueEventScheduler.now().getTimeMs(),
                 theBackoffEntityAC01.getCurrentQueueSize(), 2);
-        plotter.plot(((Double) theUniqueEventScheduler.now().getTimeMs()).doubleValue(),
+        plotter.plot(theUniqueEventScheduler.now().getTimeMs(),
                 theBackoffEntityAC02.getDot11EDCAAIFSN(), 3);
-        plotter.plot(((Double) theUniqueEventScheduler.now().getTimeMs()).doubleValue(),
+        plotter.plot(theUniqueEventScheduler.now().getTimeMs(),
                 theBackoffEntityAC02.getDot11EDCACWmin(), 4);
-        plotter.plot(((Double) theUniqueEventScheduler.now().getTimeMs()).doubleValue(),
+        plotter.plot(theUniqueEventScheduler.now().getTimeMs(),
                 theBackoffEntityAC02.getCurrentQueueSize(), 5);
     }
 
