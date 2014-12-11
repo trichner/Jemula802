@@ -29,6 +29,7 @@ public class Anna extends JE802_11MacAlgorithm {
         this.step++;
         message("---------------------------", 80);
         message("I am station " + this.dot11MACAddress.toString() +". My algorithm is called '" + this.algorithmName + "'.", 80);
+        message("Count: " + String.valueOf(count));
         message("Step:" + String.valueOf(this.step));
         // observe outcome:
         Integer AIFSN_AC01 = theBackoffEntityAC01.getDot11EDCAAIFSN();
@@ -48,7 +49,7 @@ public class Anna extends JE802_11MacAlgorithm {
         message("    AIFSN[AC01] = " + AIFSN_AC01.toString() + " and AIFSN[AC02] = " + AIFSN_AC02.toString(), 80);
         message("    CWmin[AC01] = " + CWmin_AC01.toString() + " and CWmin[AC02] = " + CWmin_AC02.toString(), 80);
         message("    CWmax[AC01] = " + CWmax_AC01.toString() + " and CWmax[AC02] = " + CWmax_AC02.toString(), 80);
-    //    message("... the backoff entity queues perform like this:", 80);
+        message("... the backoff entity queues perform like this:", 80);
 
         if(this.dot11MACAddress%count == this.step%count) {
             AIFSN_AC01 = AnnaConfig.EVIL_AC1_AIFSN;
@@ -57,7 +58,7 @@ public class Anna extends JE802_11MacAlgorithm {
             AIFSN_AC02 = AnnaConfig.EVIL_AC2_AIFSN;
             CWmin_AC02 = AnnaConfig.EVIL_AC2_CWMIN;
             CWmax_AC02 = AnnaConfig.EVIL_AC1_CWMAX;
-        } else {
+        } else if (count>1) {
             AIFSN_AC01 = AnnaConfig.FAIR_AC1_AIFSN;
             CWmin_AC01 = AnnaConfig.FAIR_AC1_CWMIN;
             CWmax_AC01 = AnnaConfig.FAIR_AC1_CWMAX;
