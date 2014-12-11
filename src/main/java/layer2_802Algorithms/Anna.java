@@ -5,6 +5,8 @@ import layer2_80211Mac.JE802_11Mac;
 import layer2_80211Mac.JE802_11MacAlgorithm;
 import plot.JEMultiPlotter;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * Created by marcel on 12/7/14.
  */
@@ -12,14 +14,14 @@ public class Anna extends JE802_11MacAlgorithm {
 
     private JE802_11BackoffEntity theBackoffEntityAC01;
     private JE802_11BackoffEntity theBackoffEntityAC02;
-    private boolean flag_undefined = false;
-    private static int count = 0;
+
+    private static AtomicInteger hiddenDSSSChannel = new AtomicInteger(0);
+    private int slot = hiddenDSSSChannel.getAndIncrement();
 
     private int step;
 
     public Anna(String name, JE802_11Mac mac) {
         super(name, mac);
-        count++;
         this.theBackoffEntityAC01 = this.mac.getBackoffEntity(1);
         this.theBackoffEntityAC02 = this.mac.getBackoffEntity(2);
     }
@@ -29,8 +31,8 @@ public class Anna extends JE802_11MacAlgorithm {
         this.step++;
         message("---------------------------", 80);
         message("I am station " + this.dot11MACAddress.toString() +". My algorithm is called '" + this.algorithmName + "'.", 80);
-        message("Count: " + String.valueOf(count));
-        message("Step:" + String.valueOf(this.step));
+        message("Slot: " + slot);
+        message("Step:" + this.step);
         // observe outcome:
         Integer AIFSN_AC01 = theBackoffEntityAC01.getDot11EDCAAIFSN();
         Integer AIFSN_AC02 = theBackoffEntityAC02.getDot11EDCAAIFSN();
@@ -38,7 +40,6 @@ public class Anna extends JE802_11MacAlgorithm {
         Integer CWmin_AC02 = theBackoffEntityAC02.getDot11EDCACWmin();
         Integer CWmax_AC01 = theBackoffEntityAC01.getDot11EDCACWmax();
         Integer CWmax_AC02 = theBackoffEntityAC02.getDot11EDCACWmax();
-
 
 //        theBackoffEntityAC01.getQueueSize();
 //        theBackoffEntityAC02.getQueueSize();
@@ -51,14 +52,14 @@ public class Anna extends JE802_11MacAlgorithm {
         message("    CWmax[AC01] = " + CWmax_AC01.toString() + " and CWmax[AC02] = " + CWmax_AC02.toString(), 80);
         message("... the backoff entity queues perform like this:", 80);
 
-        if(this.dot11MACAddress%count == this.step%count) {
+        if(this.slot == this.step%hiddenDSSSChannel.get()) {
             AIFSN_AC01 = AnnaConfig.EVIL_AC1_AIFSN;
             CWmin_AC01 = AnnaConfig.EVIL_AC1_CWMIN;
             CWmax_AC01 = AnnaConfig.EVIL_AC1_CWMAX;
             AIFSN_AC02 = AnnaConfig.EVIL_AC2_AIFSN;
             CWmin_AC02 = AnnaConfig.EVIL_AC2_CWMIN;
             CWmax_AC02 = AnnaConfig.EVIL_AC1_CWMAX;
-        } else if (count>1) {
+        } else {
             AIFSN_AC01 = AnnaConfig.FAIR_AC1_AIFSN;
             CWmin_AC01 = AnnaConfig.FAIR_AC1_CWMIN;
             CWmax_AC01 = AnnaConfig.FAIR_AC1_CWMAX;
@@ -71,8 +72,8 @@ public class Anna extends JE802_11MacAlgorithm {
         theBackoffEntityAC02.setDot11EDCAAIFSN(AIFSN_AC02);
         theBackoffEntityAC01.setDot11EDCACWmin(CWmin_AC01);
         theBackoffEntityAC02.setDot11EDCACWmin(CWmin_AC02);
-        theBackoffEntityAC01.setDot11EDCACWmin(CWmax_AC01);
-        theBackoffEntityAC02.setDot11EDCACWmin(CWmax_AC02);
+        theBackoffEntityAC01.setDot11EDCACWmax(CWmax_AC01);
+        theBackoffEntityAC02.setDot11EDCACWmax(CWmax_AC02);
     }
 
     @Override
