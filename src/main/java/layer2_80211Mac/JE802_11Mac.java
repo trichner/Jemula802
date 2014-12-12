@@ -35,30 +35,28 @@ package layer2_80211Mac;
 
 import emulator.JE802StatEval;
 import gui.JE802Gui;
+import kernel.JEEvent;
+import kernel.JEEventScheduler;
+import kernel.JETime;
+import layer0_medium.JEWirelessMedium;
+import layer1_80211Phy.JE802_11Phy;
+import layer1_802Phy.JE802Phy;
+import layer2_802Mac.JE802_Mac;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.Vector;
 
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-
-import kernel.JEEvent;
-import kernel.JEEventScheduler;
-import kernel.JETime;
-import layer0_medium.JEWirelessMedium;
 //import layer1_802Phy.JE802Phy;
-import layer1_80211Phy.JE802_11Phy;
-import layer1_802Phy.JE802Phy;
-import layer2_802Mac.JE802_Mac;
-
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 public final class JE802_11Mac extends JE802_Mac {
 
@@ -325,7 +323,7 @@ public final class JE802_11Mac extends JE802_Mac {
 						.get(0);
 				Integer mpduDA = aMpdu.getDA();
 				int retried = (Integer) anEvent.getParameterList().get(1);
-				Vector<Object> parameterList = new Vector<Object>();
+				Vector<Object> parameterList = new Vector<>();
 				parameterList.add(retried);
 				parameterList.add(mpduDA);
 				parameterList.add(this.thePhy.getCurrentChannel());

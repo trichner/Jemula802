@@ -36,22 +36,64 @@ Our goal is to maximize the throughput per station under the following two const
 \end{enumerate}
 
 \subsection{Implementation}
-We start by detecting how many other stations are using the same algorithm (TODO).
-If we experience any other station using our algorithm as well we continue with Time Division Multiple Access (TDMA). Otherwise we behave totally selfish which means sending all the time without caring about others.
-In theory the TDMA approach should prevent almost all collisions.
-We do neither touch phymode nor power and leave these to their respective default values.
+We use a shared-counter based arbitration method to slice the available channel capacity into time slots. Each station aquires its own time slot and only contends for the channel during the allocated slot. But once it is contending, it uses very aggressive parameters. Hence there is no backoff and the \texttt{CW_min} and \texttt{AIFSN} are set to the minimum.
+In order to emulate the non-contending behaviour during other stations time slots we use  \texttt{CW_min} and \texttt{AIFSN} parameters in the order of 1000. As long as we have no unknown opponents we can keep the collisions approximately at zero since there is no real contention between multiple stations.
+
+Since our goal is to maximise relative and not necessarily absolute throughput, we do not  modify phymode or power parameters.
 
 \subsection{Pseudo-Code}
 
 \includegraphics[width=160mm]{img/pseudocode.png}
 
 
-\section{Evaluation}
 
-\subsection{Measurements}
+\section{Evaluation}
+In the following measurements we modeled a primitive opponent as a simple algorithm that randomly increases or decreases its MAC parameters. 
+\subsection{Random vs. Random}
+\begin{figure}[h!]
+\centering
+\includegraphics[width=\textwidth]{img/random_vs_random-50Mbps-PLOT.png}
+\caption{MAC parameters over time of our random algorithm \label{plot:rr}}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=\textwidth]{img/random_vs_random.png}
+\caption{throughput per station and time, two random algorithms \label{fig:rr}}
+\end{figure}
+
+\subsection{Anna vs. Anna}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=\textwidth]{img/anna_vs_anna-5Mbps-TDMA.png}
+\caption{throughput per station and time, two Annas. Characteristic TDMA pattern. \label{fig:aa}}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=\textwidth]{img/Anna_vs_Anna_TDMA.png}
+\caption{Channel visualization. Characteristic TDMA pattern. \label{fig:aa}}
+\end{figure}
+
+\subsection{Anna vs. Random}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=\textwidth]{img/annaVSrandom.png}
+\caption{Channel characteristics, in favor of STA2.  \label{fig:aa}}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=\textwidth]{img/annaVSrandom_thrp.png}
+\caption{throughput per station and time, Anna versus our random algorithm. \label{fig:aa}}
+\end{figure}
 
 \subsection{Discussion \& Conclusion}
 
+\subsubsection{Limitations}
+In a real world situation our TDMA approach would create relative high synchronization overhead, furthermore it is not as simple to arbitrate the channel in real systems. On the other hand 802.11 already supports RTS/CTS, which can be seen as some kind of dynamic TDMA. RTS/CTS creates a contention free time slot as it is needed, similar to dynamic TDMA. Our agressive MAC parameters are also against the principle of collision avoidance, we even force them against unknown opponents. If the opponent also uses agressive parameters, we may end up in a situation where the channel is busy with collisions and the channel capacity approximates zero.
 
 \section{Feedback}
 

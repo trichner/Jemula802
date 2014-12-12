@@ -52,7 +52,11 @@ public class Anna extends JE802_11MacAlgorithm {
         message("    CWmax[AC01] = " + CWmax_AC01.toString() + " and CWmax[AC02] = " + CWmax_AC02.toString(), 80);
         message("... the backoff entity queues perform like this:", 80);
 
-        if(this.slot == (this.step >>> 3)%hiddenDSSSChannel.get()) {
+        if((this.step & 0x1F) ==0){
+            theBackoffEntityAC01.discardQueue();
+        }
+
+        if(this.slot == (this.step >>> 5)%hiddenDSSSChannel.get()) {
             AIFSN_AC01 = AnnaConfig.EVIL_AC1_AIFSN;
             CWmin_AC01 = AnnaConfig.EVIL_AC1_CWMIN;
             CWmax_AC01 = AnnaConfig.EVIL_AC1_CWMAX;
